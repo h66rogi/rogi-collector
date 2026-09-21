@@ -1,6 +1,6 @@
 {
   "contractVersion": "1.0.0",
-  "schemaSha256": "61f4356e81665f86edc992bbb0df6aaad7d2a35fa78e561a4efd704273a60854",
+  "schemaSha256": "531be249468baa0a75fde69d31d7798637ca799fc9585f489c3252ff7bbc968d",
   "sourceSha": "uncommitted",
   "tools": {
     "protoc": "33.0",
@@ -12,10 +12,10 @@
     "typescript": "5.9.3"
   },
   "bundleSha256": {
-    "contracts/typescript/src/collector/v1/collector_pb.ts": "1e7ae6228205f1df3fabed5a9aa7519760973a6d87b52e9602c5b97bc81a0e9a",
+    "contracts/typescript/src/collector/v1/collector_pb.ts": "115814d4949d20c371c132a10cffef33be8ce5b8ed98b99cb89e789dc023b2b9",
     "contracts/typescript/src/validate.ts": "dcedc9ff6f31fc4f846a6f87d29911618470a3de63fab69ad9dc2d27622f7376",
-    "proto/gen/collector/v1/collector_grpc.pb.go": "454174c95db7733fe1e15555c636f68b5f64e3c9508e5f8f1d1e66896c7594ef",
-    "proto/gen/collector/v1/collector.pb.go": "3677332182ccd0b8c0681ac494727ffd2b36989c37eeb01619e3a61e5be8cbd9",
+    "proto/gen/collector/v1/collector_grpc.pb.go": "31832c7bb8c4a39ebf77326db4d95c56ae9bcaee05a63c05c62d10cc3b1e0074",
+    "proto/gen/collector/v1/collector.pb.go": "bd333dd61ed436679e3031caaa78380baf9e0892dee8ed3850561187006947d0",
     "proto/gen/go/meloming/chat/v1/chat_admin_grpc.pb.go": "ce0c2c60f3b5c83ada86512bdeeb2f6b21d7c52f232e74260182051a8aa4f3d0",
     "proto/gen/go/meloming/chat/v1/chat_admin.pb.go": "bf0a239c2464d82e55e8a69e8811f0c3d0e81d56da305af37795af0c079802a5",
     "proto/gen/go/meloming/chat/v1/chat_query_grpc.pb.go": "e574889ea930ea164bf19ea9f1e7505713a72126916f5be550fb796c7853d2b5",

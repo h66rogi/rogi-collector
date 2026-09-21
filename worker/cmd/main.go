@@ -254,8 +254,19 @@ func main() {
 		closeWG.Wait()
 	}()
 
+	chatTestCtx, stopChatTests := context.WithCancel(rootCtx)
+	defer stopChatTests()
+	chatTests := workerinternal.NewChatTestDiagnostics(chatTestCtx, os.Getenv("SOOP_DIAGNOSTIC_TOKEN"), func() connector.PlatformConnector {
+		c := connector.NewSoopConnector(soopRelayAddr, nil, splitAndTrimCSV(os.Getenv("SOOP_CHAT_HOST_SUFFIXES"))...)
+		c.SetCookieFile(os.Getenv("SOOP_COOKIE_FILE"))
+		return c
+	})
+
+	chatTests.IsOptedOut = func(id string) bool { return optOutCache.IsOptedOut(model.PlatformSoop, id) }
+
 	runtimeServer := workerinternal.NewServer(envOrDefault("PROBE_ADDR", "127.0.0.1:8080"), logger, map[string]http.Handler{
-		"/metrics": promhttp.HandlerFor(metricsRegistry, promhttp.HandlerOpts{}),
+		"/metrics":               promhttp.HandlerFor(metricsRegistry, promhttp.HandlerOpts{}),
+		"/diagnostics/chat-test": chatTests,
 	})
 	go func() {
 		if err := runtimeServer.Start(); err != nil {
@@ -285,6 +296,7 @@ func main() {
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGTERM, syscall.SIGINT)
 	sig := <-sigCh
+	stopChatTests()
 	slog.Info("received signal, starting drain", "signal", sig)
 
 	// 1. Set draining flag (prevents ensureAlive from overwriting status).

@@ -93,3 +93,6 @@ manifest 변조·secret 경계·migration 실패 시 승격 거부·인증서 �
 `SOOP_DIAGNOSTIC_TOKEN`을 사용한다. 최소 32자 난수로 설정하고 운영 secret에만 보관한다.
 미설정 시 기존 수집은 유지되며 방송 체크만 사용 불가다. discover의 8080 포트는
 Compose 내부에서만 접근하며 host에 게시하지 않는다. [호출 경계와 제한](broadcast-diagnostics.md)을 따른다.
+
+입장·채팅 테스트도 제공하려면 같은 `SOOP_DIAGNOSTIC_TOKEN`을 `worker.env`에 추가한다.
+worker의 내부 8080 listener는 host에 게시하지 않는다. 테스트 수명과 보관 범위는 [진단 계약](broadcast-diagnostics.md#입장채팅-수신-테스트)을 따른다.

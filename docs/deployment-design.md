@@ -187,3 +187,8 @@ consumer cursor·generation·원천 ID·spool을 대조하고 gap/중복 재수�
 주루마블 운영 화면에서 상태를 조회하고 다른 SOOP 채널의 방송 여부를 테스트할 수 있다.
 `CheckBroadcast`는 운영 consumer/channel 인증을 유지하며 조회 대상 ID만 별도 입력받는다.
 수집 구독·게임 입력은 변경하지 않는다. [방송 조회 계약](broadcast-diagnostics.md)을 따른다.
+
+### 임시 채팅 입장 테스트 (2026-09-21)
+
+운영자가 별도 버튼으로 지정 채널에 입장해 실제 채팅 수신을 확인한다. 기존 SOOP connector를
+사용하되 운영 구독·저장·게임 전달에서 분리하고 최대 2분 후 종료한다. [진단 계약](broadcast-diagnostics.md)을 따른다.

@@ -19,6 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
+	CollectorService_StartChatTest_FullMethodName           = "/rogi.collector.v1.CollectorService/StartChatTest"
+	CollectorService_GetChatTest_FullMethodName             = "/rogi.collector.v1.CollectorService/GetChatTest"
+	CollectorService_StopChatTest_FullMethodName            = "/rogi.collector.v1.CollectorService/StopChatTest"
 	CollectorService_CheckBroadcast_FullMethodName          = "/rogi.collector.v1.CollectorService/CheckBroadcast"
 	CollectorService_GetCollectionStatus_FullMethodName     = "/rogi.collector.v1.CollectorService/GetCollectionStatus"
 	CollectorService_SetChannelSubscription_FullMethodName  = "/rogi.collector.v1.CollectorService/SetChannelSubscription"
@@ -33,6 +36,9 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CollectorServiceClient interface {
+	StartChatTest(ctx context.Context, in *ChatTestRequest, opts ...grpc.CallOption) (*ChatTestStatus, error)
+	GetChatTest(ctx context.Context, in *ChatTestRequest, opts ...grpc.CallOption) (*ChatTestStatus, error)
+	StopChatTest(ctx context.Context, in *ChatTestRequest, opts ...grpc.CallOption) (*ChatTestStatus, error)
 	CheckBroadcast(ctx context.Context, in *CheckBroadcastRequest, opts ...grpc.CallOption) (*BroadcastStatus, error)
 	GetCollectionStatus(ctx context.Context, in *GetCollectionStatusRequest, opts ...grpc.CallOption) (*CollectionStatus, error)
 	SetChannelSubscription(ctx context.Context, in *SetChannelSubscriptionRequest, opts ...grpc.CallOption) (*SetChannelSubscriptionResponse, error)
@@ -49,6 +55,36 @@ type collectorServiceClient struct {
 
 func NewCollectorServiceClient(cc grpc.ClientConnInterface) CollectorServiceClient {
 	return &collectorServiceClient{cc}
+}
+
+func (c *collectorServiceClient) StartChatTest(ctx context.Context, in *ChatTestRequest, opts ...grpc.CallOption) (*ChatTestStatus, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ChatTestStatus)
+	err := c.cc.Invoke(ctx, CollectorService_StartChatTest_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *collectorServiceClient) GetChatTest(ctx context.Context, in *ChatTestRequest, opts ...grpc.CallOption) (*ChatTestStatus, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ChatTestStatus)
+	err := c.cc.Invoke(ctx, CollectorService_GetChatTest_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *collectorServiceClient) StopChatTest(ctx context.Context, in *ChatTestRequest, opts ...grpc.CallOption) (*ChatTestStatus, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(ChatTestStatus)
+	err := c.cc.Invoke(ctx, CollectorService_StopChatTest_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *collectorServiceClient) CheckBroadcast(ctx context.Context, in *CheckBroadcastRequest, opts ...grpc.CallOption) (*BroadcastStatus, error) {
@@ -153,6 +189,9 @@ func (c *collectorServiceClient) ResolveConsumerRecovery(ctx context.Context, in
 // All implementations must embed UnimplementedCollectorServiceServer
 // for forward compatibility.
 type CollectorServiceServer interface {
+	StartChatTest(context.Context, *ChatTestRequest) (*ChatTestStatus, error)
+	GetChatTest(context.Context, *ChatTestRequest) (*ChatTestStatus, error)
+	StopChatTest(context.Context, *ChatTestRequest) (*ChatTestStatus, error)
 	CheckBroadcast(context.Context, *CheckBroadcastRequest) (*BroadcastStatus, error)
 	GetCollectionStatus(context.Context, *GetCollectionStatusRequest) (*CollectionStatus, error)
 	SetChannelSubscription(context.Context, *SetChannelSubscriptionRequest) (*SetChannelSubscriptionResponse, error)
@@ -171,6 +210,15 @@ type CollectorServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedCollectorServiceServer struct{}
 
+func (UnimplementedCollectorServiceServer) StartChatTest(context.Context, *ChatTestRequest) (*ChatTestStatus, error) {
+	return nil, status.Error(codes.Unimplemented, "method StartChatTest not implemented")
+}
+func (UnimplementedCollectorServiceServer) GetChatTest(context.Context, *ChatTestRequest) (*ChatTestStatus, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetChatTest not implemented")
+}
+func (UnimplementedCollectorServiceServer) StopChatTest(context.Context, *ChatTestRequest) (*ChatTestStatus, error) {
+	return nil, status.Error(codes.Unimplemented, "method StopChatTest not implemented")
+}
 func (UnimplementedCollectorServiceServer) CheckBroadcast(context.Context, *CheckBroadcastRequest) (*BroadcastStatus, error) {
 	return nil, status.Error(codes.Unimplemented, "method CheckBroadcast not implemented")
 }
@@ -214,6 +262,60 @@ func RegisterCollectorServiceServer(s grpc.ServiceRegistrar, srv CollectorServic
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&CollectorService_ServiceDesc, srv)
+}
+
+func _CollectorService_StartChatTest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChatTestRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CollectorServiceServer).StartChatTest(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CollectorService_StartChatTest_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CollectorServiceServer).StartChatTest(ctx, req.(*ChatTestRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CollectorService_GetChatTest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChatTestRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CollectorServiceServer).GetChatTest(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CollectorService_GetChatTest_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CollectorServiceServer).GetChatTest(ctx, req.(*ChatTestRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _CollectorService_StopChatTest_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ChatTestRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CollectorServiceServer).StopChatTest(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CollectorService_StopChatTest_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CollectorServiceServer).StopChatTest(ctx, req.(*ChatTestRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _CollectorService_CheckBroadcast_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -353,6 +455,18 @@ var CollectorService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "rogi.collector.v1.CollectorService",
 	HandlerType: (*CollectorServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "StartChatTest",
+			Handler:    _CollectorService_StartChatTest_Handler,
+		},
+		{
+			MethodName: "GetChatTest",
+			Handler:    _CollectorService_GetChatTest_Handler,
+		},
+		{
+			MethodName: "StopChatTest",
+			Handler:    _CollectorService_StopChatTest_Handler,
+		},
 		{
 			MethodName: "CheckBroadcast",
 			Handler:    _CollectorService_CheckBroadcast_Handler,
