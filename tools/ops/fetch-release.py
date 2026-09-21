@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import argparse,hashlib,json,os,re,tarfile,tempfile,urllib.request
+import argparse,hashlib,json,os,re,subprocess,tarfile,tempfile,urllib.request
 from pathlib import Path,PurePosixPath
 API='https://api.github.com'; MAX_ARCHIVE=100*1024*1024
 class FetchError(RuntimeError):pass
@@ -22,6 +22,21 @@ def safe_extract(archive,target):
    path=PurePosixPath(member.name)
    if path.is_absolute() or '..' in path.parts or member.issym() or member.islnk() or not(member.isdir() or member.isfile()):raise FetchError('unsafe release archive entry')
   bundle.extractall(target,filter='data')
+
+def deployed_healthy(receipt:Path,destination:Path,manifest:dict)->bool:
+ try:
+  saved=read_json(receipt)
+  if saved.get('sourceSha')!=manifest.get('sourceSha') or saved.get('images')!=manifest.get('images') or not destination.exists():return False
+  units=['rogi-collector.target']+[f'rogi-collector-role@{role}.service' for role in ('postgres','redis','discover','coordinator','worker','query')]
+  return all(subprocess.run(['systemctl','is-active','--quiet',unit],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode==0 for unit in units)
+ except (OSError,ValueError,json.JSONDecodeError):return False
+
+def require_descendant(repo:str,prior:str,candidate:str)->None:
+ if prior==candidate:return
+ if not re.fullmatch(r'[0-9a-f]{40}',prior):raise FetchError('deployed receipt source SHA is invalid')
+ comparison=json.loads(download(f'{API}/repos/{repo}/compare/{prior}...{candidate}',2*1024*1024))
+ if comparison.get('status')!='ahead':raise FetchError('automatic release is not a descendant of deployed source SHA')
+
 def stage(source_path,overlay_path,releases_root,run_root):
  source=exact(read_json(source_path),{'repository','workflowPath'},'release source');repo=source['repository']
  if not isinstance(repo,str) or not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+',repo):raise FetchError('invalid public GitHub repository')
@@ -37,6 +52,8 @@ def stage(source_path,overlay_path,releases_root,run_root):
   build=exact(read_json(tree/'manifest.build.json'),{'schemaVersion','product','profile','sourceSha','releaseId','contractVersion','composeSha256','runtimeFiles','images','migrations'},'build manifest')
   sha=build.get('sourceSha')
   if metadata.get('tag_name')!=f'production-{sha}':raise FetchError('release tag does not bind source SHA')
+  receipt=run_root/'deployed-release.json'
+  if receipt.is_file():require_descendant(repo,read_json(receipt).get('sourceSha',''),sha)
   if source['workflowPath']!='.github/workflows/release.yml':raise FetchError('unapproved workflow path')
   runs=json.loads(download(f'{API}/repos/{repo}/actions/runs?head_sha={sha}&per_page=100',4*1024*1024))
   if not any(x.get('path')==source['workflowPath'] and x.get('conclusion')=='success' and x.get('head_sha')==sha and x.get('head_branch')=='main' and x.get('event')=='push' for x in runs.get('workflow_runs',[]) if isinstance(x,dict)):raise FetchError('successful main release workflow is absent')
@@ -54,8 +71,8 @@ def main():
  p=argparse.ArgumentParser();p.add_argument('--source',type=Path,default=Path('/etc/rogi-collector/release-source.json'));p.add_argument('--overlay',type=Path,default=Path('/etc/rogi-collector/runtime-overlay.json'));p.add_argument('--releases-root',type=Path,default=Path('/opt/rogi-collector/app/releases'));p.add_argument('--run-root',type=Path,default=Path('/run/rogi-collector'));a=p.parse_args()
  try:
   app,manifest=stage(a.source,a.overlay,a.releases_root,a.run_root)
-  current=Path('/opt/rogi-collector/app/current')
-  if current.exists() and current.resolve()==app.resolve():return 0
+  receipt=Path('/run/rogi-collector/deployed-release.json'); candidate=read_json(manifest)
+  if deployed_healthy(receipt,app,candidate):return 0
   os.execv('/usr/local/lib/rogi-collector/deploy.sh',['deploy.sh','--manifest',str(manifest)])
  except (FetchError,OSError,ValueError,json.JSONDecodeError) as e:print(f'release fetch failed: {e}',file=__import__('sys').stderr);return 1
 if __name__=='__main__':raise SystemExit(main())
