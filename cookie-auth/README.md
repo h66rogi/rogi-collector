@@ -25,11 +25,13 @@ Go 소비자는 발급 후 48시간이 지났거나 인증 쿠키가 만료/누�
 ## 실행 입력
 
 Python 3.12+, Selenium(고정 버전은 requirements.txt), Chrome/Chromium과 호환 ChromeDriver가 필요하다.
-브라우저와 driver 설치·프로세스 배포는 CI/CD 작업의 범위다. 실행 중 driver를 자동 다운로드하지 않는다.
+정식 [Dockerfile](../deploy/Dockerfile.cookie-auth)이 Chromium과 ChromeDriver를 설치한다.
+[운영 Compose](../docs/deployment-production.md)가 실행·저장·비밀 파일을 연결한다. 실행 중 driver를 자동 다운로드하지 않는다.
 Linux의 file lock/process group을 사용한다. Chrome sandbox를 켜고 실행할 수 있는 비-root 사용자로 실행한다.
 
 | 환경 변수 | 사용 역할 | 의미 |
 | --- | --- | --- |
+| `ROLE_ENV_FILE` | cookie-auth만, 선택 | 실행 시 읽을 `KEY=value` 파일; 셸 실행 없이 읽고 이미 설정된 환경변수를 우선 |
 | `SOOP_ID` | cookie-auth만 | 로그인할 계정 ID |
 | `SOOP_PW` | cookie-auth만 | 비밀번호 |
 | `SOOP_COOKIE_FILE` | cookie-auth/discover/worker | JSON snapshot의 절대 경로; 역할마다 같은 파일을 가리킴 |
@@ -40,7 +42,9 @@ Linux의 file lock/process group을 사용한다. Chrome sandbox를 켜고 실�
 | `SOOP_COOKIE_PORT` | cookie-auth만, 선택 | 기본 `8091` |
 | `SOOP_COOKIE_API_URL` | refresh 명령, 선택 | 기본 `http://127.0.0.1:8091` |
 
-ID/PW는 운영 환경변수로 주입한다. 실제 값을 코드·`.env.example`·명령 인자에 적지 않는다.
+ID/PW는 프로세스 환경변수 또는 `ROLE_ENV_FILE`로 주입한다. 정식 배포는 Secrets Manager에서
+복원한 역할 파일을 mount하고 프로세스 안에서 읽는다. Docker `env_file`로 ID/PW를 노출하지 않는다.
+실제 값을 코드·`.env.example`·명령 인자에 적지 않는다.
 토큰·경로·브라우저 설정은 배포 측이 준비하며 수집 프로세스에는 ID/PW를 전달할 필요가 없다.
 
 ```sh
@@ -74,11 +78,13 @@ go test -race ./shared/soopauth/... ./discover/... ./worker/...
 실제 Python 저장물→Go reader, 기존 discovery live-check와 connector factory의 쿠키 연결도 검사한다.
 테스트는 실제 로그인·브라우저 실행·방송 접속을 하지 않는다.
 
-실제 계정 로그인과 연령제한 방송 입장은 아직 미검증이다. 현재 로그인 확인은 새 브라우저에서 얻은
-쿠키/계정/페이지 전환 근거이며 **성인 인증이나 방송 접근 성공을 뜻하지 않는다.** CAPTCHA·추가 인증·성인 확인이
-필요하면 자동 갱신을 성공으로 처리하지 않고 상태를 확인해야 한다. 우회하거나 인증 쿠키를 만들어내지 않는다.
-로그인 화면 변경과 실제 서버 거절 의미는 실계정 연결 시 확인한다.
-현재 접속 정보 요청에 쿠키를 적용했으며, HTTP 200의 인증 거절과 방송 종료 구분, 실제 WebSocket 입장 응답의
-완전한 판정은 다음 SOOP 연결 검증 작업에 남아 있다.
+2026-09-21 EC2에서 실제 계정 로그인·요청 갱신, 다른 연령제한 방송의 player 응답과 WebSocket 입장·채팅을 확인했다.
+정식 배포 재부팅 뒤 실제 갱신도 성공했다. 후로기 본인 방송의 수신은 방송이 켜질 때 확인해야 한다.
+세부 범위는 [검증 기록](../docs/implementation-status.md)을 따른다.
+
+로그인 성공은 페이지 전환과 인증/계정 쿠키를 확인한 결과이며, 모든 방송의 성인 인증·접근 성공을 보장하지 않는다.
+CAPTCHA·추가 인증·성인 확인이 필요하면 상태를 확인해야 한다. 우회하거나 인증 쿠키를 만들어내지 않는다.
+Go 연결 코드는 HTTP 200만으로 성공을 판단하지 않고 player 응답의 인증 거절/방송 종료를 구분하며,
+요청한 WebSocket join의 성공 응답을 확인해야 연결 상태로 전환한다.
 
 설계 근거와 원본 비교는 [조사 기록](../docs/cookie-acquisition-review.md)에 있다.

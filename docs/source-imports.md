@@ -24,13 +24,13 @@
 원본 query/admin의 공개 protobuf package는 호환성 기준으로 유지하고, go_package만 대상 주소로 바꿔 재생성한다.
 기존 `rogi.collector.v1` 계약은 별도 계약으로 보존하며, 원본 query에 이미 구현됐다고 간주하지 않는다.
 
-기존 대상의 `cmd/*`, `pkg/shared` health-only 골격은 원본의 역할별 `<role>/cmd`, `shared` 모듈로 교체한다.
-후속 배포 요청으로 신규 `deploy/live-check` Compose/Dockerfile을 작성했다. 원본 운영 설정은 가져오지 않았다. 변경된 빌드/실행/마이그레이션 경로는
+기존 대상의 `cmd/*`, `pkg/shared` health-only 골격은 원본의 역할별 `<role>/cmd`, `shared` 모듈로 교체했다.
+후속 배포 요청으로 격리 `deploy/live-check`와 정식 `deploy/compose.production.yaml`·역할 이미지·운영 도구를 연결했다. 원본 운영 설정은 가져오지 않았다. 변경된 빌드/실행/마이그레이션 경로는
 [코드 인계 문서](collector-code-handoff.md)에 기록한다.
 
 원본 코드의 일반 채팅/다중 플랫폼/ClickHouse 기능은 출발점 보존을 위해 남겨 두되 첫 SOOP 제품 경로와 구분한다.
 전체 플랫폼 수집을 기본 동작으로 사용하지 않는다. 후원 journal/spool/ACK, 채널별 consumer 권한은
-기존 클래스의 확장으로 구현해야 하며, 원본의 최근 채팅 저장을 후원 내구성으로 표시하지 않는다.
+기존 manager/pipeline/store/query의 확장으로 구현했으며, 원본의 최근 채팅 저장을 후원 내구성으로 표시하지 않는다.
 
 ## 검증 경계
 

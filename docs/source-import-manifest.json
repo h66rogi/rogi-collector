@@ -261,10 +261,11 @@
         "Keep original entrypoint/lifecycle; restrict startup to registered SOOP probes, empty allowlist collects nothing, reject BYPASS_ALLOWLIST.",
         "Connect existing SOOP discovery/connector construction to the cookie-auth JSON snapshot reader; preserve original lifecycle and interfaces",
         "단일 채널·구독 설정과 인증/방송 상태를 기존 discover loop에 연결",
-        "Load the mounted role environment as data and wire explicit single-channel live-test authentication"
+        "Load the mounted role environment as data and wire explicit single-channel live-test authentication",
+        "Clarify that single-SOOP validation precedes the retained generic allowlist parser; comments only"
       ],
       "importSha256": "b0d2ef284b9aad71fe9708a3f45d85a948fbed03c389ed47c5385b219677b5c5",
-      "currentSha256": "21053890c25cee7f2497a0b816f48ce3b7a181ed7710e9013bc885452a273d51"
+      "currentSha256": "44bce29ac76174a6f8af04867c32aed9f83f869e37550512b9f5e0d727583248"
     },
     {
       "sourcePath": "discover/cmd/main_test.go",
@@ -729,10 +730,11 @@
       "sourceSha256": "0b6cea2c720d0e6357aa9d3dfb12b9520e7d76bea81a4056a731162812763494",
       "changes": [
         "Go module/import address changed to target repository",
-        "장기 Watch가 있어도 종료되도록 gRPC graceful shutdown 상한 추가"
+        "장기 Watch가 있어도 종료되도록 gRPC graceful shutdown 상한 추가",
+        "Distinguish retained original API-key APIs from the collector v1 mTLS lifecycle in comments"
       ],
       "importSha256": "95ac40a0d0c287ff90852e7196d3aff8459e3e90c5cbfca6d040c5723a119f12",
-      "currentSha256": "2dad14d14d1b53bf24c248b86ae78f7239ddc31b2b4e212df1db4bcc3c4e20c1"
+      "currentSha256": "3c2847f67dd6ac7503d8cd8ef480e746d26a4d6eeee5ef2dcfe5c6dfcd19808a"
     },
     {
       "sourcePath": "query/internal/server_test.go",
@@ -766,9 +768,11 @@
       "sourcePath": "shared/grpcauth/interceptor.go",
       "targetPath": "shared/grpcauth/interceptor.go",
       "sourceSha256": "88dc4e3d7fe299b28757c0c22c9068f255c682b3417d831afaff753c23d8bfee",
-      "changes": [],
+      "changes": [
+        "Document original API-key interceptors separately from product mTLS authentication"
+      ],
       "importSha256": "88dc4e3d7fe299b28757c0c22c9068f255c682b3417d831afaff753c23d8bfee",
-      "currentSha256": "88dc4e3d7fe299b28757c0c22c9068f255c682b3417d831afaff753c23d8bfee"
+      "currentSha256": "f63eea46e8dfcfe6ca88eb1cc775c26d975800b266f37c8d4c99762af9c52713"
     },
     {
       "sourcePath": "shared/grpcauth/interceptor_test.go",
@@ -1098,10 +1102,11 @@
         "Go module/import address changed to target repository",
         "Connect existing SOOP discovery/connector construction to the cookie-auth JSON snapshot reader; preserve original lifecycle and interfaces",
         "기존 manager에 후원 spool/journal/소유권과 outbox 재시도 연결",
-        "Load the mounted role environment as data and wire explicit single-channel live-test authentication"
+        "Load the mounted role environment as data and wire explicit single-channel live-test authentication",
+        "Correct command dispatch blocking/order and readiness/stop-deadline comments; behavior unchanged"
       ],
       "importSha256": "52b2b984c02465d8914fc0d7ec4cb31f6f9b6adf68067b81f803fc9f4f8cee1e",
-      "currentSha256": "caf9cd03ea5e4b81d8675f0eb6fef8c7a5cf36997022810edf39decaabbdc6a5"
+      "currentSha256": "16f143616a181ca573112bc2daa5c4bc9f33a5908442cd50312beee03c73a0cc"
     },
     {
       "sourcePath": "worker/cmd/main_test.go",
@@ -1326,10 +1331,11 @@
       "sourceSha256": "413fb2fafad75cb8fb4ef236dd115afdbb80763b43556e0f10072bfe6278db44",
       "changes": [
         "Go module/import address changed to target repository",
-        "SOOP 최근 채팅의 bounded generation stream 사용 및 raw hash dedup 제외"
+        "SOOP 최근 채팅의 bounded generation stream 사용 및 raw hash dedup 제외",
+        "Document SOOP chat retention, separate durable donation acceptance, and bypass of legacy firehose/raw-hash dedup"
       ],
       "importSha256": "b28db2ba3ccd4d93163eaee64feaf68fd76389b7dd4dfa2a40e1f415bcef325a",
-      "currentSha256": "8bbd02dccc96197366695e9afd2dc3994d65ce6de2d51ff01b8335399ee52631"
+      "currentSha256": "0db87984affe3ca8723fdba1a5c0ddfa869ef0f67fb889b9ba6797b03bf9d393"
     },
     {
       "sourcePath": "worker/internal/pipeline/publisher_integration_test.go",

@@ -28,8 +28,8 @@ const (
 	channelMaxLen  = 1000
 	firehoseMaxLen = 100000
 
-	// streamTTL is the expiry for per-channel chat streams.
-	// Active channels refresh this on every publish; idle streams expire automatically.
+	// streamTTL applies only to the retained non-SOOP publisher path.
+	// SOOP product chat has its own 24-hour/10,000-message policy in product_chat.go.
 	streamTTL = 48 * time.Hour
 )
 
@@ -49,7 +49,8 @@ func dedupKey(msg model.ChatMessage) string {
 	return fmt.Sprintf("dedup:%s:%s:%016x", msg.Platform, msg.ChannelID, h)
 }
 
-// Publisher writes ChatMessages to Redis Streams using a pipeline for efficiency.
+// Publisher writes bounded recent chat to Redis Streams. Durable SOOP donations
+// are accepted separately by the manager before reaching this chat pipeline.
 type Publisher struct {
 	rdb     redis.UniversalClient
 	metrics *PublishMetrics
@@ -64,8 +65,8 @@ func NewPublisher(rdb redis.UniversalClient, metrics *PublishMetrics) *Publisher
 	return &Publisher{rdb: rdb, metrics: metrics}
 }
 
-// Publish sends a ChatMessage to both the per-channel stream and the firehose
-// stream using a Redis pipeline (XADD with MAXLEN ~).
+// Publish routes SOOP chat to the product stream without raw payload or firehose.
+// Other platforms retain the original channel/firehose pipeline (MAXLEN ~).
 func (p *Publisher) Publish(ctx context.Context, msg model.ChatMessage) error {
 	if msg.Platform == model.PlatformSoop {
 		return p.publishProductChat(ctx, msg)
@@ -112,8 +113,9 @@ func (p *Publisher) Publish(ctx context.Context, msg model.ChatMessage) error {
 	return nil
 }
 
-// PublishWithDedup publishes using a Lua script that atomically checks for
-// duplicates before writing to both streams. Used during handoff overlap.
+// PublishWithDedup retains raw-hash deduplication for non-SOOP handoff overlap.
+// SOOP uses the product chat path without raw-hash deduplication; identical
+// observations must not be silently merged.
 func (p *Publisher) PublishWithDedup(ctx context.Context, msg model.ChatMessage) error {
 	if msg.Platform == model.PlatformSoop {
 		return p.publishProductChat(ctx, msg)

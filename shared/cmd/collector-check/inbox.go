@@ -12,6 +12,8 @@ import (
 	"strconv"
 )
 
+// checkpoint tracks a bounded, single-process acceptance probe. This file inbox
+// is not the transactional inbox/cursor implementation required by the game consumer.
 type checkpoint struct {
 	Generation string `json:"generation"`
 	Offset     uint64 `json:"offset,string"`

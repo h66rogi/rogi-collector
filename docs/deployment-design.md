@@ -1,8 +1,8 @@
 # rogimarble 방송 입력 수집기 · 배포와 소비 계약 v1
 
-작성: 2026-09-21. **목표 설계 문서다. 공개 원본 수집 코드를 반입했으며, 아래 쿠키 인증·후원 내구성·신규 RPC의 완료 여부는 [구현 상태](implementation-status.md)를 따른다.**
+수정: 2026-09-21. **제품 경계와 목표 계약을 정의한다. 쿠키 인증·후원 내구성·collector v1 RPC와 정식 배포를 구현했으며, 실증 결과와 남은 게임 연동·복구 검증은 [구현 상태](implementation-status.md)를 따른다.**
 전체 제품 설계는 [rogimarble 저장소](https://github.com/h66rogi/rogimarble)의
-`docs/final-design.md`에서 관리한다. 현재 두 레포의 문서는 로컬 작성 상태이며 원격 게시 전이다.
+`docs/final-design.md`에서 관리한다.
 이 문서는 collector가 독립적으로 구현할 경계를 정한다. 실행 작업은 [구현 계획](implementation-plan.md),
 초기 조사 근거는 [조사 기록](repository-review.md)에 분리했다.
 
@@ -42,7 +42,7 @@ chat-collector는 기본 코드베이스이며, 원본의 범용 기능 목록�
 
 Go 역할별 모듈 경계와 프로세스를 유지한다. 초기 각 역할 replica는 1개다.
 ClickHouse·전체 채널 탐색·Kubernetes·외부 Aurora·추가 관리 EC2는 필요하지 않다.
-S3 백업·Secrets Manager를 활용할 수 있지만 상시 앱 서버 수는 늘리지 않는다.
+정식 배포는 S3 백업과 Secrets Manager를 사용한다. 상시 앱 서버 수는 늘리지 않는다.
 
 ## 2. 네트워크와 접근
 
@@ -51,18 +51,19 @@ S3 백업·Secrets Manager를 활용할 수 있지만 상시 앱 서버 수는 �
 - 관리 RPC와 읽기 RPC의 scope를 구분한다. 인증서/CA와 회전 정보는 private 운영 입력이다.
 - SG는 승인된 소비자 SG만 허용한다. PostgreSQL/Redis host port는 publish하지 않는다.
 - SOOP outbound를 위해 초기 public subnet/공인 주소를 사용하되 인터넷 inbound를 열지 않는다.
-- 관리 접근은 Tailscale 위 OpenSSH, 초기 확인·복구는 SSM이다. public SSH를 열지 않는다.
+- 현재 배포·확인·복구는 SSM을 사용한다. Tailscale 위 OpenSSH는 초기 관리 접근 목표이며 이 배포의 검증 완료 항목이 아니다. public SSH를 열지 않는다.
 
-`SetChannelSubscription`은 소비 제품별 구독이다. 한 제품이 구독을 제거해도 다른 활성 소비자가
-있으면 물리 수집을 계속한다. 플랫폼 opt-out은 모든 구독보다 우선한다.
+`SetChannelSubscription`은 현재 허용된 한 소비자·한 채널의 수집 시작/중지에 사용한다.
+여러 소비자를 지원할 때 다른 활성 구독이 있으면 물리 수집을 계속하는 것은 향후 확장 계약이다.
+플랫폼 opt-out은 구독보다 우선한다.
 수집 설정이 없을 때 전체 플랫폼으로 확장하지 않는다. 첫 제품의 채널 승인은 주루마블 관리자가 담당한다.
 
 ## 3. 후원 RPC와 전달 의미
 
-신규 RPC: `GetCollectionStatus`, `SetChannelSubscription`, `ListDonations(afterCursor, limit)`,
+제품 RPC: `GetCollectionStatus`, `SetChannelSubscription`, `ListDonations(afterCursor, limit)`,
 `WatchDonations(afterCursor)`, `AckDonations(cursor)`, `WatchChat(afterCursor)`.
 구현 계획 리뷰에서 복구를 위한 관리 RPC `ResolveConsumerRecovery`를 추가했다.
-기존 proto/query에 후원 내구성 계약이 이미 구현되어 있다고 가정하지 않는다.
+원본 ChatQuery/ChatAdmin 계약과 별개이며 현재 query runtime은 collector v1만 등록한다.
 
 ```text
 SOOP → 종류/원천 식별 → PostgreSQL journal + outbox
@@ -84,7 +85,7 @@ DB 복원 시 journalGeneration 변경을 감지·통지하되 기존 eventId는
 만료/세대 변경 후에는 복구 필요→범위 대조→운영자 재개점 확정→재개를 따른다.
 ResolveConsumerRecovery는 관리 scope에서 이전/새 세대·기준점·미복구 범위·사유/작업자·멱등 키·revision을 저장한다.
 기준점 변경과 실제 inbox 수락 ACK는 구분한다. 소비 제품의 로컬 반영까지 끝나기 전 수신을 재개하지 않는다.
-응답 유실은 같은 키로 재시도하고 기존 inbox/결과는 보존한다. 상세 절차는 구현 계획 I02를 따른다.
+응답 유실은 같은 키로 재시도하고 기존 inbox/결과는 보존한다. 상세 소비자·복원 절차는 [코드 인계](collector-code-handoff.md#소비자-동작과-보존)를 따른다.
 
 영속 journal/spool에 수락할 때 생성한 ID는 journal 이동·재발행에도 유지한다.
 원천 ID가 있으면 별도 보존하고 donationKind와 함께 검증한 중복 식별 규칙을 적용한다.
@@ -103,7 +104,7 @@ journal/spool/replay에도 보존한다. 원천 ID 없음만으로 모든 정상
 
 일반 채팅은 기존 bounded Redis stream을 유지하고 query가 중계한다. 영구 archive가 아니며
 trim 뒤 gap을 알린다. userId는 후원의 donorId와 같은 정규화 규칙을 사용한다.
-다른 제품이 독립 cursor로 소비할 수 있어야 한다.
+현재 주루마블 소비자가 자신의 cursor로 읽는다. 여러 소비자의 독립 구독은 향후 확장 범위다.
 
 `!이동` 해석·요청 소유권·게임 설정·Lottie 연출은 collector에 넣지 않는다.
 채팅과 후원의 전달 순서가 다를 수 있으므로 주루마블이 명령 후보를 잠깐 저장·재검사한다.
@@ -115,11 +116,13 @@ native 별풍선 정수 개수와 donationKind를 명시한다. raw packet·인�
 
 ## 5. Compose·IaC
 
-목표 파일은 `deploy/compose.yaml`, `deploy/compose.production.yaml`, systemd unit,
-`tools/ops/deploy.sh`, `tools/ops/status.sh`다. 현재 실행할 수 있는 파일은 아니다.
+정식 실행 파일은 `deploy/compose.production.yaml`, `deploy/systemd/`,
+`tools/ops/deploy.sh`, `tools/ops/status.sh`다. [운영 배포](deployment-production.md)와 [CI/CD](deployment-ci.md)를 따른다.
+`deploy/compose.yaml`은 초기 health-only 골격이며 현재 앱용 로컬 실행 절차로 사용하지 않는다.
 
 배포 helper 하나가 manifest/digest 검증 → host lock → 이미지 준비 → DB/Redis readiness →
-일회성 migration → Go 서비스 시작 → gRPC/worker heartbeat 검증을 수행하게 한다.
+일회성 marker/app migration → 7개 서비스 시작 → unit/container health 검증을 수행한다.
+소비자 호스트의 인증된 gRPC와 실제 방송 수신은 별도 인수 검사다. 배포 helper의 성공만으로 이를 대체하지 않는다.
 동작 중인 migration을 새 배포가 취소하지 않게 한다. 롤백은 호환되는 이전 이미지로 수행하며
 DB down migration과 `down -v`는 자동 실행하지 않는다.
 
@@ -151,18 +154,21 @@ Aurora/과거 Lightsail/관리 EC2와 실제 값을 복사하지 않는다. rogi
 
 ## 6. 보존·복구와 완료 기준
 
-초기 제안값: 후원 journal 30일, 일반 채팅 최대 24시간·채널별 10,000건, spool 1GiB/호스트.
-운영 설정으로 조정한다. journal 정리는 최소 보존/활성 소비자 ACK를 확인하고, 최대 용량/기간
-초과 시 명시적 만료와 알림을 거친다. 영구 지연 소비자 때문에 무제한 저장하지 않는다.
+현재 코드의 보존 한도는 후원 payload 최소 7일+ACK, 최대 30일/약 1GiB,
+일반 채팅 최대 24시간·채널별 10,000건, spool 1GiB/1만 파일이다.
+상세 tombstone·감사 보존은 [코드 인계](collector-code-handoff.md#소비자-동작과-보존)를 따른다.
+이 값들은 코드의 정책이며 환경변수로 조정하는 기능은 없다. 강제 prefix 만료는 cursor 오류와 earliest 위치로 드러난다.
+운영 알림 연결은 별도 미완료 작업이다. 지연 소비자 때문에 무제한 저장하지 않는다.
 
-PostgreSQL base backup + WAL archive를 pgBackRest job으로 S3에 보관한다.
-목표 RPO 5분·RTO 2시간은 복구 실측 전 보증이 아니다. 복원 후 worker 시작 전에
+현재는 일일 `pg_dump --format=custom`을 gzip으로 보관하고 S3로 업로드한다. 로컬 백업은 7일 초과분을 정리한다.
+초기 목표였던 pgBackRest base backup + WAL archive와 RPO 5분·RTO 2시간은 구현·복구 실측 전이다.
+일일 dump로 그 목표를 충족했다고 표현하지 않는다. 복원 후 worker 시작 전에
 consumer cursor·generation·원천 ID·spool을 대조하고 gap/중복 재수락 위험을 확인한다.
 일반 채팅 최근 stream은 재생 범위 밖 유실을 허용한다. 후원은 그 정책을 따르지 않는다.
 
-출시 조건은 다음과 같다.
+아래는 제품 인수 기준이다. 항목별 실제 완료 여부는 [검증 상태](implementation-status.md)를 따른다.
 
-- clean checkout에서 로컬 Compose로 실제 Go 서비스·DB·Redis가 시작된다.
+- clean checkout의 검증된 이미지와 운영 입력으로 정식 Compose의 실제 Go 서비스·DB·Redis·cookie-auth가 시작된다.
 - 등록 채널만 수집하고 consumer/채널 간 읽기·관리 권한이 격리된다.
 - 재전송·ACK 유실·DB/Redis 중단·worker 재시작에도 영속 수락한 eventId가 유지된다.
 - 소비자의 낮은 offset 수락 실패·높은 offset 선처리 시도·겹친 stream에서 ACK가 미수락 구간을 넘지 않는다.
