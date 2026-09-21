@@ -34,8 +34,13 @@ message WatchChatRequest { string consumer_id = 1; string channel_id = 2; option
 message RecoveryRange { Cursor start = 1; Cursor end = 2; }
 message ResolveConsumerRecoveryRequest { string consumer_id = 1; string channel_id = 2; string previous_generation = 3; string new_generation = 4; Cursor resume_from = 5; repeated RecoveryRange unrecovered_ranges = 6; string reason = 7; string operator_id = 8; string idempotency_key = 9; uint64 expected_revision = 10; }
 message ResolveConsumerRecoveryResponse { string previous_generation = 1; string new_generation = 2; Cursor previous_cursor = 3; Cursor resume_from = 4; uint64 recovery_revision = 5; repeated RecoveryRange unrecovered_ranges = 6; string idempotency_key = 7; }
+// Read-only broadcast diagnostics; channel_id remains the authorized production scope.
+// target_channel_id may name another channel and never changes subscriptions.
+message CheckBroadcastRequest { string consumer_id = 1; string channel_id = 2; string target_channel_id = 3; }
+message BroadcastStatus { string channel_id = 1; string state = 2; string title = 3; string display_name = 4; string broadcast_id = 5; google.protobuf.Timestamp checked_at = 6; bool cached = 7; }
 message Empty {}
 service CollectorService {
+  rpc CheckBroadcast(CheckBroadcastRequest) returns (BroadcastStatus);
   rpc GetCollectionStatus(GetCollectionStatusRequest) returns (CollectionStatus);
   rpc SetChannelSubscription(SetChannelSubscriptionRequest) returns (SetChannelSubscriptionResponse);
   rpc ListDonations(ListDonationsRequest) returns (ListDonationsResponse);

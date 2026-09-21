@@ -23,7 +23,10 @@ import (
 
 // ProductAccess is deliberately one configured product and channel. Certificate
 // URIs authorize scopes; request fields never establish caller identity.
-type ProductAccess struct{ Consumer, Channel, ReadURI, ManageURI, RecoveryURI string }
+type ProductAccess struct {
+	Consumer, Channel, ReadURI, ManageURI, RecoveryURI string
+	BroadcastCheck                                     func(context.Context, string) (*pb.BroadcastStatus, error)
+}
 type collectorService struct {
 	pb.UnimplementedCollectorServiceServer
 	pg     *store.PgStore

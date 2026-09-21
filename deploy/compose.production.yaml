@@ -104,6 +104,7 @@ services:
   discover:
     <<: *role
     image: ${DISCOVER_IMAGE:?set immutable DISCOVER_IMAGE digest}
+    environment: {PROBE_ADDR: "0.0.0.0:8080"}
     networks: [data, egress]
     volumes:
       - {type: bind, source: "${SECRETS_ROOT}/discover.env", target: /run/secrets/role.env, read_only: true, bind: {create_host_path: false}}

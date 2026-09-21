@@ -26,7 +26,8 @@
   방송 종료·쿠키 문제·조회 실패·재연결·저장 장애를 구분합니다.
 - 별풍선은 native 정수 개수와 관측 ID를 보존해 disk spool·PostgreSQL journal/outbox에 저장합니다.
   정상적인 동일 개수 후원 두 건을 raw hash로 합치지 않습니다.
-- collector v1의 7개 RPC로 상태·후원 재생/구독/ACK·최근 채팅·수집 설정·복구를 제공합니다.
+- collector v1의 8개 RPC로 상태·후원 재생/구독/ACK·최근 채팅·수집 설정·복구·조회 전용 방송 체크를 제공합니다.
+  다른 채널 테스트 조회는 운영 수집 대상을 바꾸지 않습니다. [방송 조회](docs/broadcast-diagnostics.md)를 참고하세요.
   소비자는 자신의 inbox와 cursor를 함께 저장한 뒤 ACK해야 합니다.
 - 일반 채팅은 Redis에 최대 24시간·채널당 1만 건을 보관합니다. 후원과 같은 영속 재생 보장은 없습니다.
 

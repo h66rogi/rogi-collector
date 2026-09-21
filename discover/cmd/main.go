@@ -5,6 +5,7 @@ import (
 	"crypto/subtle"
 	"github.com/h66rogi/rogi-collector/shared/collection"
 	"github.com/h66rogi/rogi-collector/shared/runtimeenv"
+	"github.com/h66rogi/rogi-collector/shared/soopauth"
 	"io"
 	"log/slog"
 	"net/http"
@@ -69,8 +70,9 @@ func main() {
 	})
 
 	probeServer := internal.NewProbeServer(envOrDefault("PROBE_ADDR", "127.0.0.1:8080"), logger, map[string]http.Handler{
-		"/metrics": promhttp.HandlerFor(metricsRegistry, promhttp.HandlerOpts{}),
-		"/trigger": triggerHandler,
+		"/metrics":               promhttp.HandlerFor(metricsRegistry, promhttp.HandlerOpts{}),
+		"/trigger":               triggerHandler,
+		"/diagnostics/broadcast": internal.NewBroadcastDiagnostics(os.Getenv("SOOP_DIAGNOSTIC_TOKEN"), soopauth.NewHTTPClient(os.Getenv("SOOP_COOKIE_FILE"))),
 	})
 	go func() {
 		if err := probeServer.Start(); err != nil {

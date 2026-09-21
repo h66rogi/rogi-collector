@@ -19,6 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
+	CollectorService_CheckBroadcast_FullMethodName          = "/rogi.collector.v1.CollectorService/CheckBroadcast"
 	CollectorService_GetCollectionStatus_FullMethodName     = "/rogi.collector.v1.CollectorService/GetCollectionStatus"
 	CollectorService_SetChannelSubscription_FullMethodName  = "/rogi.collector.v1.CollectorService/SetChannelSubscription"
 	CollectorService_ListDonations_FullMethodName           = "/rogi.collector.v1.CollectorService/ListDonations"
@@ -32,6 +33,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CollectorServiceClient interface {
+	CheckBroadcast(ctx context.Context, in *CheckBroadcastRequest, opts ...grpc.CallOption) (*BroadcastStatus, error)
 	GetCollectionStatus(ctx context.Context, in *GetCollectionStatusRequest, opts ...grpc.CallOption) (*CollectionStatus, error)
 	SetChannelSubscription(ctx context.Context, in *SetChannelSubscriptionRequest, opts ...grpc.CallOption) (*SetChannelSubscriptionResponse, error)
 	ListDonations(ctx context.Context, in *ListDonationsRequest, opts ...grpc.CallOption) (*ListDonationsResponse, error)
@@ -47,6 +49,16 @@ type collectorServiceClient struct {
 
 func NewCollectorServiceClient(cc grpc.ClientConnInterface) CollectorServiceClient {
 	return &collectorServiceClient{cc}
+}
+
+func (c *collectorServiceClient) CheckBroadcast(ctx context.Context, in *CheckBroadcastRequest, opts ...grpc.CallOption) (*BroadcastStatus, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(BroadcastStatus)
+	err := c.cc.Invoke(ctx, CollectorService_CheckBroadcast_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *collectorServiceClient) GetCollectionStatus(ctx context.Context, in *GetCollectionStatusRequest, opts ...grpc.CallOption) (*CollectionStatus, error) {
@@ -141,6 +153,7 @@ func (c *collectorServiceClient) ResolveConsumerRecovery(ctx context.Context, in
 // All implementations must embed UnimplementedCollectorServiceServer
 // for forward compatibility.
 type CollectorServiceServer interface {
+	CheckBroadcast(context.Context, *CheckBroadcastRequest) (*BroadcastStatus, error)
 	GetCollectionStatus(context.Context, *GetCollectionStatusRequest) (*CollectionStatus, error)
 	SetChannelSubscription(context.Context, *SetChannelSubscriptionRequest) (*SetChannelSubscriptionResponse, error)
 	ListDonations(context.Context, *ListDonationsRequest) (*ListDonationsResponse, error)
@@ -158,6 +171,9 @@ type CollectorServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedCollectorServiceServer struct{}
 
+func (UnimplementedCollectorServiceServer) CheckBroadcast(context.Context, *CheckBroadcastRequest) (*BroadcastStatus, error) {
+	return nil, status.Error(codes.Unimplemented, "method CheckBroadcast not implemented")
+}
 func (UnimplementedCollectorServiceServer) GetCollectionStatus(context.Context, *GetCollectionStatusRequest) (*CollectionStatus, error) {
 	return nil, status.Error(codes.Unimplemented, "method GetCollectionStatus not implemented")
 }
@@ -198,6 +214,24 @@ func RegisterCollectorServiceServer(s grpc.ServiceRegistrar, srv CollectorServic
 		t.testEmbeddedByValue()
 	}
 	s.RegisterService(&CollectorService_ServiceDesc, srv)
+}
+
+func _CollectorService_CheckBroadcast_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CheckBroadcastRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(CollectorServiceServer).CheckBroadcast(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: CollectorService_CheckBroadcast_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(CollectorServiceServer).CheckBroadcast(ctx, req.(*CheckBroadcastRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _CollectorService_GetCollectionStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -319,6 +353,10 @@ var CollectorService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "rogi.collector.v1.CollectorService",
 	HandlerType: (*CollectorServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "CheckBroadcast",
+			Handler:    _CollectorService_CheckBroadcast_Handler,
+		},
 		{
 			MethodName: "GetCollectionStatus",
 			Handler:    _CollectorService_GetCollectionStatus_Handler,

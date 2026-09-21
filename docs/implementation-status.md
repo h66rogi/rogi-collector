@@ -26,7 +26,7 @@
 | 별풍선 전달 | cmd 18의 native 정수 개수, donorId, 연결 epoch/sequence; 채팅 drop 경로 전에 spool 저장 | 가득 찬 채팅 버퍼에서도 같은 33개 후원 두 건 유지 |
 | 후원 보관과 재전송 | 기존 PgStore에 journal/outbox, 채널별 직렬 offset, 동일 eventId 재생, 재접속 의심 관측 별도 보존 | 실제 격리 PostgreSQL 17에서 동시 저장·응답 유실·재전송 검사 |
 | 저장 장애 | 1GiB/1만 파일 제한 spool, fsync·checksum·단일 writer, 소유권 grant·기록된 수락 시점 대조 | 합성 DB 장애, 실제 DB commit 뒤 응답 유실, full/손상/재시작 검사 |
-| 주루마블 내부 연결 | 기존 query lifecycle에 collector v1 7 RPC, 7443 mTLS, 인증서 URI별 읽기/관리/복구 권한 | 실제 TLS socket에서 조회·Watch·ACK·다른 신원/권한 거부 |
+| 주루마블 내부 연결 | 기존 query lifecycle에 collector v1 8 RPC, 7443 mTLS, 인증서 URI별 읽기/관리/복구 권한 | 실제 TLS socket에서 조회·Watch·ACK·다른 신원/권한 거부 |
 | 원하는 칸 선택용 채팅 | 원본 Redis publisher/store 확장, 동일 userId 규칙, 최근 24시간·1만 건, stream generation | 실제 격리 Redis 7과 TLS WatchChat, reset 감지; 게임 명령 파싱은 소비자 책임 |
 | 중단 이후 복구 | 명시적 cursor, generation/revision 검사, baseline과 ACK 분리, 멱등 복구·감사 기록 | 구버전 stream 종료, 보존 범위 만료, restore generation 변경 검사 |
 | 운영 상태 | waiting/connecting/connected/cookie_required/auth_required/lookup_failed/reconnecting/storage_delayed/storage_stopped/disabled | 상태 연결 코드와 저장소 검사; 실방송 운영 시나리오는 남음 |

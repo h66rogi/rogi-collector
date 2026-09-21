@@ -181,3 +181,9 @@ consumer cursor·generation·원천 ID·spool을 대조하고 gap/중복 재수�
 - 콜드 부팅·migration 실패·동시 배포·백업 복원을 실제 검증한다.
 - EC2 교체 시 data EBS 보존, 앱의 자격증명 접근 격리, 역할별 프로세스 강제 종료 후 복구를 실제 검증한다.
 - 실제 SOOP 원천 ID·종류·방송 전환 의미를 테스트 채널 관측으로 확인한다.
+
+## 운영 조회 확장 (2026-09-21)
+
+주루마블 운영 화면에서 상태를 조회하고 다른 SOOP 채널의 방송 여부를 테스트할 수 있다.
+`CheckBroadcast`는 운영 consumer/channel 인증을 유지하며 조회 대상 ID만 별도 입력받는다.
+수집 구독·게임 입력은 변경하지 않는다. [방송 조회 계약](broadcast-diagnostics.md)을 따른다.
