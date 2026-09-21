@@ -3,7 +3,9 @@
 정식 profile은 `soop-single-channel`이다. 초기 health-only profile을 실제 원본 기반
 수집기와 cookie-auth로 교체했다. GitHub main release → private GHCR digest → 승인된
 SSM 전달 → host 검증/마이그레이션 → systemd 감독 경로를 사용한다.
-현재 적용 증거는 [구현 상태](implementation-status.md)에 따로 기록한다.
+현재 적용 증거는 [구현 상태](implementation-status.md), 배포 자동화는 [CI/CD](deployment-ci.md),
+프로세스·방송·쿠키 상태의 점검 방법은 [모니터링](operations-monitoring.md)에 기록한다.
+`deploy/compose.yaml`은 과거 health-only preview이며 정식 실행에 사용하지 않는다.
 
 ## 실행과 저장 경계
 
@@ -52,6 +54,8 @@ systemd는 역할별 foreground Compose를 감독하고 컨테이너 종료 후 
 `--force-recreate`로 새 secret inode와 이미지/설정을 다시 mount한다. Compose restart는 no다.
 재부팅 때 host-ready → DB/Redis → marker/app migration → 각 역할 순서로 시작한다.
 일일 DB backup/S3 upload와 10분 release timer는 기존 경로를 유지한다.
+백업은 UTC 18:40부터 최대 20분 지연 후 custom-format pg_dump를 gzip으로 저장하며, 로컬 7일 초과분을 정리한다.
+WAL 연속 보관·시점 복원은 구현하지 않았고 실제 백업 복원 시험도 남아 있다.
 스키마 down migration, data volume 삭제, 이미지 host build는 배포 중 실행하지 않는다.
 
 ## 인증서

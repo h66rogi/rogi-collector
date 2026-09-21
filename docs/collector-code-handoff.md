@@ -2,7 +2,7 @@
 
 원본 8개 모듈의 lifecycle을 유지했다. 반입 근거는 `source-import-manifest.json`,
 현재 증거와 남은 제품 검증은 [구현 상태](implementation-status.md)를 따른다.
-기존 CI/CD 관련 `.github`, `infrastructure`, `tools/ops`는 수정하지 않았다. 후속 요청으로 `deploy/live-check` 격리 배포를 추가했다.
+후속 정식 배포 요청으로 `.github`, `deploy`, `tools/ops`를 실제 수집기 경로에 연결했다. 인프라 리소스 추가 없이 기존 EC2·Secrets Manager·전달 역할을 사용한다.
 
 ## 실행 코드와 설정
 
@@ -16,7 +16,9 @@
 | cleanup / chat-exporter | 각 `<role>/cmd` | 원본 코드 보존; 첫 제품에서는 실행하지 않음 |
 
 - 공통 `CHANNEL_ALLOWLIST=soop:h66rogi`. 한 SOOP ID만 허용하며 미설정은 수집 대상 없음이다.
-- 기존 `DATABASE_URL`, `REDIS_ADDR`, 역할별 worker/leader 설정을 사용한다. 실제 값은 이 저장소에 넣지 않는다.
+- 기존 `DATABASE_URL`, `REDIS_ADDR`, `REDIS_PASSWORD`, 역할별 worker/leader 설정을 사용한다. 실제 값은 이 저장소에 넣지 않는다.
+- Go 역할·migrate와 cookie-auth는 `ROLE_ENV_FILE`의 `KEY=value`를 셸 실행 없이 읽는다. 이미 설정된 환경변수가 우선한다.
+  정식 배포는 역할별 파일을 mount하며 SOOP ID/PW는 cookie-auth만 읽는다.
 - discover·worker의 `SOOP_COOKIE_FILE`: cookie-auth가 원자 교체하는 snapshot의 **절대 경로**.
 - worker의 `DONATION_SPOOL_DIR`: 지속 디스크의 절대 디렉터리. 단일 writer lock, 0700 디렉터리/0600 파일.
   현재 한도는 1GiB 및 1만 파일이며 파일 최대 재생 연령은 30일이다.
@@ -53,10 +55,11 @@ Go 빌드는 `./<role>/cmd`이며 기존 `./cmd/<role>` health-only 골격과 �
 `go run ./shared/cmd/migrate`를 추가했다. **기존 배포 marker migration과 원장을 덮어쓰지 않는다.**
 동시 실행은 advisory lock으로 직렬화하고 SQL/체크섬 기록을 한 transaction으로 적용한다.
 테스트는 빈 격리 schema에서 재실행까지 확인했다. 이전 별도 migration 도구로 source SQL을 이미 적용한 DB에 대한
-자동 원장 채택은 지원하지 않는다. 그 경우 상태를 대조해 CI/CD 작업에서 연결해야 한다.
+자동 원장 채택은 지원하지 않는다. 그 경우 적용 SQL/원장 상태를 먼저 대조해야 한다.
+정식 배포는 marker migration 뒤 `app-migrate`로 001~006을 적용하며 실제 적용을 확인했다.
 
 반입한 003의 원본 전용 DB role/pg_partman 설치는 제거하고 보존된 history 테이블에 일반 default partition을 둔다.
-기존 운영에 적용된 migration을 교체한 작업이 아니라 아직 연결하지 않은 원본 앱 스키마의 제품용 조정이다.
+이 조정은 첫 앱 migration 적용 전에 수행했다. 정식 배포에 적용된 SQL/체크섬은 이후 덮어쓰지 않고 새 migration을 추가한다.
 006에는 채널 상태/소유권 grant/후원 journal/outbox/소비자 cursor/멱등 요청/복구 감사 테이블이 들어간다.
 ClickHouse는 최초 제품 실행에서 사용하지 않는다.
 
@@ -86,7 +89,8 @@ DB 복원 후 **worker를 다시 시작하기 전에** `shared/cmd/rotate-genera
 
 spool `.pending`/checksum 오류/full은 자동 삭제하지 않는다. 수집 상태와 보관 파일을 점검한 뒤 복구한다.
 grant의 단조 시계 deadline을 넘으면 새 수락을 중단한다. 이미 저장된 파일은 원래 grant/수락 시점을 DB 기록과 대조한다.
-호스트·DB 시계 동기화가 필요하며 실제 강제 종료/EC2 교체 시험은 별도다.
+호스트·DB 시계 동기화가 필요하다. 격리 worker 강제 종료 후 재수신과 정식 EC2 재부팅은 확인했으며,
+백업 복원·EC2 교체 후 데이터 보존 시험은 남아 있다.
 
 ## 코드 검증 재실행
 
@@ -99,8 +103,9 @@ grant의 단조 시계 deadline을 넘으면 새 수락을 중단한다. 이미 
 
 ## 실배포에서 확인된 연결 차이
 
-- 역할 secret file 로더 `ROLE_ENV_FILE`과 `REDIS_PASSWORD`를 연결해야 한다.
+- 역할 secret file 로더 `ROLE_ENV_FILE`과 `REDIS_PASSWORD`를 연결했다.
 - Redis orphan cleanup은 STREAM 타입만 스캔해야 한다. generation 문자열을 지우면 채팅 재생 cursor가 깨진다.
 - cookie-auth Chromium의 Ubuntu user namespace 제한은 전용 AppArmor profile로 풀었다. sandbox는 꺼두지 않는다.
-- 이번 후보 스택은 별도 systemd에서 감독하지만 재부팅 secret 복원/인증서 자동 회전은 정식 배포 과정에 연결해야 한다.
+- worker의 원본 handoff 대기 상한은 135초다. 실제 종료 유예는 Compose/systemd 제한이 먼저 적용될 수 있으므로 전체 drain 완료를 보장하는 값으로 해석하지 않는다.
+- 정식 스택은 역할별 systemd와 boot secret 복원을 사용한다. 서버 leaf 자동 갱신을 연결했고 실제 재부팅과 인증서 교체 후 peer RPC를 검증했다.
 - 주루마블 EC2의 테스트 inbox는 실제 소비 구현이 아니다. 소비자가 DB inbox+cursor를 transaction으로 저장한 뒤 ACK하고, eventId로 중복 게임 효과를 막는 구현이 남아 있다.

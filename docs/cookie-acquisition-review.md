@@ -1,5 +1,8 @@
 # 쿠키 획득 컴포넌트 조사와 반영
 
+이 문서는 조사 당시의 근거다. 현재 실행 방법은 [컴포넌트 README](../cookie-auth/README.md),
+실제 로그인·연령제한 방송·정식 배포 검증은 [구현 상태](implementation-status.md)를 따른다.
+
 조사: 2026-09-21. 사용자 지정 참고는 `dylabs/tongnamu_temp`이며
 고정 SHA는 `23f75cc92e1a04606c658318d20cbfeee6f6291f`다.
 접근 가능한 private 저장소로 확인했고, 원본 clone은 작업 레포 밖에 보관했다.
@@ -33,7 +36,7 @@
 
 Python 컴포넌트는 새로 작성했으며 private 원본을 복제/개작해 반입한 파일은 없다.
 공개 collector의 수정 파일은 기존 source manifest에 변경 사유·현재 해시를 추가한다.
-원본 8개 Go 모듈·lifecycle·manager는 유지한다. CI/CD 파일은 변경하지 않는다.
+원본 8개 Go 모듈·lifecycle·manager는 유지했다. 조사/초기 컴포넌트 작성 단계에서는 CI/CD 파일을 변경하지 않았으며, 후속 배포 단계에서 정식 실행 경로를 연결했다.
 
 Selenium 사용 방식은 [명시적 대기 문서](https://www.selenium.dev/documentation/webdriver/waits/)와
 [쿠키 API 문서](https://www.selenium.dev/documentation/webdriver/interactions/cookies/)도 확인했다.
@@ -47,4 +50,4 @@ Selenium 사용 방식은 [명시적 대기 문서](https://www.selenium.dev/doc
 [soop4j](https://github.com/zzik2/soop4j)의 문서에서 RESULT=0 방송 종료 구분도 대조했다.
 이 근거로 기본 login/player URL을 `.com`으로 맞추고, 0/1/-6 외의 응답과 빈 CHATNO를 성공이나 종료로 추정하지 않는다.
 쿠키 domain은 그대로 검사하며 도메인 간 쿠키 값 복제는 하지 않는다.
-이는 공개 구현을 대조한 정적 근거이며 현재 계정·실방송에서 확인한 플랫폼 계약은 아니다.
+이는 당시 공개 구현을 대조한 정적 근거다. 이후 다른 연령제한 방송에서 익명 -6/쿠키 1과 join·채팅을 실증했다. 관측하지 않은 응답까지 플랫폼 계약으로 확정하지 않는다.

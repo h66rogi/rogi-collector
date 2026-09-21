@@ -2,8 +2,10 @@
 
 기존 health-only 배포와 분리한 `rogi-collector-live-check` Compose 프로젝트다.
 사용자가 배포·실방송 검증을 요청해 추가했다. 원본 collector 역할 4개와 PostgreSQL·Redis·cookie-auth를 실행한다.
-정식 CI release, 재부팅 시 secret 준비, 인증서 자동 회전을 대체하지 않는다.
-이번 검증용 서버/소비자 인증서는 발급 후 7일 유효하므로 그 전에 교체해야 한다.
+2026-09-21 정식 전환 때 이 스택은 중지·비활성화했다. 데이터는 보존하고 정식 DB에 합치지 않았다.
+현재 실행 안내는 [정식 배포](../../docs/deployment-production.md), 당시 결과는 [검증 기록](../../docs/implementation-status.md)을 따른다.
+아래는 격리 시험 재현용 절차다. 정식 CI release·재부팅 비밀 복원·인증서 자동 회전을 대체하지 않는다.
+당시 검증용 인증서는 발급 후 7일 유효했다. 재시험 시 유효한 격리 인증서를 준비하고 운영 7443 포트와 동시에 충돌시키지 않는다.
 
 ## 준비와 시작
 

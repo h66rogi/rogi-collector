@@ -45,7 +45,7 @@ type queryStore interface {
 }
 
 // RediscoverClient triggers single-channel re-detection on the discover service.
-// At runtime this is a thin transport wrapper; tests inject a stub.
+// It belongs to the retained original admin API, not the collector v1 runtime.
 type RediscoverClient interface {
 	ForceRediscover(ctx context.Context, platform, channelID string) (RediscoverResult, error)
 }
@@ -63,7 +63,8 @@ type historyQueryStore interface {
 	ListChannelBroadcastHistoryByRange(ctx context.Context, platform model.Platform, channelID string, from, to time.Time, limit int) ([]store.BroadcastSession, int, error)
 }
 
-// Server wraps a gRPC server that implements ChatAdminService and ChatQueryService.
+// Server owns the shared gRPC start/stop lifecycle. NewServer registers the
+// retained original APIs; NewProductServer registers only collector v1.
 type Server struct {
 	chatv1.UnimplementedChatAdminServiceServer
 	chatv1.UnimplementedChatQueryServiceServer
@@ -77,7 +78,8 @@ type Server struct {
 	logger           *slog.Logger
 }
 
-// NewServer creates a new gRPC query server.
+// NewServer constructs the retained API-key ChatAdmin/ChatQuery server.
+// The product entrypoint uses NewProductServer with mTLS instead.
 func NewServer(pgStore *store.PgStore, redisStore *store.RedisStore, historyStore *store.PgHistoryStore, rediscover RediscoverClient, port int, apiKey string, enableReflection bool, logger *slog.Logger) *Server {
 	s := &Server{
 		pgStore:          pgStore,

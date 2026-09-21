@@ -12,7 +12,8 @@ import (
 	"github.com/h66rogi/rogi-collector/worker/internal/pipeline"
 )
 
-// EnableDonations extends the existing Manager, never a second connection manager.
+// EnableDonations attaches durable donation acceptance to the Manager
+// before observations can enter the bounded chat pipeline.
 func (m *Manager) EnableDonations(pg *store.PgStore, spool *pipeline.DonationSpool) {
 	m.collectionStore = pg
 	m.donationSpool = spool

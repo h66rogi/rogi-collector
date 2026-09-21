@@ -1,3 +1,5 @@
+# Historical health-only preview; not runnable with the current product images.
+# Use compose.production.yaml with docs/deployment-production.md for deployment.
 name: ${COMPOSE_PROJECT_NAME:-rogi-collector-preview}
 x-role: &role
   restart: unless-stopped

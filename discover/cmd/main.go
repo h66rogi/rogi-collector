@@ -375,9 +375,9 @@ func constantTimeKeyMatch(provided, expected string) bool {
 	return expected != "" && len(provided) == len(expected) && subtle.ConstantTimeCompare([]byte(provided), []byte(expected)) == 1
 }
 
-// parseAllowlist parses CHANNEL_ALLOWLIST env value.
-// Format: "chzzk:channelId1,chzzk:channelId2,soop:channelId3"
-// Returns an empty set when no valid channels are configured (collect nothing).
+// parseAllowlist retains the original platform:channel parser. The product
+// entrypoint first validates a single SOOP channel through collection.Channel.
+// An empty result collects nothing; it never enables platform-wide discovery.
 func parseAllowlist(raw string, logger *slog.Logger) map[model.Platform]map[string]bool {
 	raw = strings.TrimSpace(raw)
 	if raw == "" {

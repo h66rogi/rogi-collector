@@ -22,3 +22,24 @@ contracts/fixtures
 **/*.tfvars
 **/*.tfvars.json
 **/backend.hcl
+
+# Git ignore rules do not apply to Docker build contexts.
+**/.env
+**/.env.*
+**/*.env
+!**/.env.example
+**/*.pem
+**/*.key
+**/*.p12
+**/*.dump
+**/*.dump.gz
+**/*.log
+**/.aws
+**/.ssh
+**/.venv
+**/cookies*.json*
+cookie-auth/runtime
+collector-runtime
+.references
+private-imports
+local-audit

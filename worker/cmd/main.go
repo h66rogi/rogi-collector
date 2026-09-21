@@ -291,7 +291,7 @@ func main() {
 	draining.Store(true)
 	mgr.SetDraining()
 
-	// 2. Mark not ready for K8s.
+	// 2. Mark the readiness probe unavailable before draining.
 	runtimeServer.SetReady(false)
 	workerMetrics.Ready.Set(0)
 
@@ -314,7 +314,7 @@ func main() {
 	mgr.DisconnectAll()
 
 	// 6. Wait for handoffs.
-	drainTimeout := 135 * time.Second // terminationGracePeriod(150) - 15s margin
+	drainTimeout := 135 * time.Second // Original handoff limit; the host/container stop deadline may be shorter.
 	if err := waitForHandoffs(context.Background(), pgStore, mgr, workerID, drainTimeout); err != nil {
 		slog.Warn("drain incomplete, force disconnecting", "error", err)
 		mgr.DisconnectAll()
@@ -352,11 +352,10 @@ type commandHandlerFunc func(ctx context.Context, cs store.ChannelStore, mgr *wo
 
 // commandDispatcher decouples the PubSub reader from blocking connect
 // handlers. Connect commands are sent to an internal queue and drained by
-// a fixed-size worker pool. This solves two problems:
-//   - The PubSub reader never blocks, so disconnect commands are processed
-//     immediately even during a connect storm.
-//   - Connect and disconnect commands for the same channel are serialised
-//     via a per-channel lock, preventing ordering inversions.
+// a fixed-size worker pool. Enqueueing a connect does not wait for the network.
+// Other commands run inline and may wait for an in-flight handler on the same
+// channel. The per-channel lock prevents concurrent handlers, but does not
+// guarantee FIFO ordering between queued connects and inline commands.
 type commandDispatcher struct {
 	connectQueue chan store.WorkerCommand
 	sem          chan struct{}
@@ -387,8 +386,8 @@ func (d *commandDispatcher) channelMu(platform, channelID string) *sync.Mutex {
 	return mu
 }
 
-// dispatch enqueues connect commands or runs disconnect commands inline.
-// Neither path blocks the caller.
+// dispatch enqueues connects without waiting, dropping commands when the queue
+// is full. Other commands run inline and may block on the channel lock or handler.
 func (d *commandDispatcher) dispatch(
 	ctx context.Context,
 	channelStore store.ChannelStore,

@@ -1,5 +1,6 @@
-// Package grpcauth provides small authentication interceptors for internal
-// gRPC services. Transport security remains the deployer's responsibility.
+// Package grpcauth provides internal gRPC authentication helpers. These API-key
+// interceptors support the retained original APIs; collector v1 uses ServerTLS
+// and certificate URI authorization in the product query service.
 package grpcauth
 
 import (
