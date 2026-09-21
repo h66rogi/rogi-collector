@@ -63,8 +63,12 @@ $systemctl_bin daemon-reload
 $systemctl_bin restart rogi-collector.target
 for role in postgres redis discover coordinator worker query; do $systemctl_bin is-active --quiet "rogi-collector-role@$role.service"; done
 for role in discover coordinator worker query; do
-  body=$($docker_bin compose --env-file "$config_root/runtime.env" -f deploy/compose.production.yaml exec -T "$role" /service -healthcheck http://127.0.0.1:8080/health >/dev/null && echo ok)
-  [ "$body" = ok ] || { echo "$role health smoke failed" >&2; exit 70; }
+  healthy=false
+  for attempt in $(seq 1 60);do
+    if $docker_bin compose --env-file "$config_root/runtime.env" -f deploy/compose.production.yaml exec -T "$role" /service -healthcheck http://127.0.0.1:8080/health >/dev/null 2>&1;then healthy=true;break;fi
+    sleep 1
+  done
+  [ "$healthy" = true ] || { echo "$role health smoke failed" >&2; exit 70; }
 done
 $install_bin -m 0600 "$manifest" "$runtime_root/deployed-release.json"
 echo "collector release $release_id activated; profile feedback is health-only and gRPC 7443 remains unavailable"

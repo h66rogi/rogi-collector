@@ -54,5 +54,6 @@ python3 "$root/tools/ops/test_fetch_release.py" >/dev/null
 python3 "$root/tools/ops/test_load_secrets_aws.py" >/dev/null
 python3 "$root/tools/ops/test_upload_backup_s3.py" >/dev/null
 python3 "$root/tools/ops/test_registry_auth.py" >/dev/null
+python3 "$root/tools/ops/test_production_status.py" >/dev/null
 "$root/tools/ops/test_validate_runtime_secrets.sh" >/dev/null
 echo 'collector production runtime static tests passed (no Docker or EC2 execution)'
