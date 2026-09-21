@@ -9,7 +9,7 @@ AssertPathIsMountPoint=/srv/rogi-collector
 Type=oneshot
 RemainAfterExit=yes
 ExecStart=/usr/local/lib/rogi-collector/prepare-host.sh
-ExecStop=/usr/bin/rm -f /run/rogi-collector/postgres-admin-password /run/rogi-collector/postgres-migrate-password /run/rogi-collector/migrate.pgpass /run/rogi-collector/redis-password /run/rogi-collector/discover.env /run/rogi-collector/coordinator.env /run/rogi-collector/worker.env /run/rogi-collector/query.env
+ExecStop=/usr/local/lib/rogi-collector/load-secrets-aws.py --cleanup /run/rogi-collector
 PrivateTmp=yes
 NoNewPrivileges=yes
 

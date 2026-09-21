@@ -23,10 +23,11 @@ def safe_extract(archive,target):
    if path.is_absolute() or '..' in path.parts or member.issym() or member.islnk() or not(member.isdir() or member.isfile()):raise FetchError('unsafe release archive entry')
   bundle.extractall(target,filter='data')
 
-def deployed_healthy(receipt:Path,destination:Path,manifest:dict)->bool:
+def deployed_healthy(receipt:Path,destination:Path,manifest:dict,current:Path|None=None)->bool:
  try:
   saved=read_json(receipt)
   if saved.get('sourceSha')!=manifest.get('sourceSha') or saved.get('images')!=manifest.get('images') or not destination.exists():return False
+  if current is not None and (not current.exists() or current.resolve()!=destination.resolve()):return False
   units=['rogi-collector.target']+[f'rogi-collector-role@{role}.service' for role in ('postgres','redis','discover','coordinator','worker','query')]
   return all(subprocess.run(['systemctl','is-active','--quiet',unit],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode==0 for unit in units)
  except (OSError,ValueError,json.JSONDecodeError):return False
@@ -72,7 +73,7 @@ def main():
  try:
   app,manifest=stage(a.source,a.overlay,a.releases_root,a.run_root)
   receipt=Path('/run/rogi-collector/deployed-release.json'); candidate=read_json(manifest)
-  if deployed_healthy(receipt,app,candidate):return 0
+  if deployed_healthy(receipt,app,candidate,Path('/opt/rogi-collector/app/current')):return 0
   os.execv('/usr/local/lib/rogi-collector/deploy.sh',['deploy.sh','--manifest',str(manifest)])
  except (FetchError,OSError,ValueError,json.JSONDecodeError) as e:print(f'release fetch failed: {e}',file=__import__('sys').stderr);return 1
 if __name__=='__main__':raise SystemExit(main())

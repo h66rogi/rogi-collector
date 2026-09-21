@@ -17,4 +17,4 @@ jobs:
       - run: make test
       - run: make build
       - run: ./tools/ops/test.sh
-      - run: python3 tools/ops/test_fetch_release.py
+      - run: python3 tools/ops/test_fetch_release.py && python3 tools/ops/test_load_secrets_aws.py && python3 tools/ops/test_upload_backup_s3.py

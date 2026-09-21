@@ -5,7 +5,7 @@ source_root=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd -P)
 library_root=/usr/local/lib/rogi-collector
 unit_root=/etc/systemd/system
 install -d -m 0755 "$library_root" "$unit_root"
-for file in deploy.sh status.sh prepare-host.sh validate-manifest.mjs render-runtime-env.mjs fetch-release.py production-status.py backup-postgres.sh; do
+for file in deploy.sh status.sh prepare-host.sh validate-manifest.mjs render-runtime-env.mjs fetch-release.py production-status.py backup-postgres.sh load-secrets-aws.py upload-backup-s3.py; do
   install -m 0755 "$source_root/tools/ops/$file" "$library_root/$file"
 done
 for unit in rogi-collector-host-ready.service rogi-collector-migrate.service rogi-collector-role@.service rogi-collector-update.service rogi-collector-update.timer rogi-collector-backup.service rogi-collector-backup.timer rogi-collector.target; do

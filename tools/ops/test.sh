@@ -16,11 +16,13 @@ cp "$root/deploy/systemd/rogi-collector-backup.timer" "$tmp/deploy/systemd/rogi-
 cp "$root/tools/ops/fetch-release.py" "$tmp/tools/ops/fetch-release.py"
 cp "$root/tools/ops/production-status.py" "$tmp/tools/ops/production-status.py"
 cp "$root/tools/ops/backup-postgres.sh" "$tmp/tools/ops/backup-postgres.sh"
+cp "$root/tools/ops/load-secrets-aws.py" "$tmp/tools/ops/load-secrets-aws.py"
+cp "$root/tools/ops/upload-backup-s3.py" "$tmp/tools/ops/upload-backup-s3.py"
 compose_sha=$(sha256sum "$tmp/deploy/compose.production.yaml" | awk '{print $1}')
 migration_sha=$(sha256sum "$tmp/deploy/migrations/001_foundation.sql" | awk '{print $1}')
 runner_sha=$(sha256sum "$tmp/deploy/run-migrations.sh" | awk '{print $1}')
 initdb_sha=$(sha256sum "$tmp/deploy/initdb/010_migrate_role.sh" | awk '{print $1}')
-runtime_json=$(node -e "const fs=require('fs'),crypto=require('crypto'),root=process.argv[1],paths=process.argv.slice(2);console.log(JSON.stringify(paths.map(path=>({path,sha256:crypto.createHash('sha256').update(fs.readFileSync(root+'/'+path)).digest('hex')}))))" "$tmp" 'deploy/run-migrations.sh' 'deploy/initdb/010_migrate_role.sh' 'deploy/install-runtime.sh' 'deploy/systemd/rogi-collector-update.service' 'deploy/systemd/rogi-collector-update.timer' 'deploy/systemd/rogi-collector-backup.service' 'deploy/systemd/rogi-collector-backup.timer' 'tools/ops/fetch-release.py' 'tools/ops/production-status.py' 'tools/ops/backup-postgres.sh')
+runtime_json=$(node -e "const fs=require('fs'),crypto=require('crypto'),root=process.argv[1],paths=process.argv.slice(2);console.log(JSON.stringify(paths.map(path=>({path,sha256:crypto.createHash('sha256').update(fs.readFileSync(root+'/'+path)).digest('hex')}))))" "$tmp" 'deploy/run-migrations.sh' 'deploy/initdb/010_migrate_role.sh' 'deploy/install-runtime.sh' 'deploy/systemd/rogi-collector-update.service' 'deploy/systemd/rogi-collector-update.timer' 'deploy/systemd/rogi-collector-backup.service' 'deploy/systemd/rogi-collector-backup.timer' 'tools/ops/fetch-release.py' 'tools/ops/production-status.py' 'tools/ops/backup-postgres.sh' 'tools/ops/load-secrets-aws.py' 'tools/ops/upload-backup-s3.py')
 digest=$(printf 'a%.0s' $(seq 1 64))
 cat > "$tmp/manifest.json" <<EOF
 {"schemaVersion":1,"product":"rogi-collector","profile":"feedback","sourceSha":"1111111111111111111111111111111111111111","releaseId":"test-release","contractVersion":"v1","composeSha256":"$compose_sha","runtimeFiles":$runtime_json,"images":{"postgres":"registry.example/test/postgres@sha256:$digest","redis":"registry.example/test/redis@sha256:$digest","discover":"registry.example/test/discover@sha256:$digest","coordinator":"registry.example/test/coordinator@sha256:$digest","worker":"registry.example/test/worker@sha256:$digest","query":"registry.example/test/query@sha256:$digest"},"migrations":[{"path":"deploy/migrations/001_foundation.sql","sha256":"$migration_sha"}],"runtimeNonSecret":{"composeProjectName":"rogi-collector","dataRoot":"/srv/rogi-collector","secretsRoot":"/run/rogi-collector","releaseRoot":"/opt/rogi-collector/app/current","postgresDatabase":"collector","postgresAdminUser":"collector_admin","postgresMigrateUser":"collector_migrate","capabilities":{"grpc7443":"unavailable-health-only"}}}
@@ -50,9 +52,11 @@ grep -q 'AssertPathIsMountPoint=/srv/rogi-collector' "$root/deploy/systemd/rogi-
 grep -q 'manifest must be inside the selected release bundle root' "$root/tools/ops/deploy.sh"
 grep -q 'create_host_path: false' "$root/deploy/compose.production.yaml"
 ! grep -q 'find /run/rogi-collector .* -delete' "$root/deploy/systemd/rogi-collector-host-ready.service"
-grep -q 'ExecStop=/usr/bin/rm -f /run/rogi-collector/postgres-admin-password' "$root/deploy/systemd/rogi-collector-host-ready.service"
+grep -q 'ExecStop=/usr/local/lib/rogi-collector/load-secrets-aws.py --cleanup /run/rogi-collector' "$root/deploy/systemd/rogi-collector-host-ready.service"
 ! grep -q -- '--attach %i' "$root/deploy/systemd/rogi-collector-role@.service"
 "$root/tools/ops/test-command-order.sh" >/dev/null
 "$root/tools/ops/test-migration-runner.sh" >/dev/null
 python3 "$root/tools/ops/test_fetch_release.py" >/dev/null
+python3 "$root/tools/ops/test_load_secrets_aws.py" >/dev/null
+python3 "$root/tools/ops/test_upload_backup_s3.py" >/dev/null
 echo 'collector production runtime static tests passed (no Docker or EC2 execution)'

@@ -15,6 +15,20 @@ class FetchReleaseTest(unittest.TestCase):
    with self.subTest(tag_ok=tag_ok,run_ok=run_ok):
     args=self.fixture(tag_ok,run_ok)
     with self.assertRaises(module.FetchError):module.stage(*args[:4])
+ def test_descendant_and_health_guards(self):
+  prior='a'*40;candidate='b'*40;old=module.download
+  module.download=lambda url,limit:json.dumps({'status':'ahead'}).encode()
+  try:module.require_descendant('owner/repo',prior,candidate)
+  finally:module.download=old
+  module.download=lambda url,limit:json.dumps({'status':'behind'}).encode()
+  try:
+   with self.assertRaises(module.FetchError):module.require_descendant('owner/repo',prior,candidate)
+  finally:module.download=old
+  with tempfile.TemporaryDirectory() as td:
+   root=Path(td);receipt=root/'receipt';app=root/'app';app.mkdir();manifest={'sourceSha':candidate,'images':{'x':'y'}};receipt.write_text(json.dumps(manifest));oldrun=module.subprocess.run
+   module.subprocess.run=lambda *a,**k:type('R',(),{'returncode':0})()
+   try:self.assertTrue(module.deployed_healthy(receipt,app,manifest));self.assertFalse(module.deployed_healthy(receipt,app,{'sourceSha':prior,'images':{'x':'y'}}))
+   finally:module.subprocess.run=oldrun
  def test_archive_rejects_parent_traversal(self):
   with tempfile.TemporaryDirectory() as td:
    root=Path(td);archive=root/'bad.tar.gz'

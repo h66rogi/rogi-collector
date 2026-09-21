@@ -2,7 +2,7 @@ name: release
 on:
   push: {branches: [main]}
   workflow_dispatch:
-permissions: {contents: write, packages: write}
+permissions: {contents: write, packages: write, id-token: write, attestations: write}
 concurrency: {group: production-release, cancel-in-progress: false}
 jobs:
   publish:
@@ -15,7 +15,7 @@ jobs:
         with: {go-version: '1.27.1', cache: true}
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with: {node-version: 22.22.0, cache: npm}
-      - run: npm ci && make test && make build && ./tools/ops/test.sh && python3 tools/ops/test_fetch_release.py
+      - run: npm ci && make test && make build && ./tools/ops/test.sh && python3 tools/ops/test_fetch_release.py && python3 tools/ops/test_load_secrets_aws.py && python3 tools/ops/test_upload_backup_s3.py && python3 tools/ops/test_load_secrets_aws.py && python3 tools/ops/test_upload_backup_s3.py
       - id: release_state
         name: Preserve an existing immutable release
         env: {GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'}
@@ -104,6 +104,11 @@ jobs:
           IMAGE_WORKER: 'ghcr.io/${{ steps.names.outputs.owner }}/rogi-collector-worker@${{ steps.worker.outputs.digest }}'
           IMAGE_QUERY: 'ghcr.io/${{ steps.names.outputs.owner }}/rogi-collector-query@${{ steps.query.outputs.digest }}'
         run: node tools/release/build-bundle.mjs
+      - name: Attest release bundle provenance
+        if: steps.release_state.outputs.exists != 'true'
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3.0.0
+        with:
+          subject-path: dist/release/release-bundle.tar.gz
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         if: steps.release_state.outputs.exists != 'true'
         with: {name: rogi-collector-production-release, path: 'dist/release/*', if-no-files-found: error, retention-days: 30}

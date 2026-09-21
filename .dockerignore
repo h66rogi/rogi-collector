@@ -11,3 +11,14 @@ _references
 node_modules
 contracts/typescript/dist
 contracts/fixtures
+
+# Keep local/private runtime and infrastructure data out of build contexts.
+**/__pycache__
+**/*.pyc
+**/dist-test
+**/.terraform
+**/*.tfstate*
+**/*.tfplan
+**/*.tfvars
+**/*.tfvars.json
+**/backend.hcl

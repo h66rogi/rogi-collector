@@ -17,7 +17,7 @@ exact(manifest.releaseId, /^[A-Za-z0-9._-]{1,96}$/, 'releaseId');
 exact(manifest.contractVersion, /^v[0-9]+(?:\.[0-9]+){0,2}$/, 'contractVersion');
 exact(manifest.composeSha256, /^[0-9a-f]{64}$/, 'composeSha256');
 const initdbNames = (await readdir(resolve(root, 'deploy/initdb'), {withFileTypes: true})).filter(item => item.isFile()).map(item => `deploy/initdb/${item.name}`).sort();
-const requiredRuntimePaths = ['deploy/run-migrations.sh', 'deploy/install-runtime.sh', 'deploy/systemd/rogi-collector-update.service', 'deploy/systemd/rogi-collector-update.timer', 'deploy/systemd/rogi-collector-backup.service', 'deploy/systemd/rogi-collector-backup.timer', 'tools/ops/fetch-release.py', 'tools/ops/production-status.py', 'tools/ops/backup-postgres.sh', ...initdbNames];
+const requiredRuntimePaths = ['deploy/run-migrations.sh', 'deploy/install-runtime.sh', 'deploy/systemd/rogi-collector-update.service', 'deploy/systemd/rogi-collector-update.timer', 'deploy/systemd/rogi-collector-backup.service', 'deploy/systemd/rogi-collector-backup.timer', 'tools/ops/fetch-release.py', 'tools/ops/production-status.py', 'tools/ops/backup-postgres.sh', 'tools/ops/load-secrets-aws.py', 'tools/ops/upload-backup-s3.py', ...initdbNames];
 const requiredRuntimeFiles = new Set(requiredRuntimePaths);
 if (!Array.isArray(manifest.runtimeFiles) || manifest.runtimeFiles.length !== requiredRuntimeFiles.size) fail('runtimeFiles must contain the exact executable allowlist');
 for (const item of manifest.runtimeFiles) {

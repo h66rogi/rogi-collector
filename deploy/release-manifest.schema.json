@@ -14,8 +14,8 @@
     "contractVersion": {"type": "string", "pattern": "^v[0-9]+(?:\\.[0-9]+){0,2}$"},
     "composeSha256": {"$ref": "#/$defs/sha256"},
     "runtimeFiles": {
-      "type": "array", "minItems": 10, "maxItems": 10,
-      "items": {"type": "object", "additionalProperties": false, "required": ["path", "sha256"], "properties": {"path": {"enum": ["deploy/run-migrations.sh", "deploy/initdb/010_migrate_role.sh", "deploy/install-runtime.sh", "deploy/systemd/rogi-collector-update.service", "deploy/systemd/rogi-collector-update.timer", "deploy/systemd/rogi-collector-backup.service", "deploy/systemd/rogi-collector-backup.timer", "tools/ops/fetch-release.py", "tools/ops/production-status.py", "tools/ops/backup-postgres.sh"]}, "sha256": {"$ref": "#/$defs/sha256"}}}
+      "type": "array", "minItems": 12, "maxItems": 12,
+      "items": {"type": "object", "additionalProperties": false, "required": ["path", "sha256"], "properties": {"path": {"enum": ["deploy/run-migrations.sh", "deploy/initdb/010_migrate_role.sh", "deploy/install-runtime.sh", "deploy/systemd/rogi-collector-update.service", "deploy/systemd/rogi-collector-update.timer", "deploy/systemd/rogi-collector-backup.service", "deploy/systemd/rogi-collector-backup.timer", "tools/ops/fetch-release.py", "tools/ops/production-status.py", "tools/ops/backup-postgres.sh", "tools/ops/load-secrets-aws.py", "tools/ops/upload-backup-s3.py"]}, "sha256": {"$ref": "#/$defs/sha256"}}}
     },
     "images": {
       "type": "object", "additionalProperties": false,

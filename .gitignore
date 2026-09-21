@@ -34,3 +34,7 @@ coverage/
 /node_modules/
 /contracts/typescript/dist/
 /contracts/fixtures/
+
+# Generated Python runtime checks.
+__pycache__/
+*.pyc
