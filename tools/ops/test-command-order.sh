@@ -26,6 +26,13 @@ EOF
 cat > "$tmp/bin/systemctl" <<'EOF'
 #!/bin/sh
 echo "systemctl $*" >> "$COMMAND_LOG"
+[ "${TRANSIENT_UNITS:-}" = 1 ] && [ "$1" = is-active ] && case "$*" in
+ *rogi-collector-role@discover.service*)
+  count_file=${COMMAND_LOG}.discover-count
+  count=$(cat "$count_file" 2>/dev/null || echo 0);count=$((count+1));echo "$count" > "$count_file"
+  [ "$count" -lt 3 ] && exit 3
+ ;;
+esac
 exit 0
 EOF
 cat > "$tmp/bin/docker" <<'EOF'
@@ -54,6 +61,7 @@ export FAIL_MIGRATE=1
 if "$root/tools/ops/deploy.sh" --manifest "$release/manifest.json" >/dev/null 2>&1;then echo 'migration failure was accepted' >&2;exit 1;fi
 [ ! -e "$prefix/usr/local/lib/rogi-collector/deploy.sh" ] || { echo 'runtime helper changed before successful migration' >&2;exit 1; }
 unset FAIL_MIGRATE
+export TRANSIENT_UNITS=1
 > "$COMMAND_LOG"
 "$root/tools/ops/deploy.sh" --manifest "$release/manifest.json" >/dev/null
 [ ! -e "$prefix/run/rogi-collector/docker-auth" ] || { echo 'registry credentials were not removed' >&2;exit 1; }
@@ -63,4 +71,5 @@ pull_line=$(grep -n 'docker .* compose .* pull' "$COMMAND_LOG" | cut -d: -f1)
 migrate_line=$(grep -n 'docker compose .* run --rm migrate' "$COMMAND_LOG" | cut -d: -f1)
 target_line=$(grep -n 'systemctl restart rogi-collector.target' "$COMMAND_LOG" | cut -d: -f1)
 [ "$host_line" -lt "$pull_line" ] && [ "$pull_line" -lt "$migrate_line" ] && [ "$migrate_line" -lt "$target_line" ]
+[ "$(grep -c 'systemctl start rogi-collector.target' "$COMMAND_LOG")" -ge 3 ] || { echo 'transient unit readiness was not retried' >&2;exit 1; }
 echo 'collector deploy fake-command order passed'

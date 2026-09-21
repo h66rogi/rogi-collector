@@ -46,6 +46,7 @@ grep -q 'AssertPathIsMountPoint=/srv/rogi-collector' "$root/deploy/systemd/rogi-
 grep -q '"\$data_root/backups"' "$root/tools/ops/prepare-host.sh"
 grep -q 'manifest must be inside the selected release bundle root' "$root/tools/ops/deploy.sh"
 grep -q '\$config_root/deployed-release.json' "$root/tools/ops/deploy.sh"
+grep -q 'collector supervised units did not become active' "$root/tools/ops/deploy.sh"
 grep -q "Path('/etc/rogi-collector/deployed-release.json')" "$root/tools/ops/fetch-release.py"
 grep -q 'create_host_path: false' "$root/deploy/compose.production.yaml"
 ! grep -q 'find /run/rogi-collector .* -delete' "$root/deploy/systemd/rogi-collector-host-ready.service"

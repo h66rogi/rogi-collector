@@ -61,7 +61,19 @@ $install_bin -m 0600 "$runtime_root/runtime.env.new" "$config_root/runtime.env"
 rm "$runtime_root/runtime.env.new" "$runtime_root/candidate.env"
 $systemctl_bin daemon-reload
 $systemctl_bin restart rogi-collector.target
-for role in postgres redis discover coordinator worker query; do $systemctl_bin is-active --quiet "rogi-collector-role@$role.service"; done
+units_ready=false
+for attempt in $(seq 1 60);do
+  $systemctl_bin start rogi-collector.target >/dev/null 2>&1 || true
+  if $systemctl_bin is-active --quiet rogi-collector.target;then
+    units_ready=true
+    for role in postgres redis discover coordinator worker query;do
+      if ! $systemctl_bin is-active --quiet "rogi-collector-role@$role.service";then units_ready=false;break;fi
+    done
+    [ "$units_ready" = true ] && break
+  fi
+  sleep 1
+done
+[ "$units_ready" = true ] || { echo 'collector supervised units did not become active' >&2; exit 70; }
 for role in discover coordinator worker query; do
   healthy=false
   for attempt in $(seq 1 60);do
