@@ -1,0 +1,1397 @@
+{
+  "sourceRepository": "https://github.com/dylabs/meloming-chat-collector",
+  "sourceCommit": "85b8aa1dd9284ded8717c97dc6aee556b5bcf70a",
+  "license": "AGPL-3.0-only",
+  "method": "Explicit file allowlist; original source and directory structure retained; no Git history, CI, Dockerfile or private source imported",
+  "files": [
+    {
+      "sourcePath": "DISCLAIMER.md",
+      "targetPath": "DISCLAIMER.md",
+      "sourceSha256": "f4b602bbd966e3c9701d00e587ecf17a2e42e278b12ace393480fa33e1c32016",
+      "changes": [],
+      "importSha256": "f4b602bbd966e3c9701d00e587ecf17a2e42e278b12ace393480fa33e1c32016",
+      "currentSha256": "f4b602bbd966e3c9701d00e587ecf17a2e42e278b12ace393480fa33e1c32016"
+    },
+    {
+      "sourcePath": "LICENSE",
+      "targetPath": "LICENSE",
+      "sourceSha256": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
+      "changes": [],
+      "importSha256": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef",
+      "currentSha256": "8486a10c4393cee1c25392769ddd3b2d6c242d6ec7928e1414efff7dfb2f07ef"
+    },
+    {
+      "sourcePath": "NOTICE",
+      "targetPath": "NOTICE",
+      "sourceSha256": "b32d59118c756a2bd75ac13a2b8613fc58ed34439df8631c2f61888138cf0e89",
+      "changes": [],
+      "importSha256": "b32d59118c756a2bd75ac13a2b8613fc58ed34439df8631c2f61888138cf0e89",
+      "currentSha256": "b32d59118c756a2bd75ac13a2b8613fc58ed34439df8631c2f61888138cf0e89"
+    },
+    {
+      "sourcePath": "README.md",
+      "targetPath": "docs/upstream/README.md",
+      "sourceSha256": "10b5dd3eab19c8a282411afad67ba5ffa6f87beb1163071ddb1bec9f648a1f77",
+      "changes": [],
+      "importSha256": "10b5dd3eab19c8a282411afad67ba5ffa6f87beb1163071ddb1bec9f648a1f77",
+      "currentSha256": "10b5dd3eab19c8a282411afad67ba5ffa6f87beb1163071ddb1bec9f648a1f77"
+    },
+    {
+      "sourcePath": "chat-exporter/cmd/main.go",
+      "targetPath": "chat-exporter/cmd/main.go",
+      "sourceSha256": "a0662331ff791592b077b2e634ecc68af614cb8579052e41cf3555d7853b604a",
+      "changes": [],
+      "importSha256": "a0662331ff791592b077b2e634ecc68af614cb8579052e41cf3555d7853b604a",
+      "currentSha256": "a0662331ff791592b077b2e634ecc68af614cb8579052e41cf3555d7853b604a"
+    },
+    {
+      "sourcePath": "chat-exporter/go.mod",
+      "targetPath": "chat-exporter/go.mod",
+      "sourceSha256": "5abab6606b816f008432a906bf1cfc791793c553f6e1f427902b737cb10170a6",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "2a9277de72a9dfb8c059190b5b566c1a80243b32537f5472fa90538cebb28866",
+      "currentSha256": "2a9277de72a9dfb8c059190b5b566c1a80243b32537f5472fa90538cebb28866"
+    },
+    {
+      "sourcePath": "chat-exporter/go.sum",
+      "targetPath": "chat-exporter/go.sum",
+      "sourceSha256": "6b95c27f1bc00871aefed5d73f4d0bd682818cca58a86a79edb91217f75f27c7",
+      "changes": [],
+      "importSha256": "6b95c27f1bc00871aefed5d73f4d0bd682818cca58a86a79edb91217f75f27c7",
+      "currentSha256": "6b95c27f1bc00871aefed5d73f4d0bd682818cca58a86a79edb91217f75f27c7"
+    },
+    {
+      "sourcePath": "cleanup/cmd/main.go",
+      "targetPath": "cleanup/cmd/main.go",
+      "sourceSha256": "7e88b9628bb4cacdc74f62da21348321ce52c9790f4e95272aa908a7a7c012a9",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "a52c8bdbb094ce102baf6f00084266667e23c023c4d15559337b1844d5585b42",
+      "currentSha256": "a52c8bdbb094ce102baf6f00084266667e23c023c4d15559337b1844d5585b42"
+    },
+    {
+      "sourcePath": "cleanup/go.mod",
+      "targetPath": "cleanup/go.mod",
+      "sourceSha256": "d5e507b05c4dac821a9a766d2b01e9e5c227f51e9db7823c4e7edb6819f595e7",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "aa58ff07f390ed9e71cb1de3bc943ecfda543b184140d2a5c637930aa64ed7c4",
+      "currentSha256": "aa58ff07f390ed9e71cb1de3bc943ecfda543b184140d2a5c637930aa64ed7c4"
+    },
+    {
+      "sourcePath": "cleanup/go.sum",
+      "targetPath": "cleanup/go.sum",
+      "sourceSha256": "4bd54693e254064c8bd526370c35178e3b8794a39a73992e33056f7a0701224c",
+      "changes": [],
+      "importSha256": "4bd54693e254064c8bd526370c35178e3b8794a39a73992e33056f7a0701224c",
+      "currentSha256": "4bd54693e254064c8bd526370c35178e3b8794a39a73992e33056f7a0701224c"
+    },
+    {
+      "sourcePath": "coordinator/cmd/main.go",
+      "targetPath": "coordinator/cmd/main.go",
+      "sourceSha256": "03861da51196166153938284d7d203f85b2a23d8a1cdc01705e34f5a9ee4c4c4",
+      "changes": [
+        "Go module/import address changed to target repository",
+        "단일 채널 PgStore 범위/스키마 연결; 제품에서 사용하지 않는 원본 admin gRPC 시작 제거",
+        "Load the mounted role environment as data and wire explicit single-channel live-test authentication"
+      ],
+      "importSha256": "cdce1dd9e898b266701a84e1294ee4a2cd26fdc61326d8a8b36500734644554c",
+      "currentSha256": "ff2d497bde564d1ad861bc8d2139b4b766a87e7a843c9c450205a70681d324cc"
+    },
+    {
+      "sourcePath": "coordinator/go.mod",
+      "targetPath": "coordinator/go.mod",
+      "sourceSha256": "c66de0dc4f4c762c1ff5d77fb8fefcc32d5533a4bdf2beb7e1ec7fe64b4711da",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "014e92eb108f9894672120241c68dd89bba51e0886f2de5fb76063d81eef0d0f",
+      "currentSha256": "014e92eb108f9894672120241c68dd89bba51e0886f2de5fb76063d81eef0d0f"
+    },
+    {
+      "sourcePath": "coordinator/go.sum",
+      "targetPath": "coordinator/go.sum",
+      "sourceSha256": "07a1e60fba7e3f059b038f517d754788800ce320eee1d185aa267e13ddd9d832",
+      "changes": [],
+      "importSha256": "07a1e60fba7e3f059b038f517d754788800ce320eee1d185aa267e13ddd9d832",
+      "currentSha256": "07a1e60fba7e3f059b038f517d754788800ce320eee1d185aa267e13ddd9d832"
+    },
+    {
+      "sourcePath": "coordinator/internal/assigner.go",
+      "targetPath": "coordinator/internal/assigner.go",
+      "sourceSha256": "8677fc6ad51483767fa42cdfa860b7d7f7f93c063f26a04e6dde1edb191b9d15",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "c9cc3dc2ed3e99adad1435c3e38d33a4dccb656b6b1a6f6da538d1ebac4b6727",
+      "currentSha256": "c9cc3dc2ed3e99adad1435c3e38d33a4dccb656b6b1a6f6da538d1ebac4b6727"
+    },
+    {
+      "sourcePath": "coordinator/internal/assigner_test.go",
+      "targetPath": "coordinator/internal/assigner_test.go",
+      "sourceSha256": "43ca07fc1082e9481f58253005dad2d742173361e2ddc87925ebcd4b6dca8da3",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "aad9ccdcaa48b42396f80a9307f1b7d89de3afa57d95f84681848e2be6675b2e",
+      "currentSha256": "aad9ccdcaa48b42396f80a9307f1b7d89de3afa57d95f84681848e2be6675b2e"
+    },
+    {
+      "sourcePath": "coordinator/internal/coordinator.go",
+      "targetPath": "coordinator/internal/coordinator.go",
+      "sourceSha256": "70493a4467198f6044d052f619f8e7987dafdb08a5611e84e6404962562847bf",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "e6480b9230e60cb785ade9c3e9dc8f3d72ff093cea31de4f094820118f3b1ee3",
+      "currentSha256": "e6480b9230e60cb785ade9c3e9dc8f3d72ff093cea31de4f094820118f3b1ee3"
+    },
+    {
+      "sourcePath": "coordinator/internal/grpcserver/server.go",
+      "targetPath": "coordinator/internal/grpcserver/server.go",
+      "sourceSha256": "f674afde412345b674bb2a994cc3fe733b8319e17669b6e3731a528189781fb0",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "5cb66e13ef94504aaf9001eb6b3cbff43bafa206374a623833b2e2a85934af4f",
+      "currentSha256": "5cb66e13ef94504aaf9001eb6b3cbff43bafa206374a623833b2e2a85934af4f"
+    },
+    {
+      "sourcePath": "coordinator/internal/healthcheck.go",
+      "targetPath": "coordinator/internal/healthcheck.go",
+      "sourceSha256": "c0e71ad948e1d15edad1f60e2490189ea0e2bbedf1dd109227967756a06e664f",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "b387591a50adc8a123bbddc09adf5ba0d2b2360a59c49b1a5dbc21df5a698beb",
+      "currentSha256": "b387591a50adc8a123bbddc09adf5ba0d2b2360a59c49b1a5dbc21df5a698beb"
+    },
+    {
+      "sourcePath": "coordinator/internal/healthcheck_test.go",
+      "targetPath": "coordinator/internal/healthcheck_test.go",
+      "sourceSha256": "2a5d6e2ce67c40a2f21525ff346e30b153804312fd2e8155ddd6b44eacb4e148",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "9f7362b6588c2513e6f9a138b0fd491b5f33cbb64d3e29f0ffa08e55fb153ae8",
+      "currentSha256": "9f7362b6588c2513e6f9a138b0fd491b5f33cbb64d3e29f0ffa08e55fb153ae8"
+    },
+    {
+      "sourcePath": "coordinator/internal/leader.go",
+      "targetPath": "coordinator/internal/leader.go",
+      "sourceSha256": "f0de363df10d4f291bf81e9ba2c6acea5ea0bdc1df067b0c528eb00807618bbd",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "ca307dd583f2e12a180ea21e15b13cea663ef2f01a240c780efae9fc115a98e6",
+      "currentSha256": "ca307dd583f2e12a180ea21e15b13cea663ef2f01a240c780efae9fc115a98e6"
+    },
+    {
+      "sourcePath": "coordinator/internal/leader_test.go",
+      "targetPath": "coordinator/internal/leader_test.go",
+      "sourceSha256": "574c372ae8440a065d85d944eb4e0674c3aa514372c61b22acd77e6367daf861",
+      "changes": [],
+      "importSha256": "574c372ae8440a065d85d944eb4e0674c3aa514372c61b22acd77e6367daf861",
+      "currentSha256": "574c372ae8440a065d85d944eb4e0674c3aa514372c61b22acd77e6367daf861"
+    },
+    {
+      "sourcePath": "coordinator/internal/lifecycle_test.go",
+      "targetPath": "coordinator/internal/lifecycle_test.go",
+      "sourceSha256": "461af38caff059e82c9941343a00dfa41f9bfbf6c2454d463fe38f65e08828ed",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "6ded122e2d7f74e841994669e30f867d983bd602ca407e89f2fae24f1c6194d0",
+      "currentSha256": "6ded122e2d7f74e841994669e30f867d983bd602ca407e89f2fae24f1c6194d0"
+    },
+    {
+      "sourcePath": "coordinator/internal/metrics.go",
+      "targetPath": "coordinator/internal/metrics.go",
+      "sourceSha256": "84abce7a50d97682442f114f0cb298ece01891af2a8713358bc5481e60b3918a",
+      "changes": [],
+      "importSha256": "84abce7a50d97682442f114f0cb298ece01891af2a8713358bc5481e60b3918a",
+      "currentSha256": "84abce7a50d97682442f114f0cb298ece01891af2a8713358bc5481e60b3918a"
+    },
+    {
+      "sourcePath": "coordinator/internal/probe.go",
+      "targetPath": "coordinator/internal/probe.go",
+      "sourceSha256": "e3953fb7ff1ad53ff521cd113c270e93ada8914f08202aee7b67004f01acea9f",
+      "changes": [],
+      "importSha256": "e3953fb7ff1ad53ff521cd113c270e93ada8914f08202aee7b67004f01acea9f",
+      "currentSha256": "e3953fb7ff1ad53ff521cd113c270e93ada8914f08202aee7b67004f01acea9f"
+    },
+    {
+      "sourcePath": "coordinator/internal/probe_test.go",
+      "targetPath": "coordinator/internal/probe_test.go",
+      "sourceSha256": "dc24bdda1973f0c84e9602673fd35ac5a7780b11c70925462d82efeb768343ae",
+      "changes": [],
+      "importSha256": "dc24bdda1973f0c84e9602673fd35ac5a7780b11c70925462d82efeb768343ae",
+      "currentSha256": "dc24bdda1973f0c84e9602673fd35ac5a7780b11c70925462d82efeb768343ae"
+    },
+    {
+      "sourcePath": "coordinator/internal/runtime_test.go",
+      "targetPath": "coordinator/internal/runtime_test.go",
+      "sourceSha256": "4aeea7f15603d85b48ebed7388a2c110c86f9d67628dc44dd61819c1fdcf199e",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "941cb180cb652e83300829f676d1054b401113c9f66b81acdca7b98e175ba100",
+      "currentSha256": "941cb180cb652e83300829f676d1054b401113c9f66b81acdca7b98e175ba100"
+    },
+    {
+      "sourcePath": "coordinator/internal/stats_handler.go",
+      "targetPath": "coordinator/internal/stats_handler.go",
+      "sourceSha256": "e6220ac3ae1e309a2344749a7c3a8423eb3bde950839f1a7daf74517b9bdca6f",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "e679a29f388af7101e1edd0660523e062abb695d3409d1d8ac61302c15edb49e",
+      "currentSha256": "e679a29f388af7101e1edd0660523e062abb695d3409d1d8ac61302c15edb49e"
+    },
+    {
+      "sourcePath": "discover/cmd/main.go",
+      "targetPath": "discover/cmd/main.go",
+      "sourceSha256": "030cecedbb31f1580ab45f19c27c81f3f7e9f1a0d503bbe5c2438e0f1055189b",
+      "changes": [
+        "Go module/import address changed to target repository",
+        "Keep original entrypoint/lifecycle; restrict startup to registered SOOP probes, empty allowlist collects nothing, reject BYPASS_ALLOWLIST.",
+        "Connect existing SOOP discovery/connector construction to the cookie-auth JSON snapshot reader; preserve original lifecycle and interfaces",
+        "단일 채널·구독 설정과 인증/방송 상태를 기존 discover loop에 연결",
+        "Load the mounted role environment as data and wire explicit single-channel live-test authentication"
+      ],
+      "importSha256": "b0d2ef284b9aad71fe9708a3f45d85a948fbed03c389ed47c5385b219677b5c5",
+      "currentSha256": "21053890c25cee7f2497a0b816f48ce3b7a181ed7710e9013bc885452a273d51"
+    },
+    {
+      "sourcePath": "discover/cmd/main_test.go",
+      "targetPath": "discover/cmd/main_test.go",
+      "sourceSha256": "1d24e9999d0aeeedb977d8b48380c810cc15ebb97b2babc52f069cef93e35679",
+      "changes": [],
+      "importSha256": "1d24e9999d0aeeedb977d8b48380c810cc15ebb97b2babc52f069cef93e35679",
+      "currentSha256": "1d24e9999d0aeeedb977d8b48380c810cc15ebb97b2babc52f069cef93e35679"
+    },
+    {
+      "sourcePath": "discover/go.mod",
+      "targetPath": "discover/go.mod",
+      "sourceSha256": "747e0918ce1f0f84cb7a78691b80516edd23ce02fbbf03d6e2bc869459482dc5",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "56f064e50267f4a9445e0bc016a85007663380cee72f9d23d314c4926426fe01",
+      "currentSha256": "56f064e50267f4a9445e0bc016a85007663380cee72f9d23d314c4926426fe01"
+    },
+    {
+      "sourcePath": "discover/go.sum",
+      "targetPath": "discover/go.sum",
+      "sourceSha256": "d3022bf58d68cbda76bf9ea4143a3d60fc5766439b635a9b03990c6964630799",
+      "changes": [],
+      "importSha256": "d3022bf58d68cbda76bf9ea4143a3d60fc5766439b635a9b03990c6964630799",
+      "currentSha256": "d3022bf58d68cbda76bf9ea4143a3d60fc5766439b635a9b03990c6964630799"
+    },
+    {
+      "sourcePath": "discover/internal/backnotifier.go",
+      "targetPath": "discover/internal/backnotifier.go",
+      "sourceSha256": "26d1d7a2bdf76c049185f43f77f2d4eada78deedf34fc6860301e854d5531114",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "62241fd777970533e2dbc4e3df6a36419738a82df69eab2694fa785405876dd0",
+      "currentSha256": "62241fd777970533e2dbc4e3df6a36419738a82df69eab2694fa785405876dd0"
+    },
+    {
+      "sourcePath": "discover/internal/discover.go",
+      "targetPath": "discover/internal/discover.go",
+      "sourceSha256": "5f4f0173233b9b3d0e29fe18fc855b2f3424a5d99776f706c9e2a1da40d2e4e8",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "8d6847377fc0c48afee6dab990f675c3344fbbcfd524c6f2061391203278a1d0",
+      "currentSha256": "8d6847377fc0c48afee6dab990f675c3344fbbcfd524c6f2061391203278a1d0"
+    },
+    {
+      "sourcePath": "discover/internal/discover_test.go",
+      "targetPath": "discover/internal/discover_test.go",
+      "sourceSha256": "b79c3ff7192992fbe83f1778fc16ad331264ba39b9e219a399c213f93bb11752",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "4a5e1b90dc450342b1d5d2ddd6a9267cd99b5622f87632d0470a6eec19ed0bd3",
+      "currentSha256": "4a5e1b90dc450342b1d5d2ddd6a9267cd99b5622f87632d0470a6eec19ed0bd3"
+    },
+    {
+      "sourcePath": "discover/internal/discovery/chzzk.go",
+      "targetPath": "discover/internal/discovery/chzzk.go",
+      "sourceSha256": "5580e03603b9405a0f0c3084a9f7946a3f1ad4dead09af1883df57653e24bc34",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "476ef0b33eb147695d2f28926a8b5708a039f47e84b49a9b207e7d807f0d9870",
+      "currentSha256": "476ef0b33eb147695d2f28926a8b5708a039f47e84b49a9b207e7d807f0d9870"
+    },
+    {
+      "sourcePath": "discover/internal/discovery/chzzk_test.go",
+      "targetPath": "discover/internal/discovery/chzzk_test.go",
+      "sourceSha256": "fd528fc0cee09eb180c9ad6cd63c4bb0482cb0dc0d702661565ca8d128544c64",
+      "changes": [],
+      "importSha256": "fd528fc0cee09eb180c9ad6cd63c4bb0482cb0dc0d702661565ca8d128544c64",
+      "currentSha256": "fd528fc0cee09eb180c9ad6cd63c4bb0482cb0dc0d702661565ca8d128544c64"
+    },
+    {
+      "sourcePath": "discover/internal/discovery/cime.go",
+      "targetPath": "discover/internal/discovery/cime.go",
+      "sourceSha256": "617feacb82676b102fd271018ee81c967dd9ca16868028bb0d2cee6daa2a4845",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "bf0545568988973f3d8917d4f951d4eae7336ed2504f2405800fd903790063fd",
+      "currentSha256": "bf0545568988973f3d8917d4f951d4eae7336ed2504f2405800fd903790063fd"
+    },
+    {
+      "sourcePath": "discover/internal/discovery/cime_test.go",
+      "targetPath": "discover/internal/discovery/cime_test.go",
+      "sourceSha256": "dfb623aa3c4492a102e3607a1291df5c1925b8f6517f7af7aa49781033da5120",
+      "changes": [],
+      "importSha256": "dfb623aa3c4492a102e3607a1291df5c1925b8f6517f7af7aa49781033da5120",
+      "currentSha256": "dfb623aa3c4492a102e3607a1291df5c1925b8f6517f7af7aa49781033da5120"
+    },
+    {
+      "sourcePath": "discover/internal/discovery/discovery.go",
+      "targetPath": "discover/internal/discovery/discovery.go",
+      "sourceSha256": "560603b4345ac0df121ca90815854b07d8d200daf328c7f674de77a2f35153c7",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "b8a2593e1e08d4a28d6dd6c70ab437ef3f64cb5f145b488196ce4112542526d3",
+      "currentSha256": "b8a2593e1e08d4a28d6dd6c70ab437ef3f64cb5f145b488196ce4112542526d3"
+    },
+    {
+      "sourcePath": "discover/internal/discovery/discovery_test.go",
+      "targetPath": "discover/internal/discovery/discovery_test.go",
+      "sourceSha256": "0ee1ab8bde2cdb9389e933e5c8333ab7788e26471eb46779aeb792d452bcb434",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "c0ea182c69b23c3a9e03a33f8652179b876ce699e56545996a03fc4fb0c35f48",
+      "currentSha256": "c0ea182c69b23c3a9e03a33f8652179b876ce699e56545996a03fc4fb0c35f48"
+    },
+    {
+      "sourcePath": "discover/internal/discovery/http_body.go",
+      "targetPath": "discover/internal/discovery/http_body.go",
+      "sourceSha256": "4dbcc7304765d273a3d8671be55ae6acd7022d941667be53a8c0caee3892bba5",
+      "changes": [],
+      "importSha256": "4dbcc7304765d273a3d8671be55ae6acd7022d941667be53a8c0caee3892bba5",
+      "currentSha256": "4dbcc7304765d273a3d8671be55ae6acd7022d941667be53a8c0caee3892bba5"
+    },
+    {
+      "sourcePath": "discover/internal/discovery/soop.go",
+      "targetPath": "discover/internal/discovery/soop.go",
+      "sourceSha256": "3dd5d490c38e9524a50a7b662673cd6e62b2bc8b1bac9a86af480df5301cbbcf",
+      "changes": [
+        "Go module/import address changed to target repository",
+        "Connect existing SOOP discovery/connector construction to the cookie-auth JSON snapshot reader; preserve original lifecycle and interfaces",
+        "현재 .com player API와 명시적 offline/auth/unknown 결과 구분"
+      ],
+      "importSha256": "a1f1c9190192876d4e53b1db4fe9ec1d63ddee71ea10b11b517a9d60bfc0e5aa",
+      "currentSha256": "a40903a5e9c770c98ebce4c8883d26a888dbc8833070b2f73a863be16e606b35"
+    },
+    {
+      "sourcePath": "discover/internal/discovery/soop_test.go",
+      "targetPath": "discover/internal/discovery/soop_test.go",
+      "sourceSha256": "7f0099376300c8a3d4e553ce598e01355cd260633d0529f02a23873817e43a2b",
+      "changes": [
+        "제품 연결 변경에 따른 회귀 fixture/생성물 갱신"
+      ],
+      "importSha256": "7f0099376300c8a3d4e553ce598e01355cd260633d0529f02a23873817e43a2b",
+      "currentSha256": "f78ab101271edd196fd0197b71d353bfe1bd912bd47d085d6380f31b5d28438f"
+    },
+    {
+      "sourcePath": "discover/internal/discovery/testdata/chzzk_live_list.json",
+      "targetPath": "discover/internal/discovery/testdata/chzzk_live_list.json",
+      "sourceSha256": "cd036952a174d680a92a301fd45c07522ce61d894d8867bca88ac82f97265433",
+      "changes": [],
+      "importSha256": "cd036952a174d680a92a301fd45c07522ce61d894d8867bca88ac82f97265433",
+      "currentSha256": "cd036952a174d680a92a301fd45c07522ce61d894d8867bca88ac82f97265433"
+    },
+    {
+      "sourcePath": "discover/internal/discovery/testdata/cime_live_list.json",
+      "targetPath": "discover/internal/discovery/testdata/cime_live_list.json",
+      "sourceSha256": "69d8f273541706373002a8c3f82c994ad26ecedf21ae3cf5d936ae13c442b4ac",
+      "changes": [],
+      "importSha256": "69d8f273541706373002a8c3f82c994ad26ecedf21ae3cf5d936ae13c442b4ac",
+      "currentSha256": "69d8f273541706373002a8c3f82c994ad26ecedf21ae3cf5d936ae13c442b4ac"
+    },
+    {
+      "sourcePath": "discover/internal/discovery/testdata/soop_broad_list.json",
+      "targetPath": "discover/internal/discovery/testdata/soop_broad_list.json",
+      "sourceSha256": "58164559934197359faffd269be04fa3a006af8ee4df555a709a621ef54a5708",
+      "changes": [],
+      "importSha256": "58164559934197359faffd269be04fa3a006af8ee4df555a709a621ef54a5708",
+      "currentSha256": "58164559934197359faffd269be04fa3a006af8ee4df555a709a621ef54a5708"
+    },
+    {
+      "sourcePath": "discover/internal/history/ch_writer.go",
+      "targetPath": "discover/internal/history/ch_writer.go",
+      "sourceSha256": "6d24434adfeb720f6cbf1d0f6284be060d5a78725f6022ee409bb37058e7c969",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "a13a8c4d6c667b24a1529383afdebf6e7e72ce49df9a63b3bccc43933540d090",
+      "currentSha256": "a13a8c4d6c667b24a1529383afdebf6e7e72ce49df9a63b3bccc43933540d090"
+    },
+    {
+      "sourcePath": "discover/internal/history/ch_writer_test.go",
+      "targetPath": "discover/internal/history/ch_writer_test.go",
+      "sourceSha256": "2cb7229800afe9a25ed958f77c2600b80c25bc884b226130e19335e076358925",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "c31af642bebff3cdd1ea326b1daf7a57f35163e85c3c04d45e0dd98fcf575424",
+      "currentSha256": "c31af642bebff3cdd1ea326b1daf7a57f35163e85c3c04d45e0dd98fcf575424"
+    },
+    {
+      "sourcePath": "discover/internal/history/emitter.go",
+      "targetPath": "discover/internal/history/emitter.go",
+      "sourceSha256": "348757aff4f7af4331b1e2270b5344391b762ec1cd3b45ce45e9a3db7b90eb46",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "c368cf1bbe1f73ca9325c86d90fcbd2fde7756031d282ac8f79ebab9f344399e",
+      "currentSha256": "c368cf1bbe1f73ca9325c86d90fcbd2fde7756031d282ac8f79ebab9f344399e"
+    },
+    {
+      "sourcePath": "discover/internal/history/emitter_test.go",
+      "targetPath": "discover/internal/history/emitter_test.go",
+      "sourceSha256": "f770a546bd4a6e65bdb59c9c7dd813fd2fe221f7c1f664e35c7234148bcf48ac",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "82b5a1788b4bd4dd9fd015f3b849e41441f839dcdea2ca1a5535e0d33e3dec53",
+      "currentSha256": "82b5a1788b4bd4dd9fd015f3b849e41441f839dcdea2ca1a5535e0d33e3dec53"
+    },
+    {
+      "sourcePath": "discover/internal/history/metrics.go",
+      "targetPath": "discover/internal/history/metrics.go",
+      "sourceSha256": "597572d60bef972c0ef9eb395cbd44b4fa4900123d8a0a5c53aedb360dacbf96",
+      "changes": [],
+      "importSha256": "597572d60bef972c0ef9eb395cbd44b4fa4900123d8a0a5c53aedb360dacbf96",
+      "currentSha256": "597572d60bef972c0ef9eb395cbd44b4fa4900123d8a0a5c53aedb360dacbf96"
+    },
+    {
+      "sourcePath": "discover/internal/leader.go",
+      "targetPath": "discover/internal/leader.go",
+      "sourceSha256": "31394ba21405d3ac84c16f082cec364a78bb17df554679a6dd64087c04a517b8",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "7948cb62cd57dd74040ae1421f452fcd14e73c52842b4ca913cde43a261feb62",
+      "currentSha256": "7948cb62cd57dd74040ae1421f452fcd14e73c52842b4ca913cde43a261feb62"
+    },
+    {
+      "sourcePath": "discover/internal/metrics.go",
+      "targetPath": "discover/internal/metrics.go",
+      "sourceSha256": "efe39f31937e10afc92576287e399ba8df09da0f6fd60e980f5fcae4b9b44009",
+      "changes": [],
+      "importSha256": "efe39f31937e10afc92576287e399ba8df09da0f6fd60e980f5fcae4b9b44009",
+      "currentSha256": "efe39f31937e10afc92576287e399ba8df09da0f6fd60e980f5fcae4b9b44009"
+    },
+    {
+      "sourcePath": "discover/internal/probe.go",
+      "targetPath": "discover/internal/probe.go",
+      "sourceSha256": "e3953fb7ff1ad53ff521cd113c270e93ada8914f08202aee7b67004f01acea9f",
+      "changes": [],
+      "importSha256": "e3953fb7ff1ad53ff521cd113c270e93ada8914f08202aee7b67004f01acea9f",
+      "currentSha256": "e3953fb7ff1ad53ff521cd113c270e93ada8914f08202aee7b67004f01acea9f"
+    },
+    {
+      "sourcePath": "docs/architecture.md",
+      "targetPath": "docs/upstream/architecture.md",
+      "sourceSha256": "e83b990b40845330698da5f1684814b94426040e0d2cc3e4e83e28d87bc49d54",
+      "changes": [],
+      "importSha256": "e83b990b40845330698da5f1684814b94426040e0d2cc3e4e83e28d87bc49d54",
+      "currentSha256": "e83b990b40845330698da5f1684814b94426040e0d2cc3e4e83e28d87bc49d54"
+    },
+    {
+      "sourcePath": "docs/design/coordination.md",
+      "targetPath": "docs/upstream/design/coordination.md",
+      "sourceSha256": "074b84aee13d95c62ce6d89574f4c4c04f000593a8cd410f18a85a5e9a683d91",
+      "changes": [],
+      "importSha256": "074b84aee13d95c62ce6d89574f4c4c04f000593a8cd410f18a85a5e9a683d91",
+      "currentSha256": "074b84aee13d95c62ce6d89574f4c4c04f000593a8cd410f18a85a5e9a683d91"
+    },
+    {
+      "sourcePath": "docs/design/reliability.md",
+      "targetPath": "docs/upstream/design/reliability.md",
+      "sourceSha256": "7fde832b251eae7cc98bdb8c3c501bf03e73e471892172c10b256400d135fdef",
+      "changes": [],
+      "importSha256": "7fde832b251eae7cc98bdb8c3c501bf03e73e471892172c10b256400d135fdef",
+      "currentSha256": "7fde832b251eae7cc98bdb8c3c501bf03e73e471892172c10b256400d135fdef"
+    },
+    {
+      "sourcePath": "docs/design/storage.md",
+      "targetPath": "docs/upstream/design/storage.md",
+      "sourceSha256": "3236e5c2939517c0f8c667dae299371f22d9203e288dcf9c54f495733696262f",
+      "changes": [],
+      "importSha256": "3236e5c2939517c0f8c667dae299371f22d9203e288dcf9c54f495733696262f",
+      "currentSha256": "3236e5c2939517c0f8c667dae299371f22d9203e288dcf9c54f495733696262f"
+    },
+    {
+      "sourcePath": "docs/repository-layout.md",
+      "targetPath": "docs/upstream/repository-layout.md",
+      "sourceSha256": "a55d1a0b6c0e5009fba1727d27a7ca793d1a3de6ed4cd05b501632f78faf2443",
+      "changes": [],
+      "importSha256": "a55d1a0b6c0e5009fba1727d27a7ca793d1a3de6ed4cd05b501632f78faf2443",
+      "currentSha256": "a55d1a0b6c0e5009fba1727d27a7ca793d1a3de6ed4cd05b501632f78faf2443"
+    },
+    {
+      "sourcePath": "go.work",
+      "targetPath": "go.work",
+      "sourceSha256": "84426caea9502e64e1320a0f7ac805e26e099d035646a908a6599948e8315827",
+      "changes": [],
+      "importSha256": "84426caea9502e64e1320a0f7ac805e26e099d035646a908a6599948e8315827",
+      "currentSha256": "84426caea9502e64e1320a0f7ac805e26e099d035646a908a6599948e8315827"
+    },
+    {
+      "sourcePath": "proto/buf.gen.yaml",
+      "targetPath": "proto/buf.gen.yaml",
+      "sourceSha256": "cae4854fef4706d6ce0c8f691876e0a42b5ff49e89185bf0708ed2a63278b9a0",
+      "changes": [
+        "Pin original generator versions for reproducible generation."
+      ],
+      "importSha256": "cae4854fef4706d6ce0c8f691876e0a42b5ff49e89185bf0708ed2a63278b9a0",
+      "currentSha256": "614c3181347176fb219b38569d33d200f4cd77e77ed57059906eca0800cbd31b"
+    },
+    {
+      "sourcePath": "proto/buf.yaml",
+      "targetPath": "proto/buf.yaml",
+      "sourceSha256": "59dae5e2730bef55799d89ad50aff3b92d0c0139f0a607cb5a4180be520c913a",
+      "changes": [
+        "Rename public Buf module identity for the target repository."
+      ],
+      "importSha256": "59dae5e2730bef55799d89ad50aff3b92d0c0139f0a607cb5a4180be520c913a",
+      "currentSha256": "d85c5893c4e6ec6b315df830bec1ef6edb802043ff7d1d76ff4cf3447e4d8288"
+    },
+    {
+      "sourcePath": "proto/gen/go/meloming/chat/v1/chat_admin.pb.go",
+      "targetPath": "proto/gen/go/meloming/chat/v1/chat_admin.pb.go",
+      "sourceSha256": "56006492704d18921d08d4707ac46691a61faaeb925d0f32dce37a8ba8fe8f7d",
+      "changes": [
+        "Go module/import address changed to target repository",
+        "Regenerate from the imported proto after go_package changes; preserve original generator versions and RPC package names."
+      ],
+      "importSha256": "3b51ccf60b696b10da39117a1ac60b99730d59aeddffc519a7909381f8db151c",
+      "currentSha256": "bf0a239c2464d82e55e8a69e8811f0c3d0e81d56da305af37795af0c079802a5"
+    },
+    {
+      "sourcePath": "proto/gen/go/meloming/chat/v1/chat_admin_grpc.pb.go",
+      "targetPath": "proto/gen/go/meloming/chat/v1/chat_admin_grpc.pb.go",
+      "sourceSha256": "f128f32ca422a8a4e31912894122d14ed5f5dc3a973786a3503f70198d5d03b4",
+      "changes": [
+        "Regenerate from the imported proto after go_package changes; preserve original generator versions and RPC package names."
+      ],
+      "importSha256": "f128f32ca422a8a4e31912894122d14ed5f5dc3a973786a3503f70198d5d03b4",
+      "currentSha256": "ce0c2c60f3b5c83ada86512bdeeb2f6b21d7c52f232e74260182051a8aa4f3d0"
+    },
+    {
+      "sourcePath": "proto/gen/go/meloming/chat/v1/chat_query.pb.go",
+      "targetPath": "proto/gen/go/meloming/chat/v1/chat_query.pb.go",
+      "sourceSha256": "c489f43ab31665c60ceb9deb35195994fd250453b3e983c75905f0acfdd432a3",
+      "changes": [
+        "Go module/import address changed to target repository",
+        "Regenerate from the imported proto after go_package changes; preserve original generator versions and RPC package names."
+      ],
+      "importSha256": "1561def2445fcc08a2da5b66d8f6876ae13f5d7552c28cdab782cb669ae8a399",
+      "currentSha256": "fedd1a6d2678bd2a91c2bbfd4a5984392542e218f0bcebbde2a446a336288d8a"
+    },
+    {
+      "sourcePath": "proto/gen/go/meloming/chat/v1/chat_query_grpc.pb.go",
+      "targetPath": "proto/gen/go/meloming/chat/v1/chat_query_grpc.pb.go",
+      "sourceSha256": "ebe034fa5fa163789840ad7edde4a39f9b5336739942cf6d38f22da03fc7adc2",
+      "changes": [
+        "Regenerate from the imported proto after go_package changes; preserve original generator versions and RPC package names."
+      ],
+      "importSha256": "ebe034fa5fa163789840ad7edde4a39f9b5336739942cf6d38f22da03fc7adc2",
+      "currentSha256": "e574889ea930ea164bf19ea9f1e7505713a72126916f5be550fb796c7853d2b5"
+    },
+    {
+      "sourcePath": "proto/gen/go/meloming/common/v1/pagination.pb.go",
+      "targetPath": "proto/gen/go/meloming/common/v1/pagination.pb.go",
+      "sourceSha256": "d173b25eaaa34f1b1bcd2d0f03b7e5ad5701a93de643383e9bf79d756d765322",
+      "changes": [
+        "Go module/import address changed to target repository",
+        "Regenerate from the imported proto after go_package changes; preserve original generator versions and RPC package names."
+      ],
+      "importSha256": "2d5fee3822a7609a328df9a0ed689ee318d26fd80f927f3456f6ef69445c796f",
+      "currentSha256": "a25150c49cc7759aea657dda5c0523be299aae95c8eb8c6c7155f99fc2f49064"
+    },
+    {
+      "sourcePath": "proto/go.mod",
+      "targetPath": "proto/go.mod",
+      "sourceSha256": "cfa9a8489641d47d77d173b54ef30e8b36c3c93afd3c1d80607d3b32b0dbc1e5",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "b8d00f76c75c6089261387da2fbc011216a2742f5b71d8ae2ebe7a97fa8b185b",
+      "currentSha256": "b8d00f76c75c6089261387da2fbc011216a2742f5b71d8ae2ebe7a97fa8b185b"
+    },
+    {
+      "sourcePath": "proto/go.sum",
+      "targetPath": "proto/go.sum",
+      "sourceSha256": "d344595abb519647f17275f4278550b8d66eff107fc94eb1ca2f7aeae4e0f386",
+      "changes": [],
+      "importSha256": "d344595abb519647f17275f4278550b8d66eff107fc94eb1ca2f7aeae4e0f386",
+      "currentSha256": "d344595abb519647f17275f4278550b8d66eff107fc94eb1ca2f7aeae4e0f386"
+    },
+    {
+      "sourcePath": "proto/meloming/chat/v1/chat_admin.proto",
+      "targetPath": "proto/meloming/chat/v1/chat_admin.proto",
+      "sourceSha256": "8dc8fb7024d3fdde6795a75e79a5e32bf30d38fcc2d55a4231b02274f8ae276a",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "dac722f568f8bf575d3ee3fb809d849854b7971bb0e99f26ffce04dcd1426ac5",
+      "currentSha256": "dac722f568f8bf575d3ee3fb809d849854b7971bb0e99f26ffce04dcd1426ac5"
+    },
+    {
+      "sourcePath": "proto/meloming/chat/v1/chat_query.proto",
+      "targetPath": "proto/meloming/chat/v1/chat_query.proto",
+      "sourceSha256": "9a384cd12e0a7010c36fb77645af26488ac2ceeb8966736705b1272ac0a46dc7",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "cc6aeda09935a3b9207f509df0ed9e193cf8da9bbf3069ee60da822084f7cf03",
+      "currentSha256": "cc6aeda09935a3b9207f509df0ed9e193cf8da9bbf3069ee60da822084f7cf03"
+    },
+    {
+      "sourcePath": "proto/meloming/common/v1/pagination.proto",
+      "targetPath": "proto/meloming/common/v1/pagination.proto",
+      "sourceSha256": "a8af4302c3dafd7dc662a29d4f677f3151e7fe90f83c01910935255dec961df5",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "e2752798ab43fcbe96bc50b0364e55e7943681fea1eaa6895b8729eea9eeab22",
+      "currentSha256": "e2752798ab43fcbe96bc50b0364e55e7943681fea1eaa6895b8729eea9eeab22"
+    },
+    {
+      "sourcePath": "query/cmd/main.go",
+      "targetPath": "query/cmd/main.go",
+      "sourceSha256": "c210f38229ec186aa59f68e5ad214efb72db2687e28f4c7d2af8cd36ff41541b",
+      "changes": [
+        "Go module/import address changed to target repository",
+        "기존 Server lifecycle에서 제품 mTLS 7443·범위 인증·collector v1·보존 정리 실행",
+        "Load the mounted role environment as data and wire explicit single-channel live-test authentication"
+      ],
+      "importSha256": "d2a5b154ad86dfb34a655b8289473d70a6d047409dc3dd1434785f832832179c",
+      "currentSha256": "2057f2112151e44973fb30571a204d2cf798ea8f37065b70a4008011f67dab72"
+    },
+    {
+      "sourcePath": "query/go.mod",
+      "targetPath": "query/go.mod",
+      "sourceSha256": "dd9b10577b47fac760501e60be99fe710faf729dcfa30786f1ef79121ebb3081",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "7a20e701a1c3b0aa91d220e0b1a0fe668f97f8184216e1c086ab866d4556d38e",
+      "currentSha256": "7a20e701a1c3b0aa91d220e0b1a0fe668f97f8184216e1c086ab866d4556d38e"
+    },
+    {
+      "sourcePath": "query/go.sum",
+      "targetPath": "query/go.sum",
+      "sourceSha256": "ac4126b37c424fda53b107fbd6c226efeac5e6a3b89f71f06e052921e4f8e779",
+      "changes": [],
+      "importSha256": "ac4126b37c424fda53b107fbd6c226efeac5e6a3b89f71f06e052921e4f8e779",
+      "currentSha256": "ac4126b37c424fda53b107fbd6c226efeac5e6a3b89f71f06e052921e4f8e779"
+    },
+    {
+      "sourcePath": "query/internal/admin_http.go",
+      "targetPath": "query/internal/admin_http.go",
+      "sourceSha256": "135e7fad66ef8157200ae3afcb7144a9f19abca964a5c980689cbaf829b1e7c4",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "8670c7e3cba59d5b78c071264fedc238bec39d81059c54fe3376cee47e748641",
+      "currentSha256": "8670c7e3cba59d5b78c071264fedc238bec39d81059c54fe3376cee47e748641"
+    },
+    {
+      "sourcePath": "query/internal/admin_http_test.go",
+      "targetPath": "query/internal/admin_http_test.go",
+      "sourceSha256": "aef22ed26a91fedf5affd7d9b00ae4cb678d9d477dd602642ecc3aae7382a4c3",
+      "changes": [],
+      "importSha256": "aef22ed26a91fedf5affd7d9b00ae4cb678d9d477dd602642ecc3aae7382a4c3",
+      "currentSha256": "aef22ed26a91fedf5affd7d9b00ae4cb678d9d477dd602642ecc3aae7382a4c3"
+    },
+    {
+      "sourcePath": "query/internal/server.go",
+      "targetPath": "query/internal/server.go",
+      "sourceSha256": "0b6cea2c720d0e6357aa9d3dfb12b9520e7d76bea81a4056a731162812763494",
+      "changes": [
+        "Go module/import address changed to target repository",
+        "장기 Watch가 있어도 종료되도록 gRPC graceful shutdown 상한 추가"
+      ],
+      "importSha256": "95ac40a0d0c287ff90852e7196d3aff8459e3e90c5cbfca6d040c5723a119f12",
+      "currentSha256": "2dad14d14d1b53bf24c248b86ae78f7239ddc31b2b4e212df1db4bcc3c4e20c1"
+    },
+    {
+      "sourcePath": "query/internal/server_test.go",
+      "targetPath": "query/internal/server_test.go",
+      "sourceSha256": "06723bc9d687c35bd1fc9608c25ff26d6ecdbf6ab5bf6bfa44b01d70ccba3816",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "bacfcfd9c6a88317fe623ad3f3981a3f62fdc23c1d2d6f39edcc6c9bf892c268",
+      "currentSha256": "bacfcfd9c6a88317fe623ad3f3981a3f62fdc23c1d2d6f39edcc6c9bf892c268"
+    },
+    {
+      "sourcePath": "shared/go.mod",
+      "targetPath": "shared/go.mod",
+      "sourceSha256": "80b94ec6a1859fa7450621db93b37b9bd9c4f45e3ea3ddbccfcbbed9f54a7929",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "f381166be4c14ed8bc8ada8b96971458d979d86a4a8aab8410d86c94fb403267",
+      "currentSha256": "f381166be4c14ed8bc8ada8b96971458d979d86a4a8aab8410d86c94fb403267"
+    },
+    {
+      "sourcePath": "shared/go.sum",
+      "targetPath": "shared/go.sum",
+      "sourceSha256": "ac4126b37c424fda53b107fbd6c226efeac5e6a3b89f71f06e052921e4f8e779",
+      "changes": [],
+      "importSha256": "ac4126b37c424fda53b107fbd6c226efeac5e6a3b89f71f06e052921e4f8e779",
+      "currentSha256": "ac4126b37c424fda53b107fbd6c226efeac5e6a3b89f71f06e052921e4f8e779"
+    },
+    {
+      "sourcePath": "shared/grpcauth/interceptor.go",
+      "targetPath": "shared/grpcauth/interceptor.go",
+      "sourceSha256": "88dc4e3d7fe299b28757c0c22c9068f255c682b3417d831afaff753c23d8bfee",
+      "changes": [],
+      "importSha256": "88dc4e3d7fe299b28757c0c22c9068f255c682b3417d831afaff753c23d8bfee",
+      "currentSha256": "88dc4e3d7fe299b28757c0c22c9068f255c682b3417d831afaff753c23d8bfee"
+    },
+    {
+      "sourcePath": "shared/grpcauth/interceptor_test.go",
+      "targetPath": "shared/grpcauth/interceptor_test.go",
+      "sourceSha256": "814b8b6a870be261f449f96224dcc5fa578b31735fc9d635dbd1736051949214",
+      "changes": [],
+      "importSha256": "814b8b6a870be261f449f96224dcc5fa578b31735fc9d635dbd1736051949214",
+      "currentSha256": "814b8b6a870be261f449f96224dcc5fa578b31735fc9d635dbd1736051949214"
+    },
+    {
+      "sourcePath": "shared/migrations/001_initial.sql",
+      "targetPath": "shared/migrations/001_initial.sql",
+      "sourceSha256": "7e4e44e5f8f8a8ca8a0059180cc790e432a8fade79bce8dedcae153cfe4c3014",
+      "changes": [],
+      "importSha256": "7e4e44e5f8f8a8ca8a0059180cc790e432a8fade79bce8dedcae153cfe4c3014",
+      "currentSha256": "7e4e44e5f8f8a8ca8a0059180cc790e432a8fade79bce8dedcae153cfe4c3014"
+    },
+    {
+      "sourcePath": "shared/migrations/002_handoff.sql",
+      "targetPath": "shared/migrations/002_handoff.sql",
+      "sourceSha256": "cb0525e83bd08e3e0d829cfbcbc091e446cb544d1471a692cf0a6edef9e835b6",
+      "changes": [],
+      "importSha256": "cb0525e83bd08e3e0d829cfbcbc091e446cb544d1471a692cf0a6edef9e835b6",
+      "currentSha256": "cb0525e83bd08e3e0d829cfbcbc091e446cb544d1471a692cf0a6edef9e835b6"
+    },
+    {
+      "sourcePath": "shared/migrations/003_broadcast_history.sql",
+      "targetPath": "shared/migrations/003_broadcast_history.sql",
+      "sourceSha256": "f8c136c242bbc8e40580fc5e8bfa9c681701c02725db2f8d76b95de9b1d9cc42",
+      "changes": [
+        "첫 앱 스키마에서 원본 전용 role/pg_partman provisioning을 제거하고 일반 default partition 사용"
+      ],
+      "importSha256": "f8c136c242bbc8e40580fc5e8bfa9c681701c02725db2f8d76b95de9b1d9cc42",
+      "currentSha256": "b4cc0143af9173d5ffa45adb2d657bac34dea8c280844728004f137ff58c3eb9"
+    },
+    {
+      "sourcePath": "shared/migrations/004_metadata_category_code_lengthen.sql",
+      "targetPath": "shared/migrations/004_metadata_category_code_lengthen.sql",
+      "sourceSha256": "397581a3c96f607cebdba36b1906c766c6840e3e213c17e0e54a3cb471ca784c",
+      "changes": [],
+      "importSha256": "397581a3c96f607cebdba36b1906c766c6840e3e213c17e0e54a3cb471ca784c",
+      "currentSha256": "397581a3c96f607cebdba36b1906c766c6840e3e213c17e0e54a3cb471ca784c"
+    },
+    {
+      "sourcePath": "shared/migrations/005_collection_opt_outs.sql",
+      "targetPath": "shared/migrations/005_collection_opt_outs.sql",
+      "sourceSha256": "5f3e152f99c6205ed0be0f877033ada06b6279d5ba09ee9afb66f92bb632d58f",
+      "changes": [],
+      "importSha256": "5f3e152f99c6205ed0be0f877033ada06b6279d5ba09ee9afb66f92bb632d58f",
+      "currentSha256": "5f3e152f99c6205ed0be0f877033ada06b6279d5ba09ee9afb66f92bb632d58f"
+    },
+    {
+      "sourcePath": "shared/migrations/clickhouse/001_viewer_count.sql",
+      "targetPath": "shared/migrations/clickhouse/001_viewer_count.sql",
+      "sourceSha256": "6c3e3c3f300a4648c257a86674cec9dabde2c5f307048741624bed561fa6ec89",
+      "changes": [],
+      "importSha256": "6c3e3c3f300a4648c257a86674cec9dabde2c5f307048741624bed561fa6ec89",
+      "currentSha256": "6c3e3c3f300a4648c257a86674cec9dabde2c5f307048741624bed561fa6ec89"
+    },
+    {
+      "sourcePath": "shared/migrations/clickhouse/002_chat_messages.sql",
+      "targetPath": "shared/migrations/clickhouse/002_chat_messages.sql",
+      "sourceSha256": "0de14a7c747a5335450132de077762a0a737aa53467acd02b0f97d439c3f7294",
+      "changes": [],
+      "importSha256": "0de14a7c747a5335450132de077762a0a737aa53467acd02b0f97d439c3f7294",
+      "currentSha256": "0de14a7c747a5335450132de077762a0a737aa53467acd02b0f97d439c3f7294"
+    },
+    {
+      "sourcePath": "shared/migrations/clickhouse/003_ranking_tables.sql",
+      "targetPath": "shared/migrations/clickhouse/003_ranking_tables.sql",
+      "sourceSha256": "05298dc63ffab9408d1c51f68137b8d539e57a455ae05079030757832c1c0e91",
+      "changes": [],
+      "importSha256": "05298dc63ffab9408d1c51f68137b8d539e57a455ae05079030757832c1c0e91",
+      "currentSha256": "05298dc63ffab9408d1c51f68137b8d539e57a455ae05079030757832c1c0e91"
+    },
+    {
+      "sourcePath": "shared/migrations/clickhouse/004_chat_word_frequencies.sql",
+      "targetPath": "shared/migrations/clickhouse/004_chat_word_frequencies.sql",
+      "sourceSha256": "61ef0098b4236d5357a45551b2ba2136989245c2bce4d7fca39590cebb7f3e94",
+      "changes": [],
+      "importSha256": "61ef0098b4236d5357a45551b2ba2136989245c2bce4d7fca39590cebb7f3e94",
+      "currentSha256": "61ef0098b4236d5357a45551b2ba2136989245c2bce4d7fca39590cebb7f3e94"
+    },
+    {
+      "sourcePath": "shared/migrations/clickhouse/005_user_word_frequencies.sql",
+      "targetPath": "shared/migrations/clickhouse/005_user_word_frequencies.sql",
+      "sourceSha256": "a9a30abed48571749b6fb824e6018963ce7ab351d17e89b4453cee32a5de4a02",
+      "changes": [],
+      "importSha256": "a9a30abed48571749b6fb824e6018963ce7ab351d17e89b4453cee32a5de4a02",
+      "currentSha256": "a9a30abed48571749b6fb824e6018963ce7ab351d17e89b4453cee32a5de4a02"
+    },
+    {
+      "sourcePath": "shared/migrations/clickhouse/006_chat_word_frequencies_retention.sql",
+      "targetPath": "shared/migrations/clickhouse/006_chat_word_frequencies_retention.sql",
+      "sourceSha256": "e3a446eaf4439d3e8e2fa593425ecc64dd1e2da88a04d50210cdffe0f46eaed9",
+      "changes": [],
+      "importSha256": "e3a446eaf4439d3e8e2fa593425ecc64dd1e2da88a04d50210cdffe0f46eaed9",
+      "currentSha256": "e3a446eaf4439d3e8e2fa593425ecc64dd1e2da88a04d50210cdffe0f46eaed9"
+    },
+    {
+      "sourcePath": "shared/migrations/clickhouse/007_fix_viewer_count_hourly_mv.sql",
+      "targetPath": "shared/migrations/clickhouse/007_fix_viewer_count_hourly_mv.sql",
+      "sourceSha256": "b40caa590e693a73f926ba4553b29ce769666e85b9947717752f4e79de807b69",
+      "changes": [],
+      "importSha256": "b40caa590e693a73f926ba4553b29ce769666e85b9947717752f4e79de807b69",
+      "currentSha256": "b40caa590e693a73f926ba4553b29ce769666e85b9947717752f4e79de807b69"
+    },
+    {
+      "sourcePath": "shared/migrations/clickhouse/008_ranking_kst_daily_stats.sql",
+      "targetPath": "shared/migrations/clickhouse/008_ranking_kst_daily_stats.sql",
+      "sourceSha256": "df0ca4b94807a01015639878345196d52da863ae2d6371373a72c10227c75019",
+      "changes": [],
+      "importSha256": "df0ca4b94807a01015639878345196d52da863ae2d6371373a72c10227c75019",
+      "currentSha256": "df0ca4b94807a01015639878345196d52da863ae2d6371373a72c10227c75019"
+    },
+    {
+      "sourcePath": "shared/model/channel.go",
+      "targetPath": "shared/model/channel.go",
+      "sourceSha256": "85ae90ffe196bac5727af3fb1e9859a49c8e5d24b67e6641989c2ee187eedc19",
+      "changes": [],
+      "importSha256": "85ae90ffe196bac5727af3fb1e9859a49c8e5d24b67e6641989c2ee187eedc19",
+      "currentSha256": "85ae90ffe196bac5727af3fb1e9859a49c8e5d24b67e6641989c2ee187eedc19"
+    },
+    {
+      "sourcePath": "shared/model/collection_opt_out.go",
+      "targetPath": "shared/model/collection_opt_out.go",
+      "sourceSha256": "3bdff3eb9c7047a6ac8afb65d7f537d297aa0a33e6f52773ae9715e7544cef5e",
+      "changes": [],
+      "importSha256": "3bdff3eb9c7047a6ac8afb65d7f537d297aa0a33e6f52773ae9715e7544cef5e",
+      "currentSha256": "3bdff3eb9c7047a6ac8afb65d7f537d297aa0a33e6f52773ae9715e7544cef5e"
+    },
+    {
+      "sourcePath": "shared/model/message.go",
+      "targetPath": "shared/model/message.go",
+      "sourceSha256": "4c499432f5da6c7c69520cfe414c49fa394c2b5eacebf9e4019d21ce97a27523",
+      "changes": [],
+      "importSha256": "4c499432f5da6c7c69520cfe414c49fa394c2b5eacebf9e4019d21ce97a27523",
+      "currentSha256": "4c499432f5da6c7c69520cfe414c49fa394c2b5eacebf9e4019d21ce97a27523"
+    },
+    {
+      "sourcePath": "shared/model/message_emote_test.go",
+      "targetPath": "shared/model/message_emote_test.go",
+      "sourceSha256": "35d3ebafc7d20e92ed99e69091c5ec805eff4f6ae88b096887bd42343cb58e55",
+      "changes": [],
+      "importSha256": "35d3ebafc7d20e92ed99e69091c5ec805eff4f6ae88b096887bd42343cb58e55",
+      "currentSha256": "35d3ebafc7d20e92ed99e69091c5ec805eff4f6ae88b096887bd42343cb58e55"
+    },
+    {
+      "sourcePath": "shared/model/message_test.go",
+      "targetPath": "shared/model/message_test.go",
+      "sourceSha256": "87767db9f8c07bfbc6c362624e49512d98e88688b57e92f1a2008c2326b943ac",
+      "changes": [],
+      "importSha256": "87767db9f8c07bfbc6c362624e49512d98e88688b57e92f1a2008c2326b943ac",
+      "currentSha256": "87767db9f8c07bfbc6c362624e49512d98e88688b57e92f1a2008c2326b943ac"
+    },
+    {
+      "sourcePath": "shared/model/platform.go",
+      "targetPath": "shared/model/platform.go",
+      "sourceSha256": "c8b3d1ba36723931d780d46f8cf79218c4ae8f11c58ce8d8eb3af285796cd9fb",
+      "changes": [],
+      "importSha256": "c8b3d1ba36723931d780d46f8cf79218c4ae8f11c58ce8d8eb3af285796cd9fb",
+      "currentSha256": "c8b3d1ba36723931d780d46f8cf79218c4ae8f11c58ce8d8eb3af285796cd9fb"
+    },
+    {
+      "sourcePath": "shared/model/platform_test.go",
+      "targetPath": "shared/model/platform_test.go",
+      "sourceSha256": "5ce80f38e55154832e7642e6c44db57d6f5af6f2c3abe1d24039d050a52eb15e",
+      "changes": [],
+      "importSha256": "5ce80f38e55154832e7642e6c44db57d6f5af6f2c3abe1d24039d050a52eb15e",
+      "currentSha256": "5ce80f38e55154832e7642e6c44db57d6f5af6f2c3abe1d24039d050a52eb15e"
+    },
+    {
+      "sourcePath": "shared/model/worker.go",
+      "targetPath": "shared/model/worker.go",
+      "sourceSha256": "758def0f9a4bed825b4e36aa25f8235a19b62ffd8c0a42d7665374e7a0c81f64",
+      "changes": [],
+      "importSha256": "758def0f9a4bed825b4e36aa25f8235a19b62ffd8c0a42d7665374e7a0c81f64",
+      "currentSha256": "758def0f9a4bed825b4e36aa25f8235a19b62ffd8c0a42d7665374e7a0c81f64"
+    },
+    {
+      "sourcePath": "shared/model/worker_test.go",
+      "targetPath": "shared/model/worker_test.go",
+      "sourceSha256": "94a86e74e56b0151ea9e96a581562d2d4460532d75118aaa5f890d3d7d3bed81",
+      "changes": [],
+      "importSha256": "94a86e74e56b0151ea9e96a581562d2d4460532d75118aaa5f890d3d7d3bed81",
+      "currentSha256": "94a86e74e56b0151ea9e96a581562d2d4460532d75118aaa5f890d3d7d3bed81"
+    },
+    {
+      "sourcePath": "shared/store/ch_batch_writer.go",
+      "targetPath": "shared/store/ch_batch_writer.go",
+      "sourceSha256": "8d85875a2477031f895a3fd89a0ec3dd50d5309690b2d508475e309e9d4676fb",
+      "changes": [],
+      "importSha256": "8d85875a2477031f895a3fd89a0ec3dd50d5309690b2d508475e309e9d4676fb",
+      "currentSha256": "8d85875a2477031f895a3fd89a0ec3dd50d5309690b2d508475e309e9d4676fb"
+    },
+    {
+      "sourcePath": "shared/store/ch_batch_writer_test.go",
+      "targetPath": "shared/store/ch_batch_writer_test.go",
+      "sourceSha256": "b36e43d12626b6fa1030c4acb98de8d6b82321d43adff8c6b816ddd7b33dc4e6",
+      "changes": [],
+      "importSha256": "b36e43d12626b6fa1030c4acb98de8d6b82321d43adff8c6b816ddd7b33dc4e6",
+      "currentSha256": "b36e43d12626b6fa1030c4acb98de8d6b82321d43adff8c6b816ddd7b33dc4e6"
+    },
+    {
+      "sourcePath": "shared/store/chat_message_row.go",
+      "targetPath": "shared/store/chat_message_row.go",
+      "sourceSha256": "34e2dcc484e407f35222e80dac463239de5dcc7ff1bd7ea68ddf3e6c4f501074",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "9a5511fec85cf1f86786f3600ffd0bc30dc5cd5364c9ed7c2742323c16b0bf96",
+      "currentSha256": "9a5511fec85cf1f86786f3600ffd0bc30dc5cd5364c9ed7c2742323c16b0bf96"
+    },
+    {
+      "sourcePath": "shared/store/chat_message_row_test.go",
+      "targetPath": "shared/store/chat_message_row_test.go",
+      "sourceSha256": "261150cc7f189a5286127e5c47e3091e2aae6dd2ce705998aadb351fc25f1217",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "b8df01d1b9da94d54d5abcead1d7930b16e02aca95708c0f72345dde87e3f872",
+      "currentSha256": "b8df01d1b9da94d54d5abcead1d7930b16e02aca95708c0f72345dde87e3f872"
+    },
+    {
+      "sourcePath": "shared/store/clickhouse.go",
+      "targetPath": "shared/store/clickhouse.go",
+      "sourceSha256": "3428ff65fbfc3f1b973847614bbc1c655bdbda56c010535db13fb83fe984c358",
+      "changes": [],
+      "importSha256": "3428ff65fbfc3f1b973847614bbc1c655bdbda56c010535db13fb83fe984c358",
+      "currentSha256": "3428ff65fbfc3f1b973847614bbc1c655bdbda56c010535db13fb83fe984c358"
+    },
+    {
+      "sourcePath": "shared/store/collection_opt_out.go",
+      "targetPath": "shared/store/collection_opt_out.go",
+      "sourceSha256": "9f91f9a5300155f6404dcd15c325eba73527aa454eb58be05d40363c9f218db7",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "b252fcb9bdbb345df2f6b5c25fa9e4d3d530f1325115cf3e3342b49d854e9b16",
+      "currentSha256": "b252fcb9bdbb345df2f6b5c25fa9e4d3d530f1325115cf3e3342b49d854e9b16"
+    },
+    {
+      "sourcePath": "shared/store/history_store.go",
+      "targetPath": "shared/store/history_store.go",
+      "sourceSha256": "5691c205946a89b18bd6524956d50597c1e8b8c83e87a77ef78074d9eef0e74d",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "8df18796139815f5cfdd39b2b1d6688e204b69ebaa13acbc9b1c8d7c88ebe151",
+      "currentSha256": "8df18796139815f5cfdd39b2b1d6688e204b69ebaa13acbc9b1c8d7c88ebe151"
+    },
+    {
+      "sourcePath": "shared/store/history_store_test.go",
+      "targetPath": "shared/store/history_store_test.go",
+      "sourceSha256": "9b4027d0810cd697216fe1071ce1d9e5dbb1950740402b3aa7c42f0d5e672d57",
+      "changes": [],
+      "importSha256": "9b4027d0810cd697216fe1071ce1d9e5dbb1950740402b3aa7c42f0d5e672d57",
+      "currentSha256": "9b4027d0810cd697216fe1071ce1d9e5dbb1950740402b3aa7c42f0d5e672d57"
+    },
+    {
+      "sourcePath": "shared/store/postgres.go",
+      "targetPath": "shared/store/postgres.go",
+      "sourceSha256": "96fe50ed84424a816390508c94df4025a0b5f0c921557a9b1df06e6c103de306",
+      "changes": [
+        "Go module/import address changed to target repository",
+        "기존 PgStore의 할당·pending 조회·handoff에 단일 채널 범위 적용",
+        "Count only configured product channel assignments so stale test-channel rows cannot consume worker capacity"
+      ],
+      "importSha256": "e630ca41dc5100cd1f8cc41028313e5b27119c3692dd42ae37e8917a26070354",
+      "currentSha256": "8dc85aa1f77d98832288f05321ea427b4ca4202cee239bae8bbef21b008ef672"
+    },
+    {
+      "sourcePath": "shared/store/postgres_history.go",
+      "targetPath": "shared/store/postgres_history.go",
+      "sourceSha256": "442eba67b3f2bd44bbf7d09c4e80ca627d0307937794bf0238390889c6824e6d",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "e4cf41de5ba049a376780f842c348c89a0cf1616985562f041735d1f6578f920",
+      "currentSha256": "e4cf41de5ba049a376780f842c348c89a0cf1616985562f041735d1f6578f920"
+    },
+    {
+      "sourcePath": "shared/store/postgres_test.go",
+      "targetPath": "shared/store/postgres_test.go",
+      "sourceSha256": "5160e30d5bba0b1ded2c081529259416b3de61a38956d937c25368440365a941",
+      "changes": [],
+      "importSha256": "5160e30d5bba0b1ded2c081529259416b3de61a38956d937c25368440365a941",
+      "currentSha256": "5160e30d5bba0b1ded2c081529259416b3de61a38956d937c25368440365a941"
+    },
+    {
+      "sourcePath": "shared/store/redis.go",
+      "targetPath": "shared/store/redis.go",
+      "sourceSha256": "02148badb9ca16d7b612d0f93815605f2a11be4600d120f645d9811bdd16c7d9",
+      "changes": [
+        "Go module/import address changed to target repository",
+        "Read Redis password from the mounted role environment for authenticated live deployment",
+        "Filter orphan cleanup SCAN by Redis STREAM type to preserve live chat generation metadata; verified against real Redis"
+      ],
+      "importSha256": "338e72952d722e638d8bf12ac07f0c5e3b73c7e5b8126fdffc40f62f1b7a8991",
+      "currentSha256": "100d9e55151120956dbfc2fe753964cc6e7a66c9598aa2aa830567babae115c2"
+    },
+    {
+      "sourcePath": "shared/store/redis_integration_test.go",
+      "targetPath": "shared/store/redis_integration_test.go",
+      "sourceSha256": "23ca0516b05d8ba7c458684b630d490deb812aa4b7cbd40d01b913f72315179b",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "1e7fd5758868916b05972e7d5603e956de89315875d7b16f702a90a124768391",
+      "currentSha256": "1e7fd5758868916b05972e7d5603e956de89315875d7b16f702a90a124768391"
+    },
+    {
+      "sourcePath": "shared/store/redis_test.go",
+      "targetPath": "shared/store/redis_test.go",
+      "sourceSha256": "e4eb3708f7771192ebc7f36c6fa239933e0c752b9033fbdac8a9765da1fb7b43",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "07977c0a64577f9018d3da81a2806fe9cb69383749f65a7227b72a7ab46599a3",
+      "currentSha256": "07977c0a64577f9018d3da81a2806fe9cb69383749f65a7227b72a7ab46599a3"
+    },
+    {
+      "sourcePath": "worker/cmd/main.go",
+      "targetPath": "worker/cmd/main.go",
+      "sourceSha256": "fb9c66d7c5bde1b4469ee175a49685c8cd236996b130b346dcaed14f98408551",
+      "changes": [
+        "Go module/import address changed to target repository",
+        "Connect existing SOOP discovery/connector construction to the cookie-auth JSON snapshot reader; preserve original lifecycle and interfaces",
+        "기존 manager에 후원 spool/journal/소유권과 outbox 재시도 연결",
+        "Load the mounted role environment as data and wire explicit single-channel live-test authentication"
+      ],
+      "importSha256": "52b2b984c02465d8914fc0d7ec4cb31f6f9b6adf68067b81f803fc9f4f8cee1e",
+      "currentSha256": "caf9cd03ea5e4b81d8675f0eb6fef8c7a5cf36997022810edf39decaabbdc6a5"
+    },
+    {
+      "sourcePath": "worker/cmd/main_test.go",
+      "targetPath": "worker/cmd/main_test.go",
+      "sourceSha256": "7cfcd5e6a5f58d67118d71d8fa2a0932153a16609dea99a858d9a1986e9d1a66",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "c6f5f65edd8e91b4edcc0b5d0ef003c58027f479f4a591d7da431d94d99dedef",
+      "currentSha256": "c6f5f65edd8e91b4edcc0b5d0ef003c58027f479f4a591d7da431d94d99dedef"
+    },
+    {
+      "sourcePath": "worker/go.mod",
+      "targetPath": "worker/go.mod",
+      "sourceSha256": "3353a7ce32260b5a0df576df4b5bd56bf2faf2265e6dafa736a208472d6c7328",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "7cb2315461f022d46a5a102111ef3b2f4c1b3553381e22e56c37a35bf69d577c",
+      "currentSha256": "7cb2315461f022d46a5a102111ef3b2f4c1b3553381e22e56c37a35bf69d577c"
+    },
+    {
+      "sourcePath": "worker/go.sum",
+      "targetPath": "worker/go.sum",
+      "sourceSha256": "858875698949d60d249ae3b753e6d7cb6c83d77404c0624b6ffdc901116ee4ed",
+      "changes": [],
+      "importSha256": "858875698949d60d249ae3b753e6d7cb6c83d77404c0624b6ffdc901116ee4ed",
+      "currentSha256": "858875698949d60d249ae3b753e6d7cb6c83d77404c0624b6ffdc901116ee4ed"
+    },
+    {
+      "sourcePath": "worker/internal/connector/chzzk.go",
+      "targetPath": "worker/internal/connector/chzzk.go",
+      "sourceSha256": "2db43c6f3a9d562036162bdf74fc353bc71de6ecc73dda336c61bc027ebd29f1",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "46c071daefdc438555ad56452ca3f0e4cc9d47f8c659669d31bee6d163c4ef5a",
+      "currentSha256": "46c071daefdc438555ad56452ca3f0e4cc9d47f8c659669d31bee6d163c4ef5a"
+    },
+    {
+      "sourcePath": "worker/internal/connector/chzzk_emote_test.go",
+      "targetPath": "worker/internal/connector/chzzk_emote_test.go",
+      "sourceSha256": "3a2faf9deb35507b3639bcca559a955aa7a6e2a5f8642b944269d4fa9458d553",
+      "changes": [],
+      "importSha256": "3a2faf9deb35507b3639bcca559a955aa7a6e2a5f8642b944269d4fa9458d553",
+      "currentSha256": "3a2faf9deb35507b3639bcca559a955aa7a6e2a5f8642b944269d4fa9458d553"
+    },
+    {
+      "sourcePath": "worker/internal/connector/chzzk_test.go",
+      "targetPath": "worker/internal/connector/chzzk_test.go",
+      "sourceSha256": "88fce81ab15b76bc9225c9979933fab2c1e20df6e435c02014090cc2645cdbaf",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "f555867cbb494695a119cb9ee3626c8c81a5ef514111e04f2ce3c2f0c2ab46ce",
+      "currentSha256": "f555867cbb494695a119cb9ee3626c8c81a5ef514111e04f2ce3c2f0c2ab46ce"
+    },
+    {
+      "sourcePath": "worker/internal/connector/cime.go",
+      "targetPath": "worker/internal/connector/cime.go",
+      "sourceSha256": "477721c6ef713299468faaac8b55234c26d9f85c1a8fe386b4226e4842464dc0",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "5443b86f7045d00915c5e984ab852d73a2a33305a8d3852d4713c6e8329e71ea",
+      "currentSha256": "5443b86f7045d00915c5e984ab852d73a2a33305a8d3852d4713c6e8329e71ea"
+    },
+    {
+      "sourcePath": "worker/internal/connector/cime_emote_test.go",
+      "targetPath": "worker/internal/connector/cime_emote_test.go",
+      "sourceSha256": "b208d44ddaba3988f87677703e8ea82b6429f3f27d9ba11aec9987c56c2ac003",
+      "changes": [],
+      "importSha256": "b208d44ddaba3988f87677703e8ea82b6429f3f27d9ba11aec9987c56c2ac003",
+      "currentSha256": "b208d44ddaba3988f87677703e8ea82b6429f3f27d9ba11aec9987c56c2ac003"
+    },
+    {
+      "sourcePath": "worker/internal/connector/cime_test.go",
+      "targetPath": "worker/internal/connector/cime_test.go",
+      "sourceSha256": "1cfb39f559ae4abe54150689c63dafba1515ec587d3a2319a33e2447f5695663",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "14059ce0c0a3f7a9e659ce73964e7e5c138fe44c3366ea8e3f5f4a6374aaea49",
+      "currentSha256": "14059ce0c0a3f7a9e659ce73964e7e5c138fe44c3366ea8e3f5f4a6374aaea49"
+    },
+    {
+      "sourcePath": "worker/internal/connector/connector.go",
+      "targetPath": "worker/internal/connector/connector.go",
+      "sourceSha256": "d088071216a0921cb6d3b9bfafdcdb9be7fa964f0e5403b438f976457fa73bfd",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "424b5729fbb34c8e0d00c28c6bed1a993f288ef90a8adf2969bf638538d0c0d5",
+      "currentSha256": "424b5729fbb34c8e0d00c28c6bed1a993f288ef90a8adf2969bf638538d0c0d5"
+    },
+    {
+      "sourcePath": "worker/internal/connector/factory.go",
+      "targetPath": "worker/internal/connector/factory.go",
+      "sourceSha256": "228a7e78cb3f326b3722887cbf4cfe0f4f3d22baa649cd748213dc2812b0e73b",
+      "changes": [
+        "Go module/import address changed to target repository",
+        "Connect existing SOOP discovery/connector construction to the cookie-auth JSON snapshot reader; preserve original lifecycle and interfaces",
+        "Explicit anonymous-test mode for public live validation; cookie authentication remains the default"
+      ],
+      "importSha256": "43e44b65f0ee4ec0cf084f7fa9b76b683a850ed4f5c1bf0beaee58f7b6d36200",
+      "currentSha256": "09f2abc12be399ab666b75168b39580fdaf720cc1375f058d07663f6807bc8cc"
+    },
+    {
+      "sourcePath": "worker/internal/connector/helpers_test.go",
+      "targetPath": "worker/internal/connector/helpers_test.go",
+      "sourceSha256": "7d4318a923f6cbacf956bf3573dbd0e56e39f575c7e234783adfba16a8897025",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "1aa2d333e7d5bf47f5b763ae93a4477506ba81b6bb137f04168cdfedbde6524d",
+      "currentSha256": "1aa2d333e7d5bf47f5b763ae93a4477506ba81b6bb137f04168cdfedbde6524d"
+    },
+    {
+      "sourcePath": "worker/internal/connector/http_body.go",
+      "targetPath": "worker/internal/connector/http_body.go",
+      "sourceSha256": "c81e75780d4ac0f56655bdbeba94fcdbafc66de4389fe9a3c61bb300add8a443",
+      "changes": [],
+      "importSha256": "c81e75780d4ac0f56655bdbeba94fcdbafc66de4389fe9a3c61bb300add8a443",
+      "currentSha256": "c81e75780d4ac0f56655bdbeba94fcdbafc66de4389fe9a3c61bb300add8a443"
+    },
+    {
+      "sourcePath": "worker/internal/connector/retry.go",
+      "targetPath": "worker/internal/connector/retry.go",
+      "sourceSha256": "e13c0d519feaa9956b4c8ce93699c5cb12e783ecccb14c9983c00243920cd09d",
+      "changes": [],
+      "importSha256": "e13c0d519feaa9956b4c8ce93699c5cb12e783ecccb14c9983c00243920cd09d",
+      "currentSha256": "e13c0d519feaa9956b4c8ce93699c5cb12e783ecccb14c9983c00243920cd09d"
+    },
+    {
+      "sourcePath": "worker/internal/connector/retry_test.go",
+      "targetPath": "worker/internal/connector/retry_test.go",
+      "sourceSha256": "c9be7a277860635cd7bd6007765c405953ec062e91de982e37befb222f344133",
+      "changes": [],
+      "importSha256": "c9be7a277860635cd7bd6007765c405953ec062e91de982e37befb222f344133",
+      "currentSha256": "c9be7a277860635cd7bd6007765c405953ec062e91de982e37befb222f344133"
+    },
+    {
+      "sourcePath": "worker/internal/connector/security_test.go",
+      "targetPath": "worker/internal/connector/security_test.go",
+      "sourceSha256": "589a6cedf9586cdca251d0132558532fb95f34d3c0362b00f2443d6865aaa7e6",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "94721b9986c4273888fbb4ffb31dee0b7022858c4a3d3f3bd48d99a711fede7e",
+      "currentSha256": "94721b9986c4273888fbb4ffb31dee0b7022858c4a3d3f3bd48d99a711fede7e"
+    },
+    {
+      "sourcePath": "worker/internal/connector/soop.go",
+      "targetPath": "worker/internal/connector/soop.go",
+      "sourceSha256": "bf25a354e05b50eee7f7c007e67dbf17643a66cf7589fbd12bf2e7d3e91871a1",
+      "changes": [
+        "Go module/import address changed to target repository",
+        "Connect existing SOOP discovery/connector construction to the cookie-auth JSON snapshot reader; preserve original lifecycle and interfaces",
+        "실제 join ACK 대기, 현재 player API, epoch ID, 정수 별풍선의 채팅 drop 이전 저장 분리"
+      ],
+      "importSha256": "8a900c65f43bfd1c7f71e5433d2c3d924cffc2bcb6f4b2dbcf437a195c55e93b",
+      "currentSha256": "5b36864e251d57319b2de68b847b819988e6b9df9a9714d04681e6c96f03a630"
+    },
+    {
+      "sourcePath": "worker/internal/connector/soop_test.go",
+      "targetPath": "worker/internal/connector/soop_test.go",
+      "sourceSha256": "669d4e6c88fe29b32cb5cb42a0e1e58f52a5ffa65670beb8a7f0c6a5dd38daa1",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "d7347091594d2e5d4f0f799d157ad7218cd7cc732ceecc2d475157f89f0a2aa6",
+      "currentSha256": "d7347091594d2e5d4f0f799d157ad7218cd7cc732ceecc2d475157f89f0a2aa6"
+    },
+    {
+      "sourcePath": "worker/internal/manager.go",
+      "targetPath": "worker/internal/manager.go",
+      "sourceSha256": "82a52fcc7310331ab6e8d2135643ca1ef32ef0462da0498a00e2ef0921dfaafd",
+      "changes": [
+        "Go module/import address changed to target repository",
+        "대상 밖 접속 차단, 동시 중복 dial 예약 방지, 기존 lifecycle에 소유권 수락/해제 연결"
+      ],
+      "importSha256": "d7221c680d5f9b7df62bdc5b47a83150b5d0fa034235283306ce95a49248a070",
+      "currentSha256": "58d9d36744a59af1eedcd8d294ea7e7932bdf564697bff254f3ada47bae89506"
+    },
+    {
+      "sourcePath": "worker/internal/manager_test.go",
+      "targetPath": "worker/internal/manager_test.go",
+      "sourceSha256": "c0a90f035446a2e87a781fd39b20e5d68c0eba803035148ed1fc65c56c3a6856",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "e87848f603db7aeeb0bb21510d51210969469de7ba76e2476140871426cd8409",
+      "currentSha256": "e87848f603db7aeeb0bb21510d51210969469de7ba76e2476140871426cd8409"
+    },
+    {
+      "sourcePath": "worker/internal/metrics.go",
+      "targetPath": "worker/internal/metrics.go",
+      "sourceSha256": "1b57d9b345bbc937b31aa6d8dbee06bc6b34054b38540049d49448f2111f05ff",
+      "changes": [],
+      "importSha256": "1b57d9b345bbc937b31aa6d8dbee06bc6b34054b38540049d49448f2111f05ff",
+      "currentSha256": "1b57d9b345bbc937b31aa6d8dbee06bc6b34054b38540049d49448f2111f05ff"
+    },
+    {
+      "sourcePath": "worker/internal/metrics_test.go",
+      "targetPath": "worker/internal/metrics_test.go",
+      "sourceSha256": "b84c49ddd687da9b75f6acac600bfbdf3a1861d3e4f8bc6fce7fe099d71ddf15",
+      "changes": [],
+      "importSha256": "b84c49ddd687da9b75f6acac600bfbdf3a1861d3e4f8bc6fce7fe099d71ddf15",
+      "currentSha256": "b84c49ddd687da9b75f6acac600bfbdf3a1861d3e4f8bc6fce7fe099d71ddf15"
+    },
+    {
+      "sourcePath": "worker/internal/pipeline/dedup.lua",
+      "targetPath": "worker/internal/pipeline/dedup.lua",
+      "sourceSha256": "a0bd6530820add0610eefb08c188c423e899ec3b1a9b2cc6ce978036c6bba81a",
+      "changes": [],
+      "importSha256": "a0bd6530820add0610eefb08c188c423e899ec3b1a9b2cc6ce978036c6bba81a",
+      "currentSha256": "a0bd6530820add0610eefb08c188c423e899ec3b1a9b2cc6ce978036c6bba81a"
+    },
+    {
+      "sourcePath": "worker/internal/pipeline/publisher.go",
+      "targetPath": "worker/internal/pipeline/publisher.go",
+      "sourceSha256": "413fb2fafad75cb8fb4ef236dd115afdbb80763b43556e0f10072bfe6278db44",
+      "changes": [
+        "Go module/import address changed to target repository",
+        "SOOP 최근 채팅의 bounded generation stream 사용 및 raw hash dedup 제외"
+      ],
+      "importSha256": "b28db2ba3ccd4d93163eaee64feaf68fd76389b7dd4dfa2a40e1f415bcef325a",
+      "currentSha256": "8bbd02dccc96197366695e9afd2dc3994d65ce6de2d51ff01b8335399ee52631"
+    },
+    {
+      "sourcePath": "worker/internal/pipeline/publisher_integration_test.go",
+      "targetPath": "worker/internal/pipeline/publisher_integration_test.go",
+      "sourceSha256": "0181357efc9587028feb9c06ad63e0ea8a2f3064f8c33767bcfae03993bcddd4",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "c4e1a607724c19ebba1fd5e4f4f2a37fae1b723197f2e5db69255e05ee9d6223",
+      "currentSha256": "c4e1a607724c19ebba1fd5e4f4f2a37fae1b723197f2e5db69255e05ee9d6223"
+    },
+    {
+      "sourcePath": "worker/internal/pipeline/publisher_test.go",
+      "targetPath": "worker/internal/pipeline/publisher_test.go",
+      "sourceSha256": "994d4e0e52f2823dbe074df575fcbec5843da7b906ba8265bd1c89c8d402495b",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "030c60e325b357ba269a880449842f71af1d40b3c69842584e3353ebf49bc0d1",
+      "currentSha256": "030c60e325b357ba269a880449842f71af1d40b3c69842584e3353ebf49bc0d1"
+    },
+    {
+      "sourcePath": "worker/internal/ratecounter.go",
+      "targetPath": "worker/internal/ratecounter.go",
+      "sourceSha256": "cf4393000f382d27d88f7c55264c425838a1ef2a5193a6b5110294fc95a3a136",
+      "changes": [],
+      "importSha256": "cf4393000f382d27d88f7c55264c425838a1ef2a5193a6b5110294fc95a3a136",
+      "currentSha256": "cf4393000f382d27d88f7c55264c425838a1ef2a5193a6b5110294fc95a3a136"
+    },
+    {
+      "sourcePath": "worker/internal/ratecounter_test.go",
+      "targetPath": "worker/internal/ratecounter_test.go",
+      "sourceSha256": "da125a153aa0f0c41cbadba8dcb50b322416c1246d86e06eedb7a72b27219d34",
+      "changes": [],
+      "importSha256": "da125a153aa0f0c41cbadba8dcb50b322416c1246d86e06eedb7a72b27219d34",
+      "currentSha256": "da125a153aa0f0c41cbadba8dcb50b322416c1246d86e06eedb7a72b27219d34"
+    },
+    {
+      "sourcePath": "worker/internal/runtime_test.go",
+      "targetPath": "worker/internal/runtime_test.go",
+      "sourceSha256": "f110a4a95880da0190a909f7a421a60492c7a7a9f3cfbbcf47f8f66b29dd746e",
+      "changes": [
+        "Go module/import address changed to target repository"
+      ],
+      "importSha256": "9689d96c3e7106831fa7d8768b0285cb57859f3bf788e7b7f1edbd4cf5b3abbe",
+      "currentSha256": "9689d96c3e7106831fa7d8768b0285cb57859f3bf788e7b7f1edbd4cf5b3abbe"
+    },
+    {
+      "sourcePath": "worker/internal/server.go",
+      "targetPath": "worker/internal/server.go",
+      "sourceSha256": "528f4ea040430d506a58f80cad272f63f6338e2f7b05300d0423cd47a662f7f9",
+      "changes": [],
+      "importSha256": "528f4ea040430d506a58f80cad272f63f6338e2f7b05300d0423cd47a662f7f9",
+      "currentSha256": "528f4ea040430d506a58f80cad272f63f6338e2f7b05300d0423cd47a662f7f9"
+    },
+    {
+      "sourcePath": "worker/internal/server_test.go",
+      "targetPath": "worker/internal/server_test.go",
+      "sourceSha256": "dca86e0665190a9c3c821e32ebf1a7a943205b925838a8fff82517ca3cd299ca",
+      "changes": [],
+      "importSha256": "dca86e0665190a9c3c821e32ebf1a7a943205b925838a8fff82517ca3cd299ca",
+      "currentSha256": "dca86e0665190a9c3c821e32ebf1a7a943205b925838a8fff82517ca3cd299ca"
+    }
+  ]
+}

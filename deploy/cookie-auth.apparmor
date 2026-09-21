@@ -1,0 +1,7 @@
+# Dedicated container label permits Chromium's own user-namespace sandbox on
+# Ubuntu 24.04+. It does not change the host-wide user-namespace restriction.
+abi <abi/4.0>,
+include <tunables/global>
+profile rogi-collector-cookie-auth flags=(unconfined) {
+  userns,
+}

@@ -1,0 +1,12 @@
+Meloming Chat Collector
+Copyright DYLabs
+
+This repository is an independent version of software derived from
+the former Meloming service's chat data plane.
+
+The names and marks of third-party streaming platforms and infrastructure
+providers belong to their respective owners. Their appearance identifies
+interoperability targets only and does not imply sponsorship or endorsement.
+
+See LICENSE and DISCLAIMER.md for the terms and important limitations that
+apply to this software.

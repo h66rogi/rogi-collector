@@ -2,7 +2,7 @@
 from __future__ import annotations
 import json,shutil,subprocess,time
 from pathlib import Path
-REQUIRED=('postgres','redis','discover','coordinator','worker','query')
+REQUIRED=('postgres','redis','discover','coordinator','worker','query','cookie-auth')
 def command(argv):
  r=subprocess.run(argv,text=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE);return {'ok':r.returncode==0,'output':(r.stdout or r.stderr).strip()}
 def parse_containers(raw):
@@ -28,6 +28,6 @@ def main():
  units={'target':command(['systemctl','is-active','rogi-collector.target']),**{name:command(['systemctl','is-active',f'rogi-collector-role@{name}.service']) for name in REQUIRED}}
  compose=command(['docker','compose','--env-file','/etc/rogi-collector/runtime.env','-f',str(current/'deploy/compose.production.yaml'),'ps','--format','json'])
  assessment=evaluate(manifest,receipt,units,compose)
- status={'checkedAt':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'sourceSha':manifest.get('sourceSha') if isinstance(manifest,dict) else None,'receipt':receipt,**assessment,'dataDisk':shutil.disk_usage('/srv/rogi-collector')._asdict(),'latestBackup':{'path':str(latest),'ageSeconds':int(time.time()-latest.stat().st_mtime)} if latest else None,'capabilities':{'grpc7443':'unavailable-health-only','soopCollector':'not-claimed-by-health-check'}}
+ status={'checkedAt':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'sourceSha':manifest.get('sourceSha') if isinstance(manifest,dict) else None,'receipt':receipt,**assessment,'dataDisk':shutil.disk_usage('/srv/rogi-collector')._asdict(),'latestBackup':{'path':str(latest),'ageSeconds':int(time.time()-latest.stat().st_mtime)} if latest else None,'capabilities':{'grpc7443':'mtls-collector-v1','soopCollector':'single-configured-channel; inspect channel status separately'}}
  print(json.dumps(status,sort_keys=True,indent=2));return 0 if status['ok'] else 1
 if __name__=='__main__':raise SystemExit(main())

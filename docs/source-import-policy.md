@@ -1,8 +1,9 @@
 # 이식 범위와 Git 이력
 
 원본 clone은 대상 밖의 `_references/rogimarble/dylabs/`에 있다.
-현재 이 저장소에는 신규 작성한 문서와 ignore 규칙만 있으며, 원본 소스나 이력을
-아직 반입하지 않았다.
+현재 공개 collector의 코드와 구조를 경로별 허용 목록에 따라 직접 반입했다.
+원본 커밋/대상 파일/수정 이유는 `source-imports.md`와 `source-import-manifest.json`에 기록한다.
+원본 Git 이력과 private 코드 전체는 반입하지 않았다.
 
 공개 `meloming-chat-collector`의 필요한 파일을 우선 사용한다. private
 `meloming-chat-service`는 차이와 설계 의도를 검토하는 자료다. 이미 공개된 collector도

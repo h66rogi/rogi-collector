@@ -13,5 +13,6 @@ const lines = {
   POSTGRES_IMAGE: manifest.images.postgres, REDIS_IMAGE: manifest.images.redis,
   DISCOVER_IMAGE: manifest.images.discover, COORDINATOR_IMAGE: manifest.images.coordinator,
   WORKER_IMAGE: manifest.images.worker, QUERY_IMAGE: manifest.images.query,
+  COOKIE_AUTH_IMAGE: manifest.images["cookie-auth"], QUERY_BIND_IP: manifest.runtimeNonSecret.queryBindIp,
 };
 for (const [key, value] of Object.entries(lines)) process.stdout.write(`${key}=${q(value)}\n`);

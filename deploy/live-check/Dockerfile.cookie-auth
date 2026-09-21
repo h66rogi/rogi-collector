@@ -1,0 +1,8 @@
+FROM python:3.12-slim-bookworm
+RUN apt-get update && apt-get install -y --no-install-recommends chromium chromium-driver ca-certificates && rm -rf /var/lib/apt/lists/*
+COPY cookie-auth/requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r /app/requirements.txt && useradd --uid 65532 --create-home collector
+COPY cookie-auth/service.py /app/service.py
+USER 65532:65532
+ENV SOOP_CHROME_BINARY=/usr/bin/chromium SOOP_CHROMEDRIVER=/usr/bin/chromedriver
+ENTRYPOINT ["python","/app/service.py"]

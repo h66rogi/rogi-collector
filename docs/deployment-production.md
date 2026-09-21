@@ -1,92 +1,84 @@
-# Collector production deployment preparation
+# Collector 정식 배포
 
-This is a production delivery contract, not evidence of an EC2 deployment. The current Go images expose process health only. They do not implement collection, persistence, authenticated gRPC, or mTLS. The feedback profile therefore does not listen on or publish TCP 7443. Infrastructure may reserve an inbound rule from the marble application security group, but it must remain unused until the query implementation and certificate checks pass.
+정식 profile은 `soop-single-channel`이다. 초기 health-only profile을 실제 원본 기반
+수집기와 cookie-auth로 교체했다. GitHub main release → private GHCR digest → 승인된
+SSM 전달 → host 검증/마이그레이션 → systemd 감독 경로를 사용한다.
+현재 적용 증거는 [구현 상태](implementation-status.md)에 따로 기록한다.
 
-## Host and product boundary
+## 실행과 저장 경계
 
-Collector runs on its own EC2 instance, Compose project, PostgreSQL, Redis, encrypted data EBS, secrets, release lock, and backup lifecycle. Marble uses a different EC2 instance and does not mount collector paths or connect to collector PostgreSQL/Redis.
+- 정식 Compose 프로젝트: `rogi-collector`; 역할은 PostgreSQL, Redis, discover,
+  coordinator, worker, query, cookie-auth이다.
+- release bundle과 current: `/opt/rogi-collector/app`; 설정: `/etc/rogi-collector`;
+  tmpfs 비밀 파일: `/run/rogi-collector`; encrypted data EBS: `/srv/rogi-collector`.
+- host-ready는 EBS mount와 예상 UUID를 검사한다. 빠진 EBS를 root 디스크의 빈 폴더로 대체하지 않는다.
+- 검증용 `live-check` DB·spool은 보존하고 정식 DB로 섞지 않는다. 첫 정식 시작의 대상은 h66rogi 하나다.
+- discover/worker는 SOOP outbound를 사용한다. query는 VPC private IP의 7443만 게시하고,
+  SG에서 주루마블 SG를 허용한다. 서버 SAN `collector.internal`, TLS 1.3, client URI 권한을 검증한다.
+  PostgreSQL/Redis에는 host port가 없다. 기존 container IMDS guard를 유지한다.
 
-| Purpose | Path |
-| --- | --- |
-| immutable release bundles and `current` link | `/opt/rogi-collector/app` |
-| non-secret host configuration and expected EBS UUID | `/etc/rogi-collector` |
-| role-specific runtime secrets and deployment lock | `/run/rogi-collector` |
-| PostgreSQL, Redis, and worker spool EBS mount | `/srv/rogi-collector` |
-| installed public deployment helpers | `/usr/local/lib/rogi-collector` |
+## 비밀 설정과 재부팅
 
-The EC2 root volume must never substitute for a missing data volume. `deploy.sh` requires `/srv/rogi-collector` to be a mount point and compares its UUID with `/etc/rogi-collector/data-volume.uuid` before pulling or starting anything. EC2 replacement and EBS deletion are separate operations; deletion protection and attachment are owned by the infrastructure root.
+Secrets Manager의 runtime SecretString은 다음 정확한 키 집합이다. 실제 값은 Git이나 bundle에 넣지 않는다.
 
-## Release manifest v1
+`postgres-admin-password`, `postgres-migrate-password`, `migrate.pgpass`, `redis-password`,
+`discover.env`, `coordinator.env`, `worker.env`, `query.env`, `cookie-auth.env`,
+`app-migrate.env`, `tls-ca.pem`, `tls-ca.key`.
 
-The real manifest is a private release input and is not committed. It lives at the root of the staged release bundle so migration and Compose checksums resolve within that bundle. Required fields are shared with marble:
+기존 root-only `secrets-manager.json`의 ARN/region을 통해 instance role이 읽는다.
+새 비밀 세대를 tmpfs에 쓰고 검증한 뒤 역할 UID로 소유권을 설정한다.
+모든 앱은 자기 역할 파일만 mount한다. SOOP_ID/PW는 cookie-auth 파일에만 들어가며
+Docker env_file을 쓰지 않고 프로세스 안에서 `ROLE_ENV_FILE`의 KEY=value를 읽는다.
+쿠키 자체는 encrypted EBS에 0600으로 원자 교체하고 discover/worker에 RO 공유한다.
+root 호스트 관리자는 런타임 비밀에 접근할 수 있다.
 
-- `schemaVersion: 1`, `product: rogi-collector`, and `profile: feedback`;
-- a 40-character lowercase `sourceSha`, bounded `releaseId`, and `contractVersion`;
-- `composeSha256` for `deploy/compose.production.yaml`;
-- an exact `runtimeFiles` allow-list with SHA-256 values for `deploy/run-migrations.sh` and every file mounted from `deploy/initdb/`;
-- `images` entries for postgres, redis, discover, coordinator, worker, and query, each as `repository@sha256:<64 lowercase hex>`;
-- a sorted `migrations` array that exactly lists every on-disk `deploy/migrations/*.sql` file once with its SHA-256;
-- `runtimeNonSecret` with the fixed host roots, non-secret database role names, Compose project name, and `capabilities.grpc7443=unavailable-health-only`.
+`CHANNEL_ALLOWLIST=soop:h66rogi`, `SOOP_AUTH_MODE=cookie`를 모든 Go 역할에 설정한다.
+기타 필드는 [역할별 인계](collector-code-handoff.md)를 따른다. 원래 health-only 역할 설정을
+그대로 쓸 수 없다. 정식 활성화 전 새 키 집합과 역할별 DB 계정·권한을 준비해야 한다.
 
-The validator rejects tags without digests, unknown product/profile paths, migration traversal, missing files, and checksum drift. Missing, duplicate, or changed allow-listed runtime files also reject the bundle before image pull or database access. It does not accept secret values. Private GHCR authentication comes from the dedicated registry Secrets Manager entry into a root-only `/run` Docker config used only for pull and immediately removed. Database passwords, TLS material, AWS state, host addresses, and the actual manifest remain outside Git.
+## 데이터베이스와 배포
 
-## Secrets and database roles
+기존 `deploy/migrations`의 marker checksum 원장은 보존한다. 이어 query 이미지의 `/migrate`를
+app-migrate 역할로 한 번 실행하고 `shared/migrations`의 앱 원장을 별도로 유지한다.
+둘 다 성공해야 current를 승격한다. 런타임 계정은 DDL 권한 없이 schema/table/sequence 권한만 받는다.
+새 migration의 table/sequence에도 권한이 이어지도록 migration owner의 default privileges를 설정한다.
 
-`/run/rogi-collector` is tmpfs populated by the private executable `/etc/rogi-collector/load-secrets` before Docker or application units start. `rogi-collector-host-ready.service` asserts the EBS mount point and UUID, invokes that hook, and rejects missing, empty, or group/world-readable secret files. Files are mounted individually:
+manifest는 7개 image digest, 공개 runtime 파일 allowlist checksum, SQL checksum,
+private IP를 포함한 비밀 없는 host overlay를 검증한다. tag만 있는 이미지는 허용하지 않는다.
+첫 health-only → SOOP 전환은 새 admission helper/secret schema를 설치한 뒤 수행한다.
+이후에는 기존 release updater가 같은 profile을 처리한다.
 
-| File | Consumer |
-| --- | --- |
-| `postgres-admin-password` | PostgreSQL bootstrap only |
-| `migrate.pgpass` | one-shot migration only; mode 0600 |
-| `redis-password` | Redis only |
-| `discover.env` | discover only |
-| `coordinator.env` | coordinator only |
-| `worker.env` | worker only |
-| `query.env` | query only |
+systemd는 역할별 foreground Compose를 감독하고 컨테이너 종료 후 재시작한다.
+`--force-recreate`로 새 secret inode와 이미지/설정을 다시 mount한다. Compose restart는 no다.
+재부팅 때 host-ready → DB/Redis → marker/app migration → 각 역할 순서로 시작한다.
+일일 DB backup/S3 upload와 10분 release timer는 기존 경로를 유지한다.
+스키마 down migration, data volume 삭제, 이미지 host build는 배포 중 실행하지 않는다.
 
-The official PostgreSQL and Redis images run as fixed container UIDs 70 and 999; host preparation creates and owns their bind directories before Compose, and every bind mount uses `create_host_path: false`. The PostgreSQL first-volume initialization script creates the named migration role from its dedicated secret. The migration runner serializes apply operations with a PostgreSQL transaction advisory lock and commits each SQL file together with its checksum ledger row in one transaction. It skips an identical applied file and rejects checksum drift. The migration database role owns schema changes but is not mounted into application roles. Runtime roles receive only their own future credentials. The current health-only images do not consume these files, which is an explicit capability limitation rather than proof of credential isolation. Before live use, container tests must show that each role cannot read another role's secret, migration credentials, or IMDS.
+## 인증서
 
-## Deployment sequence and supervision
+root-only issuer CA key는 Secrets Manager와 host tmpfs에만 두고 앱에 mount하지 않는다.
+서버 leaf는 90일 유효하며 boot 준비와 일일 `rogi-collector-tls.timer`가 확인한다.
+30일 미만이면 새 key/cert를 검증하고 디렉터리 세대를 교체한 뒤 query만 재시작한다.
+수동 회전 확인은 `rotate-server-tls.py --force --restart`로 할 수 있다.
+CA 변경은 소비자 신뢰 저장소와 함께 조정해야 하며 자동으로 별도 CA를 생성하지 않는다.
 
-From a verified release source, `sudo deploy/install-runtime.sh` installs the public helpers under `/usr/local/lib/rogi-collector`, installs and enables the systemd units without starting them, and leaves EBS mounting and private secret-loader installation to the approved host process. Stage the bundle as `/opt/rogi-collector/app/releases/<releaseId>`, then invoke:
+소비자는 자신의 client private key/certificate와 CA를 별도로 받아야 한다.
+첫 주루마블 읽기 인증서는 365일이며 URI `spiffe://rogi-collector/rogimarble/reader`로 h66rogi에만 권한이 있다.
+소비자 인증서 발급/갱신은 운영자가 issuer로 서명해 전달하는 절차다. 서버 leaf 자동 회전과 구분한다.
+실제 게임 소비 프로세스의 재시작/credential reload 연결은 주루마블 inbox 구현 단계에 반영한다.
 
-```sh
-sudo /usr/local/lib/rogi-collector/deploy.sh --manifest /opt/rogi-collector/app/releases/<releaseId>/manifest.json
-```
+## 쿠키 브라우저
 
-The helper acquires `/run/rogi-collector/deploy.lock`, requires the manifest to be inside the exact selected release directory, validates manifest and checksums, checks the data mount UUID, renders a candidate non-secret environment, validates Compose interpolation, pulls immutable digests, and runs database readiness and the one-shot migration against that candidate. Only after migration succeeds does it atomically promote `current`, install the durable non-secret runtime environment, restart attached systemd role units, and execute health smoke checks. A failed migration leaves the previous `current` link in place. It never runs a down migration, `compose down -v`, or a host image build.
+Ubuntu의 user namespace 제한에는 `deploy/cookie-auth.apparmor`를 설치한다.
+Chromium sandbox는 유지하며 현재 이미지의 seccomp는 unconfined다.
+쿠키 서비스 health는 프로세스 가용성이고 로그인 준비 상태와는 별개다.
+24시간 갱신과 인증된 on-demand refresh API를 제공한다. API는 외부 host port로 공개하지 않는다.
 
-Compose sets `restart: "no"`. Each systemd template invocation runs `docker compose up --no-deps <one-role>` in the foreground; the role name is a positional service argument, not an `--attach` option value. Container exit is therefore visible and restarted under host supervision. A detached `compose up -d` result is not operational evidence. Migration failure prevents role units from starting. Rollback selects a previously staged compatible manifest and images; it does not reverse schema migrations automatically.
+## 검증
 
-## Network and capability gate
-
-PostgreSQL and Redis have internal networks only and no host ports. Role health endpoints are container-internal. Query has no published 7443 port in the feedback profile. Live enablement requires all of the following in a later release: implemented query RPCs, SAN/CA-verified mTLS, consumer/channel authorization, private 7443 listener, SG source limited to the marble app SG, certificate rotation evidence, and integration replay tests.
-
-## CI and release boundary
-
-Public pull-request CI runs Go/contract tests, shell syntax, manifest fixture validation, secret scanning, and static infrastructure checks with read-only repository permission. It receives no AWS, SSH, registry-push, production manifest, or secret access. The trusted `release` workflow runs only for `main` push or an explicit `main` dispatch, repeats the test gate, publishes immutable private GHCR digests, and emits public checksummed release metadata/source assets without secret values. Its separate privileged `private-deploy` `workflow_run` consumer accepts only this repository's successful `main` push release, checks out no triggering code, assumes the scoped AWS role through OIDC, and invokes the parameter-free product SSM document. The host receives only a temporary packages-read job credential through the dedicated registry Secrets Manager entry; it receives no human PAT.
-
-## Verification status
-
-`tools/ops/test.sh` is deliberately Docker-free. It validates a synthetic manifest, migration and Compose checksums, rendered non-secret environment, YAML parsing, shell syntax, absence of host builds/ports, bind auto-creation, `restart: "no"`, and the health-only capability declaration. Its fake-command deployment run records and checks host-ready → pull → migration → target restart ordering and verifies release promotion without invoking Docker or systemd. Passing it does not prove Compose startup, database permissions, EBS persistence, systemd recovery, mTLS, collection, or EC2 deployment. Those require the selected AWS account path and an actual host.
-
-## Public release updater, monitoring, and backups
-
-`rogi-collector-update.timer` polls the configured public repository every ten minutes without a GitHub token. The fetcher accepts only non-draft `production-<sourceSha>` assets whose archive checksum, embedded manifest SHA, and successful `.github/workflows/release.yml` push on `main` agree. It safely extracts into `/opt/rogi-collector/app/releases`, strictly merges root-owned `/etc/rogi-collector/runtime-overlay.json`, and invokes the same locked deploy helper. `deploy/release-source.example.json` and `deploy/runtime-overlay.example.json` document the non-secret host input shape.
-
-Public polling covers release metadata and healthy deployed-receipt no-op checks. Pulling a new private digest is driven by the matching
-`private-deploy` run while its packages-read job token is temporarily available: the workflow writes exact `{username,token}` JSON to
-the dedicated Secrets Manager entry, invokes the fixed SSM document, waits for its result, and clears the value on exit. The host creates
-a root-only Docker config under `/run` for the pull and deletes it on success or failure. Without that credential a new-image pull fails
-closed and preserves the current release. Retry by rerunning the failed `private-deploy` run to obtain a fresh job token; do not add an
-anonymous fallback, persistent login, or human PAT. Public Release assets do not make GHCR images public.
-
-`rogi-collector-backup.timer` creates a daily PostgreSQL custom-format logical dump under the data EBS and retains seven days. `production-status.py` reports target/container state, data-disk usage, latest backup age, deployed receipt, and the explicit health-only capability profile. These checks do not claim that collection or gRPC 7443 is available.
-
-### Instance-role secret materialization
-
-When no private `/etc/rogi-collector/load-secrets` override is installed, host readiness reads root-owned mode 0400/0600 `/etc/rogi-collector/secrets-manager.json`, uses the EC2 instance role through `python3-boto3` to fetch exactly one Secrets Manager JSON `SecretString`, rejects missing, empty, or extra keys, and atomically writes the eight role-specific files into `/run/rogi-collector`. The ARN and region are metadata only; secret values never enter the release bundle, manifest, environment overlay, or persistent application directory.
-
-The updater skips a candidate only when the deployed receipt has the same source SHA and image map and every supervised role unit is active. It queries GitHub's compare API and accepts automatic movement only when the candidate is the same commit or a descendant of the deployed SHA. Rollback therefore remains an explicit operator action rather than an automatic poll result.
-
-Backups are written to a raw temporary file before compression, so a failing `pg_dump` cannot be hidden by a successful `gzip`. After local validation, `upload-backup-s3.py` reads root-owned mode 0400/0600 `/etc/rogi-collector/backup-s3.json`, uploads through the instance role to the configured private bucket with S3 server-side encryption, and fails the backup unit if upload fails. Bucket credentials are never stored in the repository or host metadata.
+`make race`, `make build`, `make source-check`, `tools/ops/test.sh`,
+`python3 tools/ops/test_rotate_server_tls.py`, Selenium 환경의 cookie-auth unittest를 사용한다.
+manifest 변조·secret 경계·migration 실패 시 승격 거부·인증서 동일 CA 회전을 검사한다.
+정식 EC2에서는 7개 역할 health, h66rogi 상태 RPC, 인증서 교체 후 peer 연결,
+강제 종료/재부팅 복구, backup 완료를 별도로 확인한다.
+프로세스 healthy를 방송 연결 또는 게임 연동 성공으로 표현하지 않는다.

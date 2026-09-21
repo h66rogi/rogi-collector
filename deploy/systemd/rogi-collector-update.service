@@ -11,4 +11,4 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/rogi-collector/app /run/rogi-collector /usr/local/lib/rogi-collector /etc/systemd/system /etc/rogi-collector
+ReadWritePaths=/opt/rogi-collector/app /run/rogi-collector /usr/local/lib/rogi-collector /etc/systemd/system /etc/rogi-collector /srv/rogi-collector /etc/apparmor.d

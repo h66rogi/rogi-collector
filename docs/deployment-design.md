@@ -1,10 +1,28 @@
-# 로기챗 공통 수집기 · 배포와 소비 계약 v1
+# rogimarble 방송 입력 수집기 · 배포와 소비 계약 v1
 
-작성: 2026-09-21. **목표 설계 문서다. 로컬 Go health skeleton·Compose·migration은 구현됐지만 실제 수집·gRPC·Terraform은 구현 전**이다.
+작성: 2026-09-21. **목표 설계 문서다. 공개 원본 수집 코드를 반입했으며, 아래 쿠키 인증·후원 내구성·신규 RPC의 완료 여부는 [구현 상태](implementation-status.md)를 따른다.**
 전체 제품 설계는 [rogimarble 저장소](https://github.com/h66rogi/rogimarble)의
 `docs/final-design.md`에서 관리한다. 현재 두 레포의 문서는 로컬 작성 상태이며 원격 게시 전이다.
 이 문서는 collector가 독립적으로 구현할 경계를 정한다. 실행 작업은 [구현 계획](implementation-plan.md),
 초기 조사 근거는 [조사 기록](repository-review.md)에 분리했다.
+
+## 첫 출시 대상 · 사용자 확정 변경 (2026-09-21)
+
+이 도구는 rogimarble의 후원 기반 게임 진행과 후원자 채팅 선택에 필요한 입력을 제공한다.
+chat-collector는 기본 코드베이스이며, 원본의 범용 기능 목록이 이 제품의 구현 목표는 아니다.
+첫 제품은 후로기(`h66rogi`) 한 채널의 주루마블 방송을 위한 수집기다.
+연령제한 방송이므로 주입한 로그인 쿠키를 사용하는 방송 감지·채팅 접속이 필수다.
+후로기 방의 전체 채팅과 필요한 별풍선 후원을 수집하며 첫 소비자는 주루마블 하나다.
+
+기존 구조와 아래 후원 전달 의미는 유지하되, 다채널 승인/등록 및 여러 소비자 관리의 일반화는
+첫 출시 선행 조건에서 제외한다. 한 채널·한 소비자의 설정으로 시작한다.
+실행 순서는 [제품 구현 계획 v3](implementation-plan.md)를 따른다. 쿠키를 이용한 실제 접속 확인을
+초기에 수행하고 후원 전달·저장·방송 운영 검증을 이어간다. 이 범위 변경이 아래 일반적인 확장 설명보다 우선한다.
+
+쿠키 입력은 `SOOP_COOKIE_FILE`의 JSON snapshot으로 주입한다.
+[쿠키 획득 컴포넌트](../cookie-auth/README.md)가 `SOOP_ID`/`SOOP_PW`로 로그인하고 24시간마다 또는 갱신 요청 시 저장한다. discover와 worker에 필요하며
+쿠키 값은 코드/로그/계약/브라우저에 넣지 않는다. 인증 실패와 방송 종료를 구분하고
+교체 후 재접속한다. 실제 SOOP 인증 흐름과 다른 연령제한 방송 입장을 EC2에서 확인했다. 후로기 본인 방송의 수신은 방송이 켜질 때 확인해야 한다.
 
 ## 1. 단일 EC2 구성
 
@@ -17,6 +35,7 @@
 | coordinator | 채널 소유권·할당·lease/fencing |
 | worker | SOOP 연결·정규화·후원 영속 수락·outbox/spool |
 | query | 인증된 내부 gRPC 상태·수집 관리·후원 replay·최근 채팅 |
+| cookie-auth | SOOP 브라우저 로그인·일일/요청 시 쿠키 갱신; 동일 EC2의 보조 컴포넌트 |
 | PostgreSQL | 등록/소유권에 필요한 영속 상태·후원 journal/outbox·consumer ACK |
 | Redis | coordination·최근 채팅·journal 갱신 알림 |
 | 일회성 profile | 초기화/migration·backup/restore |

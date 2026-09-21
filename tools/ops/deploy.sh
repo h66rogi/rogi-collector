@@ -52,6 +52,7 @@ $docker_bin --config "$registry_auth" compose --env-file "$runtime_root/candidat
 rm -rf "$registry_auth";trap - EXIT HUP INT TERM
 $docker_bin compose --env-file "$runtime_root/candidate.env" -f deploy/compose.production.yaml up --no-deps --wait postgres redis
 $docker_bin compose --env-file "$runtime_root/candidate.env" -f deploy/compose.production.yaml run --rm migrate
+$docker_bin compose --env-file "$runtime_root/candidate.env" -f deploy/compose.production.yaml run --rm app-migrate
 
 "$target_real/deploy/install-runtime.sh" --update-only
 
@@ -66,7 +67,7 @@ for attempt in $(seq 1 60);do
   $systemctl_bin start rogi-collector.target >/dev/null 2>&1 || true
   if $systemctl_bin is-active --quiet rogi-collector.target;then
     units_ready=true
-    for role in postgres redis discover coordinator worker query;do
+    for role in postgres redis discover coordinator worker query cookie-auth;do
       if ! $systemctl_bin is-active --quiet "rogi-collector-role@$role.service";then units_ready=false;break;fi
     done
     [ "$units_ready" = true ] && break
@@ -77,7 +78,7 @@ done
 for role in discover coordinator worker query; do
   healthy=false
   for attempt in $(seq 1 60);do
-    if $docker_bin compose --env-file "$config_root/runtime.env" -f deploy/compose.production.yaml exec -T "$role" /service -healthcheck http://127.0.0.1:8080/health >/dev/null 2>&1;then healthy=true;break;fi
+    if $docker_bin compose --env-file "$config_root/runtime.env" -f deploy/compose.production.yaml exec -T "$role" /healthcheck >/dev/null 2>&1;then healthy=true;break;fi
     sleep 1
   done
   [ "$healthy" = true ] || { echo "$role health smoke failed" >&2; exit 70; }
@@ -86,9 +87,9 @@ containers_healthy=false
 for attempt in $(seq 1 60);do
   compose_status=$($docker_bin compose --env-file "$config_root/runtime.env" -f deploy/compose.production.yaml ps --format json 2>/dev/null || true)
   if printf '%s' "$compose_status" | $node_bin -e '
-let raw="";process.stdin.on("data",chunk=>raw+=chunk).on("end",()=>{try{let rows;try{const value=JSON.parse(raw);rows=Array.isArray(value)?value:[value]}catch{rows=raw.split(/\n/).filter(Boolean).map(line=>JSON.parse(line))}const required=new Set(["postgres","redis","discover","coordinator","worker","query"]);for(const row of rows){if(row&&required.has(row.Service)&&row.State==="running"&&row.Health==="healthy")required.delete(row.Service)}process.exit(required.size===0?0:1)}catch{process.exit(1)}})';then containers_healthy=true;break;fi
+let raw="";process.stdin.on("data",chunk=>raw+=chunk).on("end",()=>{try{let rows;try{const value=JSON.parse(raw);rows=Array.isArray(value)?value:[value]}catch{rows=raw.split(/\n/).filter(Boolean).map(line=>JSON.parse(line))}const required=new Set(["postgres","redis","discover","coordinator","worker","query","cookie-auth"]);for(const row of rows){if(row&&required.has(row.Service)&&row.State==="running"&&row.Health==="healthy")required.delete(row.Service)}process.exit(required.size===0?0:1)}catch{process.exit(1)}})';then containers_healthy=true;break;fi
   sleep 1
 done
 [ "$containers_healthy" = true ] || { echo 'collector containers did not become Docker-healthy' >&2; exit 70; }
 $install_bin -m 0600 "$manifest" "$config_root/deployed-release.json"
-echo "collector release $release_id activated; profile feedback is health-only and gRPC 7443 remains unavailable"
+echo "collector release $release_id activated; single SOOP channel and mTLS 7443 enabled"

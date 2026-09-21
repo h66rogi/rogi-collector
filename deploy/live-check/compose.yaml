@@ -1,0 +1,87 @@
+name: rogi-collector-live-check
+x-app: &app
+  image: ${CANDIDATE_IMAGE:?required}
+  init: true
+  restart: "no"
+  user: "65532:65532"
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  mem_limit: 256m
+  cpus: 0.75
+  pids_limit: 128
+  tmpfs: ["/tmp:rw,noexec,nosuid,nodev,size=16777216,mode=1777"]
+  networks: [data]
+  environment: {ROLE_ENV_FILE: /run/secrets/role.env}
+  logging: {driver: json-file, options: {max-size: 5m, max-file: "2"}}
+  healthcheck: {test: [CMD, /app/healthcheck], interval: 5s, timeout: 3s, retries: 20}
+services:
+  postgres:
+    image: ${POSTGRES_IMAGE:?required}
+    restart: "no"
+    environment: {POSTGRES_DB: collector_live_check, POSTGRES_USER: collector_check, POSTGRES_PASSWORD_FILE: /run/secrets/password}
+    volumes:
+      - ${CHECK_DATA_ROOT:?required}/postgres:/var/lib/postgresql/data
+      - ${CHECK_SECRETS_ROOT:?required}/postgres-password:/run/secrets/password:ro
+    networks: [data]
+    mem_limit: 512m
+    healthcheck: {test: [CMD-SHELL, pg_isready -U collector_check -d collector_live_check], interval: 3s, timeout: 3s, retries: 30}
+  redis:
+    image: ${REDIS_IMAGE:?required}
+    restart: "no"
+    command: [sh, -ec, 'exec redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy noeviction --requirepass "$$(cat /run/secrets/password)"']
+    volumes:
+      - ${CHECK_DATA_ROOT:?required}/redis:/data
+      - ${CHECK_SECRETS_ROOT:?required}/redis-password:/run/secrets/password:ro
+    networks: [data]
+    mem_limit: 192m
+    healthcheck: {test: [CMD-SHELL, 'REDISCLI_AUTH="$$(cat /run/secrets/password)" redis-cli ping | grep -qx PONG'], interval: 3s, timeout: 3s, retries: 30}
+  discover:
+    <<: *app
+    entrypoint: [/app/discover]
+    networks: [data, egress]
+    volumes:
+      - ${CHECK_SECRETS_ROOT}/discover.env:/run/secrets/role.env:ro
+      - ${CHECK_DATA_ROOT}/cookies:/cookies:ro
+  coordinator:
+    <<: *app
+    entrypoint: [/app/coordinator]
+    volumes: ["${CHECK_SECRETS_ROOT}/coordinator.env:/run/secrets/role.env:ro"]
+  worker:
+    <<: *app
+    entrypoint: [/app/worker]
+    networks: [data, egress]
+    volumes:
+      - ${CHECK_SECRETS_ROOT}/worker.env:/run/secrets/role.env:ro
+      - ${CHECK_DATA_ROOT}/cookies:/cookies:ro
+      - ${CHECK_DATA_ROOT}/spool:/spool
+  query:
+    <<: *app
+    entrypoint: [/app/query]
+    ports: ["127.0.0.1:17443:7443", "${CHECK_BIND_IP:?private IP required}:7443:7443"]
+    networks: [data, egress]
+    volumes:
+      - ${CHECK_SECRETS_ROOT}/query.env:/run/secrets/role.env:ro
+      - ${CHECK_SECRETS_ROOT}/server.pem:/tls/server.pem:ro
+      - ${CHECK_SECRETS_ROOT}/server.key:/tls/server.key:ro
+      - ${CHECK_SECRETS_ROOT}/ca.pem:/tls/ca.pem:ro
+  cookie-auth:
+    image: ${COOKIE_AUTH_IMAGE:?required}
+    init: true
+    restart: "no"
+    user: "65532:65532"
+    read_only: true
+    security_opt: [seccomp:unconfined, apparmor:rogi-collector-cookie-auth]
+    mem_limit: 1400m
+    cpus: 1.0
+    pids_limit: 256
+    shm_size: 256m
+    tmpfs: ["/tmp:rw,nosuid,nodev,size=268435456,mode=1777", "/home/collector:rw,nosuid,nodev,size=67108864,uid=65532,gid=65532"]
+    env_file: ["${CHECK_SECRETS_ROOT}/cookie-auth.env"]
+    environment: {SOOP_COOKIE_FILE: /cookies/cookies.json, SOOP_COOKIE_BIND: 0.0.0.0}
+    volumes: ["${CHECK_DATA_ROOT}/cookies:/cookies"]
+    networks: [egress]
+    logging: {driver: json-file, options: {max-size: 2m, max-file: "2"}}
+networks:
+  data: {internal: true}
+  egress: {}

@@ -1,0 +1,261 @@
+syntax = "proto3";
+
+package meloming.chat.v1;
+
+option go_package = "github.com/h66rogi/rogi-collector/proto/gen/go/meloming/chat/v1;chatv1";
+
+// ChatQueryService provides read-only access to live channel data.
+service ChatQueryService {
+  // GetLiveStatuses returns live broadcast statuses for the given (platform, channel_id) pairs.
+  // Only channels currently broadcasting (status 'live' or 'pending') are included.
+  rpc GetLiveStatuses(GetLiveStatusesRequest) returns (GetLiveStatusesResponse);
+
+  // GetBroadcastHistory returns recent broadcast sessions for a channel.
+  rpc GetBroadcastHistory(GetBroadcastHistoryRequest) returns (GetBroadcastHistoryResponse);
+
+  // SearchLiveChannels returns currently live channels matching keyword/category/tag filters.
+  // All filter fields are optional (empty string = no filter), allowing chip-driven
+  // browsing without a keyword. Used by the explore live board.
+  rpc SearchLiveChannels(SearchLiveChannelsRequest) returns (SearchLiveChannelsResponse);
+
+  // SearchBroadcastChannels returns broadcast channels (live + recently active within
+  // lookback_days) matching a keyword in latest broadcast metadata title/category/tags.
+  // Dedup is per (platform, channel_id), keeping the latest metadata row.
+  // Useful for finding channels that recently broadcast matching content even
+  // when they are not currently live.
+  rpc SearchBroadcastChannels(SearchBroadcastChannelsRequest) returns (SearchBroadcastChannelsResponse);
+
+  // GetLiveDiscoveryFacets returns the most popular categories and tags currently
+  // being broadcast across all platforms (or a specific platform). Used by the
+  // explore live board to render top-N filter chips with no operator curation.
+  rpc GetLiveDiscoveryFacets(GetLiveDiscoveryFacetsRequest) returns (GetLiveDiscoveryFacetsResponse);
+
+  // GetTrendingLiveChannels returns hot channels — viewer DESC with a "just-started" boost
+  // (channels started within the last hour get a small score bonus). Used by explore main hero.
+  rpc GetTrendingLiveChannels(GetTrendingLiveChannelsRequest) returns (GetTrendingLiveChannelsResponse);
+
+  // GetJustStartedLiveChannels returns channels whose broadcast started within the last
+  // N minutes, ordered by viewer DESC. Used by explore "Just Started" section.
+  rpc GetJustStartedLiveChannels(GetJustStartedLiveChannelsRequest) returns (GetJustStartedLiveChannelsResponse);
+
+  // GetFeaturedLiveChannels returns top-viewer live channels meant to be re-ranked by
+  // an upstream API to prioritize registered channels.
+  rpc GetFeaturedLiveChannels(GetFeaturedLiveChannelsRequest) returns (GetFeaturedLiveChannelsResponse);
+
+  // GetPlatformLiveSummary returns per-platform active count plus top N channels per platform.
+  rpc GetPlatformLiveSummary(GetPlatformLiveSummaryRequest) returns (GetPlatformLiveSummaryResponse);
+
+  // GetExploreStats returns global counters for the explore hero (active live count,
+  // distinct categories/tags, per-platform breakdown).
+  rpc GetExploreStats(GetExploreStatsRequest) returns (GetExploreStatsResponse);
+
+  // GetCategoryLiveBundles returns the top-N most-active categories with K live channels
+  // bundled inside each.
+  rpc GetCategoryLiveBundles(GetCategoryLiveBundlesRequest) returns (GetCategoryLiveBundlesResponse);
+}
+
+message GetLiveStatusesRequest {
+  repeated ChannelIdentifier channels = 1;
+}
+
+message ChannelIdentifier {
+  string platform = 1;    // "chzzk", "soop", "cime"
+  string channel_id = 2;
+}
+
+message GetLiveStatusesResponse {
+  repeated LiveStatus statuses = 1;
+}
+
+message LiveStatus {
+  string platform = 1;
+  string channel_id = 2;
+  string streamer_name = 3;
+  int64 viewer_count = 4;
+  optional string title = 5;
+  optional string category = 6;
+  optional string thumbnail_url = 7;
+  optional string broadcast_started_at = 8;  // RFC 3339
+  repeated string tags = 9;                  // Platform tags (e.g. ["strategy", "virtual"]); empty if unknown.
+}
+
+// SearchLiveChannels messages
+
+message SearchLiveChannelsRequest {
+  string keyword = 1;              // Search keyword (title/category/tags ILIKE). Empty = no keyword filter.
+  optional string platform = 2;    // Legacy single-platform filter. Empty/omitted = all. Superseded by `platforms` (multi).
+  int32 limit = 3;                 // Max results (server clamps to 1-60, default 10)
+  int32 offset = 4;                // Pagination offset (default 0). Used with limit for paginated browsing.
+  string category = 5;             // Legacy single-category exact match. Empty = no filter. Superseded by `categories` (multi).
+  string tag = 6;                  // Legacy single-tag exact match. Empty = no filter. Superseded by `tags_in` (multi).
+  string sort = 7;                 // Legacy. Superseded by `sort_order` enum-string below.
+
+  // Optional multi-axis filters for channel exploration.
+  repeated string platforms = 8;        // Multi-select platforms (OR). Empty = all. When non-empty, overrides legacy `platform`.
+  repeated string categories = 9;       // Multi-select categories (OR exact match). Empty = no filter.
+  repeated string tags_in = 10;         // Multi-select tags (OR — overlap with row tags). Empty = no filter.
+  int32 min_viewer_count = 11;          // 0 = no min
+  int32 max_viewer_count = 12;          // 0 = no max
+  int32 started_within_seconds = 13;    // Only channels started within last N seconds. 0 = no filter.
+  string sort_order = 14;               // "viewer_desc" (default) | "viewer_asc" | "started_at_desc" | "started_at_asc".
+}
+
+message SearchLiveChannelsResponse {
+  repeated LiveStatus channels = 1;
+  int64 total = 2;                 // Total matching rows (independent of limit/offset).
+}
+
+// GetBroadcastHistory messages
+
+message GetBroadcastHistoryRequest {
+  string platform = 1;
+  string channel_id = 2;
+  int32 limit = 3;        // max 50, default 20
+  int32 days = 4;          // Legacy lookback days, default 30.
+  // from/to use RFC 3339 and define the half-open interval [from, to).
+  // from/to and days are mutually exclusive; from/to take precedence.
+  optional string from = 5;       // RFC 3339
+  optional string to = 6;         // RFC 3339
+}
+
+message GetBroadcastHistoryResponse {
+  repeated BroadcastHistoryItem items = 1;
+  int64 total = 2;
+}
+
+message BroadcastHistoryItem {
+  string platform = 1;
+  string channel_id = 2;
+  string streamer_name = 3;
+  string title = 4;
+  string category = 5;
+  string started_at = 6;          // RFC 3339
+  optional string ended_at = 7;   // null if still live
+  int64 peak_viewer_count = 8;
+  int64 duration_minutes = 9;     // 0 if still live
+}
+
+// SearchBroadcastChannels messages
+
+message SearchBroadcastChannelsRequest {
+  string keyword = 1;              // Search keyword (e.g. "strategy", "tournament")
+  optional string platform = 2;    // Platform filter, omit for all platforms
+  int32 limit = 3;                 // Max results (server clamps to 1-60, default 20)
+  int32 offset = 4;                // Pagination offset (default 0)
+  int32 lookback_days = 5;         // Lookback window in days (server clamps to 1-180, default 30)
+}
+
+message SearchBroadcastChannelsResponse {
+  repeated BroadcastChannel channels = 1;
+  int64 total = 2;                 // Total matching channels (independent of limit/offset)
+}
+
+message BroadcastChannel {
+  string platform = 1;
+  string channel_id = 2;
+  string streamer_name = 3;        // From latest broadcast_sessions row
+  string title = 4;                // Latest metadata title (may be from a past session)
+  optional string category = 5;
+  repeated string tags = 6;
+  optional string thumbnail_url = 7;
+  optional string last_started_at = 8;  // Most recent session start (RFC 3339)
+  optional string last_ended_at = 9;    // null if currently broadcasting
+  int64 peak_viewer_count = 10;          // Peak of the latest matched session
+  bool is_live = 11;                     // True if currently in live_channels with status live/pending
+  optional int64 current_viewer_count = 12; // Current viewer count if is_live
+}
+
+// GetLiveDiscoveryFacets messages
+
+message GetLiveDiscoveryFacetsRequest {
+  optional string platform = 1;    // Platform filter for facet aggregation, omit for all platforms
+  int32 category_limit = 2;        // Max categories to return (server clamps to 1-50, default 12)
+  int32 tag_limit = 3;             // Max tags to return (server clamps to 1-100, default 24)
+}
+
+message GetLiveDiscoveryFacetsResponse {
+  repeated FacetEntry categories = 1;
+  repeated FacetEntry tags = 2;
+}
+
+message FacetEntry {
+  string name = 1;
+  int64 count = 2;
+}
+
+// Explore and discovery RPCs.
+
+// GetTrendingLiveChannels — viewer DESC with "just-started boost" for channels started recently.
+message GetTrendingLiveChannelsRequest {
+  int32 limit = 1;                  // server clamps 1-60, default 12
+  int32 boost_within_seconds = 2;   // started_at boost window (default 3600 = 1h)
+  optional string platform = 3;     // optional platform scoping
+}
+
+message GetTrendingLiveChannelsResponse {
+  repeated LiveStatus channels = 1;
+}
+
+// GetJustStartedLiveChannels — channels broadcasting since within_minutes ago.
+message GetJustStartedLiveChannelsRequest {
+  int32 within_minutes = 1;         // default 30, max 180
+  int32 limit = 2;                  // default 12, max 60
+  optional string platform = 3;
+}
+
+message GetJustStartedLiveChannelsResponse {
+  repeated LiveStatus channels = 1;
+}
+
+// GetFeaturedLiveChannels returns a top-viewer slice for optional upstream re-ranking.
+message GetFeaturedLiveChannelsRequest {
+  int32 limit = 1;                  // default 24, max 60; callers may overfetch and re-rank.
+  optional string platform = 2;
+}
+
+message GetFeaturedLiveChannelsResponse {
+  repeated LiveStatus channels = 1;
+}
+
+// GetPlatformLiveSummary — per-platform active counts + top channels per platform.
+message GetPlatformLiveSummaryRequest {
+  int32 top_per_platform = 1;       // default 6, max 20
+}
+
+message PlatformLiveSummary {
+  string platform = 1;
+  int64 active_count = 2;
+  repeated LiveStatus top_channels = 3;
+}
+
+message GetPlatformLiveSummaryResponse {
+  repeated PlatformLiveSummary platforms = 1;
+}
+
+// GetExploreStats — single-shot global counters for hero strip.
+message GetExploreStatsRequest {}
+
+message GetExploreStatsResponse {
+  int64 active_live_count = 1;       // status IN ('live','pending') AND last_seen within 10 min
+  int64 distinct_category_count = 2;
+  int64 distinct_tag_count = 3;
+  int64 total_viewer_count = 4;      // SUM(viewer_count); int64 accommodates large aggregate peaks.
+  map<string, int64> platform_counts = 5; // platform -> active count
+}
+
+// GetCategoryLiveBundles — top-N categories, each with K channels.
+message GetCategoryLiveBundlesRequest {
+  int32 category_count = 1;          // default 6, max 20
+  int32 channels_per_category = 2;   // default 6, max 20
+  optional string platform = 3;
+}
+
+message CategoryLiveBundle {
+  string category = 1;
+  int64 active_count = 2;
+  repeated LiveStatus channels = 3;
+}
+
+message GetCategoryLiveBundlesResponse {
+  repeated CategoryLiveBundle bundles = 1;
+}

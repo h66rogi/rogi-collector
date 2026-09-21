@@ -1,0 +1,193 @@
+syntax = "proto3";
+
+package meloming.chat.v1;
+
+option go_package = "github.com/h66rogi/rogi-collector/proto/gen/go/meloming/chat/v1;chatv1";
+
+import "meloming/common/v1/pagination.proto";
+
+// ChatAdminService provides admin read-only access to chat collection data.
+service ChatAdminService {
+  // GetPlatformStats returns aggregated stats for each streaming platform.
+  rpc GetPlatformStats(GetPlatformStatsRequest) returns (GetPlatformStatsResponse);
+
+  // ListChannels returns a paginated list of live channels with filtering.
+  rpc ListChannels(ListChannelsRequest) returns (ListChannelsResponse);
+
+  // ListWorkers returns the current status of all chat-collection workers.
+  rpc ListWorkers(ListWorkersRequest) returns (ListWorkersResponse);
+
+  // GetChannelMessages returns recent chat messages from a channel's Redis Stream.
+  rpc GetChannelMessages(GetChannelMessagesRequest) returns (GetChannelMessagesResponse);
+
+  // GetFirehoseMessages returns recent messages from the global firehose stream (all channels).
+  rpc GetFirehoseMessages(GetFirehoseMessagesRequest) returns (GetFirehoseMessagesResponse);
+
+  // ForceReconnectChannel forces the assigned worker to tear down and re-establish
+  // the chat WebSocket for a single channel. Use when a channel's chat collection
+  // is silently stuck (e.g., chzzk session rotated mid-broadcast).
+  rpc ForceReconnectChannel(ForceReconnectChannelRequest) returns (ForceReconnectChannelResponse);
+
+  // ForceRediscoverChannel forces the discover service to re-fetch live-detail for a
+  // single channel and refresh its DB record. Use when discover wrongly marked the
+  // channel offline.
+  rpc ForceRediscoverChannel(ForceRediscoverChannelRequest) returns (ForceRediscoverChannelResponse);
+
+  // RecoverChannel runs ForceRediscoverChannel followed by ForceReconnectChannel.
+  // Single-button "fix everything" flow for streamers.
+  rpc RecoverChannel(RecoverChannelRequest) returns (RecoverChannelResponse);
+}
+
+// ---------------------------------------------------------------------------
+// GetPlatformStats
+// ---------------------------------------------------------------------------
+
+message GetPlatformStatsRequest {}
+
+message GetPlatformStatsResponse {
+  repeated PlatformStats platforms = 1;
+}
+
+message PlatformStats {
+  string platform = 1;            // "chzzk", "soop", "cime"
+  int64 live_channel_count = 2;
+  int64 pending_channel_count = 3;
+  int64 ended_channel_count = 4;
+  int64 total_viewer_count = 5;
+}
+
+// ---------------------------------------------------------------------------
+// ListChannels
+// ---------------------------------------------------------------------------
+
+message ListChannelsRequest {
+  optional string platform = 1;   // filter by platform
+  optional string status = 2;     // "pending", "live", "ended"
+  optional string sort = 3;       // "viewerCount", "discoveredAt"
+  meloming.common.v1.PaginationRequest pagination = 10;
+}
+
+message ListChannelsResponse {
+  repeated LiveChannel channels = 1;
+  meloming.common.v1.PaginationResponse pagination = 2;
+}
+
+message LiveChannel {
+  int64 id = 1;
+  string platform = 2;
+  string channel_id = 3;
+  string streamer_name = 4;
+  int64 viewer_count = 5;
+  string status = 6;              // "pending", "live", "ended"
+  optional string worker_id = 7;
+  string discovered_at = 8;       // RFC 3339
+  string last_seen_at = 9;
+  optional string ended_at = 10;
+}
+
+// ---------------------------------------------------------------------------
+// ListWorkers
+// ---------------------------------------------------------------------------
+
+message ListWorkersRequest {}
+
+message ListWorkersResponse {
+  repeated Worker workers = 1;
+}
+
+message Worker {
+  string id = 1;
+  string status = 2;              // "alive", "dead"
+  int64 max_capacity = 3;
+  int64 active_connections = 4;
+  string registered_at = 5;       // RFC 3339
+  string last_heartbeat = 6;      // RFC 3339
+}
+
+// ---------------------------------------------------------------------------
+// GetChannelMessages
+// ---------------------------------------------------------------------------
+
+message GetChannelMessagesRequest {
+  string platform = 1;
+  string channel_id = 2;
+  int32 count = 3;                // number of recent messages (default 50, max 200)
+  optional string before_id = 4;  // Redis Stream ID for cursor-based pagination
+}
+
+message GetChannelMessagesResponse {
+  repeated ChatMessage messages = 1;
+}
+
+// ---------------------------------------------------------------------------
+// GetFirehoseMessages
+// ---------------------------------------------------------------------------
+
+message GetFirehoseMessagesRequest {
+  int32 count = 1;                // number of recent messages (default 50, max 200)
+  optional string before_id = 2;  // Redis Stream ID for cursor-based pagination
+}
+
+message GetFirehoseMessagesResponse {
+  repeated ChatMessage messages = 1;
+}
+
+// ---------------------------------------------------------------------------
+// ForceReconnectChannel
+// ---------------------------------------------------------------------------
+
+message ForceReconnectChannelRequest {
+  string platform = 1;     // "chzzk", "soop", "cime"
+  string channel_id = 2;   // platform-native channel id
+}
+
+message ForceReconnectChannelResponse {
+  bool dispatched = 1;             // true if a reconnect command was published
+  optional string worker_id = 2;   // worker that received the command (empty if none assigned)
+}
+
+// ---------------------------------------------------------------------------
+// ForceRediscoverChannel
+// ---------------------------------------------------------------------------
+
+message ForceRediscoverChannelRequest {
+  string platform = 1;
+  string channel_id = 2;
+}
+
+message ForceRediscoverChannelResponse {
+  bool dispatched = 1;             // true if discover acknowledged the request
+  optional string status = 2;      // resulting channel status if known: "pending", "live", "ended"
+}
+
+// ---------------------------------------------------------------------------
+// RecoverChannel
+// ---------------------------------------------------------------------------
+
+message RecoverChannelRequest {
+  string platform = 1;
+  string channel_id = 2;
+}
+
+message RecoverChannelResponse {
+  bool rediscover_dispatched = 1;
+  bool reconnect_dispatched = 2;
+  optional string worker_id = 3;
+  optional string status = 4;
+}
+
+message ChatMessage {
+  string stream_id = 1;           // Redis Stream entry ID (e.g. "1711800000000-0")
+  string id = 2;                  // application-level message ID
+  string type = 3;                // "chat", "donation", "subscription", "system"
+  string platform = 4;
+  string channel_id = 5;
+  string streamer_name = 6;
+  string user_id = 7;
+  string nickname = 8;
+  string message = 9;
+  string timestamp = 10;          // RFC 3339
+  double amount = 11;
+  string currency = 12;
+  int64 amount_krw = 13;
+}
