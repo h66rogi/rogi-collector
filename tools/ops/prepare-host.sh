@@ -14,6 +14,7 @@ install -d -m 0700 "$runtime_root"
 install -d -m 0700 -o 70 -g 70 "$data_root/postgres"
 install -d -m 0700 -o 999 -g 1000 "$data_root/redis"
 install -d -m 0700 -o 65532 -g 65532 "$data_root/spool"
+install -d -m 0700 -o 0 -g 0 "$data_root/backups"
 if [ -x "$config_root/load-secrets" ]; then
   "$config_root/load-secrets" "$runtime_root"
 else

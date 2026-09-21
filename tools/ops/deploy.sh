@@ -70,5 +70,5 @@ for role in discover coordinator worker query; do
   done
   [ "$healthy" = true ] || { echo "$role health smoke failed" >&2; exit 70; }
 done
-$install_bin -m 0600 "$manifest" "$runtime_root/deployed-release.json"
+$install_bin -m 0600 "$manifest" "$config_root/deployed-release.json"
 echo "collector release $release_id activated; profile feedback is health-only and gRPC 7443 remains unavailable"

@@ -23,7 +23,7 @@ def evaluate(current_manifest,receipt,units,compose):
  containers_ok=set(containers)==set(REQUIRED) and all(value['running'] and value['healthy'] for value in container_state.values())
  return {'ok':receipt_matches and units_ok and containers_ok,'receiptMatchesCurrent':receipt_matches,'unitStatuses':units,'containerStatuses':container_state,'requiredServices':list(REQUIRED)}
 def main():
- current=Path('/opt/rogi-collector/app/current');receipt_path=Path('/run/rogi-collector/deployed-release.json');backup_root=Path('/srv/rogi-collector/backups');latest=max(backup_root.glob('postgres-*.dump.gz'),key=lambda p:p.stat().st_mtime,default=None)
+ current=Path('/opt/rogi-collector/app/current');receipt_path=Path('/etc/rogi-collector/deployed-release.json');backup_root=Path('/srv/rogi-collector/backups');latest=max(backup_root.glob('postgres-*.dump.gz'),key=lambda p:p.stat().st_mtime,default=None)
  manifest_path=current/'manifest.json';manifest=json.loads(manifest_path.read_text()) if manifest_path.is_file() else None;receipt=json.loads(receipt_path.read_text()) if receipt_path.is_file() else None
  units={'target':command(['systemctl','is-active','rogi-collector.target']),**{name:command(['systemctl','is-active',f'rogi-collector-role@{name}.service']) for name in REQUIRED}}
  compose=command(['docker','compose','--env-file','/etc/rogi-collector/runtime.env','-f',str(current/'deploy/compose.production.yaml'),'ps','--format','json'])

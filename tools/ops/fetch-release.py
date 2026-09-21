@@ -38,7 +38,7 @@ def require_descendant(repo:str,prior:str,candidate:str)->None:
  comparison=json.loads(download(f'{API}/repos/{repo}/compare/{prior}...{candidate}',2*1024*1024))
  if comparison.get('status')!='ahead':raise FetchError('automatic release is not a descendant of deployed source SHA')
 
-def stage(source_path,overlay_path,releases_root,run_root):
+def stage(source_path,overlay_path,releases_root,run_root,receipt_path=None):
  source=exact(read_json(source_path),{'repository','workflowPath'},'release source');repo=source['repository']
  if not isinstance(repo,str) or not re.fullmatch(r'[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+',repo):raise FetchError('invalid public GitHub repository')
  metadata=json.loads(download(f'{API}/repos/{repo}/releases/latest',1024*1024))
@@ -53,7 +53,7 @@ def stage(source_path,overlay_path,releases_root,run_root):
   build=exact(read_json(tree/'manifest.build.json'),{'schemaVersion','product','profile','sourceSha','releaseId','contractVersion','composeSha256','runtimeFiles','images','migrations'},'build manifest')
   sha=build.get('sourceSha')
   if metadata.get('tag_name')!=f'production-{sha}':raise FetchError('release tag does not bind source SHA')
-  receipt=run_root/'deployed-release.json'
+  receipt=receipt_path or run_root/'deployed-release.json'
   if receipt.is_file():require_descendant(repo,read_json(receipt).get('sourceSha',''),sha)
   if source['workflowPath']!='.github/workflows/release.yml':raise FetchError('unapproved workflow path')
   runs=json.loads(download(f'{API}/repos/{repo}/actions/runs?head_sha={sha}&per_page=100',4*1024*1024))
@@ -71,8 +71,9 @@ def stage(source_path,overlay_path,releases_root,run_root):
 def main():
  p=argparse.ArgumentParser();p.add_argument('--source',type=Path,default=Path('/etc/rogi-collector/release-source.json'));p.add_argument('--overlay',type=Path,default=Path('/etc/rogi-collector/runtime-overlay.json'));p.add_argument('--releases-root',type=Path,default=Path('/opt/rogi-collector/app/releases'));p.add_argument('--run-root',type=Path,default=Path('/run/rogi-collector'));a=p.parse_args()
  try:
-  app,manifest=stage(a.source,a.overlay,a.releases_root,a.run_root)
-  receipt=Path('/run/rogi-collector/deployed-release.json'); candidate=read_json(manifest)
+  receipt=Path('/etc/rogi-collector/deployed-release.json')
+  app,manifest=stage(a.source,a.overlay,a.releases_root,a.run_root,receipt)
+  candidate=read_json(manifest)
   if deployed_healthy(receipt,app,candidate,Path('/opt/rogi-collector/app/current')):return 0
   os.execv('/usr/local/lib/rogi-collector/deploy.sh',['deploy.sh','--manifest',str(manifest)])
  except (FetchError,OSError,ValueError,json.JSONDecodeError) as e:print(f'release fetch failed: {e}',file=__import__('sys').stderr);return 1

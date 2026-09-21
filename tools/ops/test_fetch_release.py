@@ -10,6 +10,11 @@ class FetchReleaseTest(unittest.TestCase):
   bundle=stream.getvalue();checksum=hashlib.sha256(bundle).hexdigest().encode();metadata=json.dumps({'draft':False,'prerelease':False,'tag_name':f"production-{sha if tag_ok else '0'*40}",'assets':[{'name':'release-bundle.tar.gz','browser_download_url':'bundle'},{'name':'release-bundle.tar.gz.sha256','browser_download_url':'checksum'}]}).encode();runs=json.dumps({'workflow_runs':[{'path':'.github/workflows/release.yml','conclusion':'success' if run_ok else 'failure','head_sha':sha,'head_branch':'main','event':'push'}]}).encode();prior=module.download;module.download=lambda url,limit:{f'{module.API}/repos/owner/repo/releases/latest':metadata,f'{module.API}/repos/owner/repo/actions/runs?head_sha={sha}&per_page=100':runs,'bundle':bundle,'checksum':checksum}[url];self.addCleanup(setattr,module,'download',prior);return source,overlay,releases,run,runtime
  def test_public_release_checksum_workflow_and_overlay_bound(self):
   source,overlay,releases,run,runtime=self.fixture();app,manifest=module.stage(source,overlay,releases,run);self.assertEqual(app,releases/'r1');self.assertEqual(json.loads(manifest.read_text())['runtimeNonSecret'],runtime)
+ def test_persistent_receipt_drives_ancestry_guard(self):
+  source,overlay,releases,run,_=self.fixture();receipt=run.parent/'etc-receipt.json';receipt.write_text(json.dumps({'sourceSha':'a'*40}));old=module.require_descendant;seen=[];module.require_descendant=lambda repo,prior,candidate:seen.append((prior,candidate))
+  try:module.stage(source,overlay,releases,run,receipt)
+  finally:module.require_descendant=old
+  self.assertEqual(seen,[('a'*40,'b'*40)])
  def test_wrong_tag_and_failed_workflow_are_rejected(self):
   for tag_ok,run_ok in [(False,True),(True,False)]:
    with self.subTest(tag_ok=tag_ok,run_ok=run_ok):
