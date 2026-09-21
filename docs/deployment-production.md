@@ -86,3 +86,10 @@ manifest 변조·secret 경계·migration 실패 시 승격 거부·인증서 �
 정식 EC2에서는 7개 역할 health, h66rogi 상태 RPC, 인증서 교체 후 peer 연결,
 강제 종료/재부팅 복구, backup 완료를 별도로 확인한다.
 프로세스 healthy를 방송 연결 또는 게임 연동 성공으로 표현하지 않는다.
+
+## 운영 화면 방송 조회
+
+주루마블의 조회 전용 방송 체크는 `discover.env`와 `query.env`의 동일한
+`SOOP_DIAGNOSTIC_TOKEN`을 사용한다. 최소 32자 난수로 설정하고 운영 secret에만 보관한다.
+미설정 시 기존 수집은 유지되며 방송 체크만 사용 불가다. discover의 8080 포트는
+Compose 내부에서만 접근하며 host에 게시하지 않는다. [호출 경계와 제한](broadcast-diagnostics.md)을 따른다.

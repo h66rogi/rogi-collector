@@ -262,10 +262,11 @@
         "Connect existing SOOP discovery/connector construction to the cookie-auth JSON snapshot reader; preserve original lifecycle and interfaces",
         "단일 채널·구독 설정과 인증/방송 상태를 기존 discover loop에 연결",
         "Load the mounted role environment as data and wire explicit single-channel live-test authentication",
-        "Clarify that single-SOOP validation precedes the retained generic allowlist parser; comments only"
+        "Clarify that single-SOOP validation precedes the retained generic allowlist parser; comments only",
+        "Connect read-only broadcast diagnostics through discover cookie boundary; preserve production subscription scope."
       ],
       "importSha256": "b0d2ef284b9aad71fe9708a3f45d85a948fbed03c389ed47c5385b219677b5c5",
-      "currentSha256": "44bce29ac76174a6f8af04867c32aed9f83f869e37550512b9f5e0d727583248"
+      "currentSha256": "64d02914078a0a13036cb6df3b09882e66136d4c7418f4be63b800e0b88141e7"
     },
     {
       "sourcePath": "discover/cmd/main_test.go",
@@ -683,10 +684,11 @@
       "changes": [
         "Go module/import address changed to target repository",
         "기존 Server lifecycle에서 제품 mTLS 7443·범위 인증·collector v1·보존 정리 실행",
-        "Load the mounted role environment as data and wire explicit single-channel live-test authentication"
+        "Load the mounted role environment as data and wire explicit single-channel live-test authentication",
+        "Connect read-only broadcast diagnostics through discover cookie boundary; preserve production subscription scope."
       ],
       "importSha256": "d2a5b154ad86dfb34a655b8289473d70a6d047409dc3dd1434785f832832179c",
-      "currentSha256": "2057f2112151e44973fb30571a204d2cf798ea8f37065b70a4008011f67dab72"
+      "currentSha256": "972a811380edf19d1ddcd37af74730f511304dba1cad3c1e98d1d50ba33e87cd"
     },
     {
       "sourcePath": "query/go.mod",

@@ -77,7 +77,7 @@ func main() {
 	if consumer == "" {
 		consumer = "rogimarble"
 	}
-	grpcSrv, err := internal.NewProductServer(pgStore, redisStore, 7443, tlsConfig, internal.ProductAccess{Consumer: consumer, Channel: productChannel, ReadURI: os.Getenv("COLLECTOR_READ_CERT_URI"), ManageURI: os.Getenv("COLLECTOR_MANAGE_CERT_URI"), RecoveryURI: os.Getenv("COLLECTOR_RECOVERY_CERT_URI")}, logger)
+	grpcSrv, err := internal.NewProductServer(pgStore, redisStore, 7443, tlsConfig, internal.ProductAccess{Consumer: consumer, Channel: productChannel, ReadURI: os.Getenv("COLLECTOR_READ_CERT_URI"), ManageURI: os.Getenv("COLLECTOR_MANAGE_CERT_URI"), RecoveryURI: os.Getenv("COLLECTOR_RECOVERY_CERT_URI"), BroadcastCheck: internal.DiscoverBroadcastChecker(os.Getenv("SOOP_DIAGNOSTIC_TOKEN"))}, logger)
 	if err != nil {
 		logger.Error("collector access configuration invalid")
 		os.Exit(1)

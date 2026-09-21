@@ -1709,6 +1709,160 @@ func (x *ResolveConsumerRecoveryResponse) GetIdempotencyKey() string {
 	return ""
 }
 
+// Read-only broadcast diagnostics; channel_id remains the authorized production scope.
+// target_channel_id may name another channel and never changes subscriptions.
+type CheckBroadcastRequest struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	ConsumerId      string                 `protobuf:"bytes,1,opt,name=consumer_id,json=consumerId,proto3" json:"consumer_id,omitempty"`
+	ChannelId       string                 `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
+	TargetChannelId string                 `protobuf:"bytes,3,opt,name=target_channel_id,json=targetChannelId,proto3" json:"target_channel_id,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *CheckBroadcastRequest) Reset() {
+	*x = CheckBroadcastRequest{}
+	mi := &file_collector_v1_collector_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CheckBroadcastRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CheckBroadcastRequest) ProtoMessage() {}
+
+func (x *CheckBroadcastRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_collector_v1_collector_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CheckBroadcastRequest.ProtoReflect.Descriptor instead.
+func (*CheckBroadcastRequest) Descriptor() ([]byte, []int) {
+	return file_collector_v1_collector_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *CheckBroadcastRequest) GetConsumerId() string {
+	if x != nil {
+		return x.ConsumerId
+	}
+	return ""
+}
+
+func (x *CheckBroadcastRequest) GetChannelId() string {
+	if x != nil {
+		return x.ChannelId
+	}
+	return ""
+}
+
+func (x *CheckBroadcastRequest) GetTargetChannelId() string {
+	if x != nil {
+		return x.TargetChannelId
+	}
+	return ""
+}
+
+type BroadcastStatus struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ChannelId     string                 `protobuf:"bytes,1,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
+	State         string                 `protobuf:"bytes,2,opt,name=state,proto3" json:"state,omitempty"`
+	Title         string                 `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
+	DisplayName   string                 `protobuf:"bytes,4,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
+	BroadcastId   string                 `protobuf:"bytes,5,opt,name=broadcast_id,json=broadcastId,proto3" json:"broadcast_id,omitempty"`
+	CheckedAt     *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=checked_at,json=checkedAt,proto3" json:"checked_at,omitempty"`
+	Cached        bool                   `protobuf:"varint,7,opt,name=cached,proto3" json:"cached,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *BroadcastStatus) Reset() {
+	*x = BroadcastStatus{}
+	mi := &file_collector_v1_collector_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BroadcastStatus) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BroadcastStatus) ProtoMessage() {}
+
+func (x *BroadcastStatus) ProtoReflect() protoreflect.Message {
+	mi := &file_collector_v1_collector_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BroadcastStatus.ProtoReflect.Descriptor instead.
+func (*BroadcastStatus) Descriptor() ([]byte, []int) {
+	return file_collector_v1_collector_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *BroadcastStatus) GetChannelId() string {
+	if x != nil {
+		return x.ChannelId
+	}
+	return ""
+}
+
+func (x *BroadcastStatus) GetState() string {
+	if x != nil {
+		return x.State
+	}
+	return ""
+}
+
+func (x *BroadcastStatus) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *BroadcastStatus) GetDisplayName() string {
+	if x != nil {
+		return x.DisplayName
+	}
+	return ""
+}
+
+func (x *BroadcastStatus) GetBroadcastId() string {
+	if x != nil {
+		return x.BroadcastId
+	}
+	return ""
+}
+
+func (x *BroadcastStatus) GetCheckedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CheckedAt
+	}
+	return nil
+}
+
+func (x *BroadcastStatus) GetCached() bool {
+	if x != nil {
+		return x.Cached
+	}
+	return false
+}
+
 type Empty struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -1717,7 +1871,7 @@ type Empty struct {
 
 func (x *Empty) Reset() {
 	*x = Empty{}
-	mi := &file_collector_v1_collector_proto_msgTypes[18]
+	mi := &file_collector_v1_collector_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1729,7 +1883,7 @@ func (x *Empty) String() string {
 func (*Empty) ProtoMessage() {}
 
 func (x *Empty) ProtoReflect() protoreflect.Message {
-	mi := &file_collector_v1_collector_proto_msgTypes[18]
+	mi := &file_collector_v1_collector_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1742,7 +1896,7 @@ func (x *Empty) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Empty.ProtoReflect.Descriptor instead.
 func (*Empty) Descriptor() ([]byte, []int) {
-	return file_collector_v1_collector_proto_rawDescGZIP(), []int{18}
+	return file_collector_v1_collector_proto_rawDescGZIP(), []int{20}
 }
 
 var File_collector_v1_collector_proto protoreflect.FileDescriptor
@@ -1924,7 +2078,23 @@ const file_collector_v1_collector_proto_rawDesc = "" +
 	"resumeFrom\x12+\n" +
 	"\x11recovery_revision\x18\x05 \x01(\x04R\x10recoveryRevision\x12O\n" +
 	"\x12unrecovered_ranges\x18\x06 \x03(\v2 .rogi.collector.v1.RecoveryRangeR\x11unrecoveredRanges\x12'\n" +
-	"\x0fidempotency_key\x18\a \x01(\tR\x0eidempotencyKey\"\a\n" +
+	"\x0fidempotency_key\x18\a \x01(\tR\x0eidempotencyKey\"\x83\x01\n" +
+	"\x15CheckBroadcastRequest\x12\x1f\n" +
+	"\vconsumer_id\x18\x01 \x01(\tR\n" +
+	"consumerId\x12\x1d\n" +
+	"\n" +
+	"channel_id\x18\x02 \x01(\tR\tchannelId\x12*\n" +
+	"\x11target_channel_id\x18\x03 \x01(\tR\x0ftargetChannelId\"\xf5\x01\n" +
+	"\x0fBroadcastStatus\x12\x1d\n" +
+	"\n" +
+	"channel_id\x18\x01 \x01(\tR\tchannelId\x12\x14\n" +
+	"\x05state\x18\x02 \x01(\tR\x05state\x12\x14\n" +
+	"\x05title\x18\x03 \x01(\tR\x05title\x12!\n" +
+	"\fdisplay_name\x18\x04 \x01(\tR\vdisplayName\x12!\n" +
+	"\fbroadcast_id\x18\x05 \x01(\tR\vbroadcastId\x129\n" +
+	"\n" +
+	"checked_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tcheckedAt\x12\x16\n" +
+	"\x06cached\x18\a \x01(\bR\x06cached\"\a\n" +
 	"\x05Empty*7\n" +
 	"\bPlatform\x12\x18\n" +
 	"\x14PLATFORM_UNSPECIFIED\x10\x00\x12\x11\n" +
@@ -1942,8 +2112,9 @@ const file_collector_v1_collector_proto_rawDesc = "" +
 	"\x1bIDENTITY_STATUS_UNSPECIFIED\x10\x00\x12\x1d\n" +
 	"\x19IDENTITY_STATUS_SOURCE_ID\x10\x01\x12$\n" +
 	" IDENTITY_STATUS_OBSERVATION_ONLY\x10\x02\x12'\n" +
-	"#IDENTITY_STATUS_RECONNECT_AMBIGUOUS\x10\x032\xf6\x05\n" +
-	"\x10CollectorService\x12i\n" +
+	"#IDENTITY_STATUS_RECONNECT_AMBIGUOUS\x10\x032\xd6\x06\n" +
+	"\x10CollectorService\x12^\n" +
+	"\x0eCheckBroadcast\x12(.rogi.collector.v1.CheckBroadcastRequest\x1a\".rogi.collector.v1.BroadcastStatus\x12i\n" +
 	"\x13GetCollectionStatus\x12-.rogi.collector.v1.GetCollectionStatusRequest\x1a#.rogi.collector.v1.CollectionStatus\x12}\n" +
 	"\x16SetChannelSubscription\x120.rogi.collector.v1.SetChannelSubscriptionRequest\x1a1.rogi.collector.v1.SetChannelSubscriptionResponse\x12b\n" +
 	"\rListDonations\x12'.rogi.collector.v1.ListDonationsRequest\x1a(.rogi.collector.v1.ListDonationsResponse\x12^\n" +
@@ -1965,7 +2136,7 @@ func file_collector_v1_collector_proto_rawDescGZIP() []byte {
 }
 
 var file_collector_v1_collector_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_collector_v1_collector_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
+var file_collector_v1_collector_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
 var file_collector_v1_collector_proto_goTypes = []any{
 	(Platform)(0),                           // 0: rogi.collector.v1.Platform
 	(NativeCurrency)(0),                     // 1: rogi.collector.v1.NativeCurrency
@@ -1989,28 +2160,30 @@ var file_collector_v1_collector_proto_goTypes = []any{
 	(*RecoveryRange)(nil),                   // 19: rogi.collector.v1.RecoveryRange
 	(*ResolveConsumerRecoveryRequest)(nil),  // 20: rogi.collector.v1.ResolveConsumerRecoveryRequest
 	(*ResolveConsumerRecoveryResponse)(nil), // 21: rogi.collector.v1.ResolveConsumerRecoveryResponse
-	(*Empty)(nil),                           // 22: rogi.collector.v1.Empty
-	(*timestamppb.Timestamp)(nil),           // 23: google.protobuf.Timestamp
+	(*CheckBroadcastRequest)(nil),           // 22: rogi.collector.v1.CheckBroadcastRequest
+	(*BroadcastStatus)(nil),                 // 23: rogi.collector.v1.BroadcastStatus
+	(*Empty)(nil),                           // 24: rogi.collector.v1.Empty
+	(*timestamppb.Timestamp)(nil),           // 25: google.protobuf.Timestamp
 }
 var file_collector_v1_collector_proto_depIdxs = []int32{
 	2,  // 0: rogi.collector.v1.ContractErrorDetail.code:type_name -> rogi.collector.v1.ContractErrorCode
 	4,  // 1: rogi.collector.v1.ContractErrorDetail.requested_cursor:type_name -> rogi.collector.v1.Cursor
 	4,  // 2: rogi.collector.v1.ContractErrorDetail.earliest_cursor:type_name -> rogi.collector.v1.Cursor
 	4,  // 3: rogi.collector.v1.ContractErrorDetail.current_cursor:type_name -> rogi.collector.v1.Cursor
-	23, // 4: rogi.collector.v1.DonationEvent.source_timestamp:type_name -> google.protobuf.Timestamp
+	25, // 4: rogi.collector.v1.DonationEvent.source_timestamp:type_name -> google.protobuf.Timestamp
 	4,  // 5: rogi.collector.v1.DonationEvent.cursor:type_name -> rogi.collector.v1.Cursor
 	3,  // 6: rogi.collector.v1.DonationEvent.identity_status:type_name -> rogi.collector.v1.IdentityStatus
 	0,  // 7: rogi.collector.v1.DonationEvent.platform:type_name -> rogi.collector.v1.Platform
-	23, // 8: rogi.collector.v1.DonationEvent.observed_at:type_name -> google.protobuf.Timestamp
-	23, // 9: rogi.collector.v1.DonationEvent.occurred_at:type_name -> google.protobuf.Timestamp
+	25, // 8: rogi.collector.v1.DonationEvent.observed_at:type_name -> google.protobuf.Timestamp
+	25, // 9: rogi.collector.v1.DonationEvent.occurred_at:type_name -> google.protobuf.Timestamp
 	1,  // 10: rogi.collector.v1.DonationEvent.native_currency:type_name -> rogi.collector.v1.NativeCurrency
 	5,  // 11: rogi.collector.v1.ChatEvent.cursor:type_name -> rogi.collector.v1.ChatCursor
-	23, // 12: rogi.collector.v1.ChatEvent.occurred_at:type_name -> google.protobuf.Timestamp
-	23, // 13: rogi.collector.v1.ChatEvent.observed_at:type_name -> google.protobuf.Timestamp
+	25, // 12: rogi.collector.v1.ChatEvent.occurred_at:type_name -> google.protobuf.Timestamp
+	25, // 13: rogi.collector.v1.ChatEvent.observed_at:type_name -> google.protobuf.Timestamp
 	0,  // 14: rogi.collector.v1.ChatEvent.platform:type_name -> rogi.collector.v1.Platform
 	4,  // 15: rogi.collector.v1.CollectionStatus.earliest_cursor:type_name -> rogi.collector.v1.Cursor
 	4,  // 16: rogi.collector.v1.CollectionStatus.current_cursor:type_name -> rogi.collector.v1.Cursor
-	23, // 17: rogi.collector.v1.CollectionStatus.last_received_at:type_name -> google.protobuf.Timestamp
+	25, // 17: rogi.collector.v1.CollectionStatus.last_received_at:type_name -> google.protobuf.Timestamp
 	9,  // 18: rogi.collector.v1.SetChannelSubscriptionResponse.status:type_name -> rogi.collector.v1.CollectionStatus
 	4,  // 19: rogi.collector.v1.ListDonationsRequest.after_cursor:type_name -> rogi.collector.v1.Cursor
 	7,  // 20: rogi.collector.v1.ListDonationsResponse.donations:type_name -> rogi.collector.v1.DonationEvent
@@ -2027,25 +2200,28 @@ var file_collector_v1_collector_proto_depIdxs = []int32{
 	4,  // 31: rogi.collector.v1.ResolveConsumerRecoveryResponse.previous_cursor:type_name -> rogi.collector.v1.Cursor
 	4,  // 32: rogi.collector.v1.ResolveConsumerRecoveryResponse.resume_from:type_name -> rogi.collector.v1.Cursor
 	19, // 33: rogi.collector.v1.ResolveConsumerRecoveryResponse.unrecovered_ranges:type_name -> rogi.collector.v1.RecoveryRange
-	10, // 34: rogi.collector.v1.CollectorService.GetCollectionStatus:input_type -> rogi.collector.v1.GetCollectionStatusRequest
-	11, // 35: rogi.collector.v1.CollectorService.SetChannelSubscription:input_type -> rogi.collector.v1.SetChannelSubscriptionRequest
-	13, // 36: rogi.collector.v1.CollectorService.ListDonations:input_type -> rogi.collector.v1.ListDonationsRequest
-	15, // 37: rogi.collector.v1.CollectorService.WatchDonations:input_type -> rogi.collector.v1.WatchDonationsRequest
-	16, // 38: rogi.collector.v1.CollectorService.AckDonations:input_type -> rogi.collector.v1.AckDonationsRequest
-	18, // 39: rogi.collector.v1.CollectorService.WatchChat:input_type -> rogi.collector.v1.WatchChatRequest
-	20, // 40: rogi.collector.v1.CollectorService.ResolveConsumerRecovery:input_type -> rogi.collector.v1.ResolveConsumerRecoveryRequest
-	9,  // 41: rogi.collector.v1.CollectorService.GetCollectionStatus:output_type -> rogi.collector.v1.CollectionStatus
-	12, // 42: rogi.collector.v1.CollectorService.SetChannelSubscription:output_type -> rogi.collector.v1.SetChannelSubscriptionResponse
-	14, // 43: rogi.collector.v1.CollectorService.ListDonations:output_type -> rogi.collector.v1.ListDonationsResponse
-	7,  // 44: rogi.collector.v1.CollectorService.WatchDonations:output_type -> rogi.collector.v1.DonationEvent
-	17, // 45: rogi.collector.v1.CollectorService.AckDonations:output_type -> rogi.collector.v1.AckDonationsResponse
-	8,  // 46: rogi.collector.v1.CollectorService.WatchChat:output_type -> rogi.collector.v1.ChatEvent
-	21, // 47: rogi.collector.v1.CollectorService.ResolveConsumerRecovery:output_type -> rogi.collector.v1.ResolveConsumerRecoveryResponse
-	41, // [41:48] is the sub-list for method output_type
-	34, // [34:41] is the sub-list for method input_type
-	34, // [34:34] is the sub-list for extension type_name
-	34, // [34:34] is the sub-list for extension extendee
-	0,  // [0:34] is the sub-list for field type_name
+	25, // 34: rogi.collector.v1.BroadcastStatus.checked_at:type_name -> google.protobuf.Timestamp
+	22, // 35: rogi.collector.v1.CollectorService.CheckBroadcast:input_type -> rogi.collector.v1.CheckBroadcastRequest
+	10, // 36: rogi.collector.v1.CollectorService.GetCollectionStatus:input_type -> rogi.collector.v1.GetCollectionStatusRequest
+	11, // 37: rogi.collector.v1.CollectorService.SetChannelSubscription:input_type -> rogi.collector.v1.SetChannelSubscriptionRequest
+	13, // 38: rogi.collector.v1.CollectorService.ListDonations:input_type -> rogi.collector.v1.ListDonationsRequest
+	15, // 39: rogi.collector.v1.CollectorService.WatchDonations:input_type -> rogi.collector.v1.WatchDonationsRequest
+	16, // 40: rogi.collector.v1.CollectorService.AckDonations:input_type -> rogi.collector.v1.AckDonationsRequest
+	18, // 41: rogi.collector.v1.CollectorService.WatchChat:input_type -> rogi.collector.v1.WatchChatRequest
+	20, // 42: rogi.collector.v1.CollectorService.ResolveConsumerRecovery:input_type -> rogi.collector.v1.ResolveConsumerRecoveryRequest
+	23, // 43: rogi.collector.v1.CollectorService.CheckBroadcast:output_type -> rogi.collector.v1.BroadcastStatus
+	9,  // 44: rogi.collector.v1.CollectorService.GetCollectionStatus:output_type -> rogi.collector.v1.CollectionStatus
+	12, // 45: rogi.collector.v1.CollectorService.SetChannelSubscription:output_type -> rogi.collector.v1.SetChannelSubscriptionResponse
+	14, // 46: rogi.collector.v1.CollectorService.ListDonations:output_type -> rogi.collector.v1.ListDonationsResponse
+	7,  // 47: rogi.collector.v1.CollectorService.WatchDonations:output_type -> rogi.collector.v1.DonationEvent
+	17, // 48: rogi.collector.v1.CollectorService.AckDonations:output_type -> rogi.collector.v1.AckDonationsResponse
+	8,  // 49: rogi.collector.v1.CollectorService.WatchChat:output_type -> rogi.collector.v1.ChatEvent
+	21, // 50: rogi.collector.v1.CollectorService.ResolveConsumerRecovery:output_type -> rogi.collector.v1.ResolveConsumerRecoveryResponse
+	43, // [43:51] is the sub-list for method output_type
+	35, // [35:43] is the sub-list for method input_type
+	35, // [35:35] is the sub-list for extension type_name
+	35, // [35:35] is the sub-list for extension extendee
+	0,  // [0:35] is the sub-list for field type_name
 }
 
 func init() { file_collector_v1_collector_proto_init() }
@@ -2067,7 +2243,7 @@ func file_collector_v1_collector_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_collector_v1_collector_proto_rawDesc), len(file_collector_v1_collector_proto_rawDesc)),
 			NumEnums:      4,
-			NumMessages:   19,
+			NumMessages:   21,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
