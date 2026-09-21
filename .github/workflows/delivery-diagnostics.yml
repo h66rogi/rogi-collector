@@ -1,0 +1,52 @@
+name: delivery-diagnostics
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  oidc-and-sts:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Show bounded OIDC claims
+        shell: python
+        env:
+          EXPECTED_REPOSITORY: ${{ github.repository }}
+        run: |
+          import base64
+          import json
+          import os
+          import urllib.parse
+          import urllib.request
+
+          request_url = os.environ["ACTIONS_ID_TOKEN_REQUEST_URL"]
+          separator = "&" if urllib.parse.urlsplit(request_url).query else "?"
+          request = urllib.request.Request(
+              request_url + separator + "audience=sts.amazonaws.com",
+              headers={"Authorization": "Bearer " + os.environ["ACTIONS_ID_TOKEN_REQUEST_TOKEN"]},
+          )
+          with urllib.request.urlopen(request, timeout=30) as response:
+              token = json.load(response)["value"]
+          payload_segment = token.split(".")[1]
+          payload_segment += "=" * (-len(payload_segment) % 4)
+          claims = json.loads(base64.urlsafe_b64decode(payload_segment))
+          visible = {
+              key: claims.get(key)
+              for key in ("sub", "aud", "ref", "job_workflow_ref", "repository")
+          }
+          if visible["repository"] != os.environ["EXPECTED_REPOSITORY"]:
+              raise SystemExit("OIDC repository claim does not match this repository")
+          print(json.dumps(visible, sort_keys=True, separators=(",", ":")))
+
+      - name: Verify production deploy role through STS
+        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # v5.1.0
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ap-northeast-2
+          mask-aws-account-id: true
+          retry-max-attempts: 1
+          role-session-name: delivery-diagnostics

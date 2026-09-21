@@ -39,6 +39,8 @@ node "$root/tools/ops/render-runtime-env.mjs" "$tmp/manifest.json" | grep -q "QU
 sh -n "$root/tools/ops/deploy.sh" "$root/tools/ops/status.sh" "$root/tools/ops/test.sh" "$root/tools/ops/prepare-host.sh" "$root/deploy/install-runtime.sh" "$root/deploy/initdb/010_migrate_role.sh" "$root/deploy/run-migrations.sh"
 grep -q 'restart: "no"' "$root/deploy/compose.production.yaml"
 ! grep -Eq 'ports:|7443:|build:' "$root/deploy/compose.production.yaml"
+! grep -q 'tmpfs: \[/' "$root/deploy/compose.production.yaml"
+! grep -Eq 'tmpfs:.*(^|, )(noexec|nosuid|nodev|size=|mode=|uid=|gid=)' "$root/deploy/compose.production.yaml"
 grep -q 'unavailable-health-only' "$root/tools/ops/validate-manifest.mjs"
 grep -q 'AssertPathIsMountPoint=/srv/rogi-collector' "$root/deploy/systemd/rogi-collector-host-ready.service"
 grep -q 'manifest must be inside the selected release bundle root' "$root/tools/ops/deploy.sh"

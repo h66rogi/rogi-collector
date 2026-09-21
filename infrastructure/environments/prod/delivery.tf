@@ -1,3 +1,12 @@
+variable "github_oidc_subject" {
+  type        = string
+  default     = ""
+  description = "Exact main-branch OIDC subject from the repository API, including immutable IDs when enabled."
+  validation {
+    condition     = var.github_oidc_subject == "" || can(regex("^repo:h66rogi(@[0-9]+)?/rogi-collector(@[0-9]+)?:ref:refs/heads/main$", var.github_oidc_subject))
+    error_message = "Only this product repository's exact main-branch subject is allowed."
+  }
+}
 # Only the successful trusted main release workflow can request this product's pull.
 variable "github_oidc_provider_arn" {
   type        = string
@@ -35,11 +44,17 @@ resource "aws_ssm_document" "delivery" {
   tags = local.tags
 }
 resource "aws_iam_role" "github_delivery" {
+  lifecycle {
+    precondition {
+      condition     = var.github_oidc_subject != ""
+      error_message = "Read the actual repository OIDC subject before enabling delivery."
+    }
+  }
   count       = local.delivery_enabled ? 1 : 0
   name_prefix = "${local.name}-github-delivery-"
   assume_role_policy = jsonencode({ Version = "2012-10-17", Statement = [{
     Effect    = "Allow", Action = "sts:AssumeRoleWithWebIdentity", Principal = { Federated = var.github_oidc_provider_arn },
-    Condition = { StringEquals = { "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com", "token.actions.githubusercontent.com:sub" = "repo:h66rogi/rogi-collector:ref:refs/heads/main" } }
+    Condition = { StringEquals = { "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com", "token.actions.githubusercontent.com:sub" = var.github_oidc_subject } }
   }] })
   tags = local.tags
 }

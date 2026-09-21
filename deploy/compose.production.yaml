@@ -12,7 +12,7 @@ x-role: &role
   pids_limit: 128
   mem_limit: 192m
   cpus: 0.50
-  tmpfs: [/tmp:rw,noexec,nosuid,nodev,size=16777216,mode=1777]
+  tmpfs: ["/tmp:rw,noexec,nosuid,nodev,size=16777216,mode=1777"]
   networks: [services]
   logging: *logging
   healthcheck:
@@ -44,7 +44,7 @@ services:
       - {type: bind, source: "${SECRETS_ROOT:?set SECRETS_ROOT}/postgres-admin-password", target: /run/secrets/postgres-admin-password, read_only: true, bind: {create_host_path: false}}
       - {type: bind, source: "${SECRETS_ROOT:?set SECRETS_ROOT}/postgres-migrate-password", target: /run/secrets/postgres-migrate-password, read_only: true, bind: {create_host_path: false}}
       - {type: bind, source: "${RELEASE_ROOT:?set RELEASE_ROOT}/deploy/initdb", target: /docker-entrypoint-initdb.d, read_only: true, bind: {create_host_path: false}}
-    tmpfs: [/tmp:rw,noexec,nosuid,nodev,size=67108864,mode=1777, /run/postgresql:rw,noexec,nosuid,nodev,size=16777216,uid=70,gid=70]
+    tmpfs: ["/tmp:rw,noexec,nosuid,nodev,size=67108864,mode=1777", "/run/postgresql:rw,noexec,nosuid,nodev,size=16777216,uid=70,gid=70"]
     networks: [data]
     logging: *logging
     healthcheck:
@@ -66,7 +66,7 @@ services:
     volumes:
       - {type: bind, source: "${DATA_ROOT:?set DATA_ROOT}/redis", target: /data, bind: {create_host_path: false}}
       - {type: bind, source: "${SECRETS_ROOT:?set SECRETS_ROOT}/redis-password", target: /run/secrets/redis-password, read_only: true, bind: {create_host_path: false}}
-    tmpfs: [/tmp:rw,noexec,nosuid,nodev,size=16777216,mode=1777]
+    tmpfs: ["/tmp:rw,noexec,nosuid,nodev,size=16777216,mode=1777"]
     networks: [data]
     logging: *logging
     healthcheck:
@@ -91,7 +91,7 @@ services:
       - {type: bind, source: "${RELEASE_ROOT:?set RELEASE_ROOT}/deploy/migrations", target: /release/migrations, read_only: true, bind: {create_host_path: false}}
       - {type: bind, source: "${RELEASE_ROOT:?set RELEASE_ROOT}/deploy/run-migrations.sh", target: /release/run-migrations.sh, read_only: true, bind: {create_host_path: false}}
       - {type: bind, source: "${SECRETS_ROOT:?set SECRETS_ROOT}/migrate.pgpass", target: /run/secrets/pgpass, read_only: true, bind: {create_host_path: false}}
-    tmpfs: [/tmp:rw,noexec,nosuid,nodev,size=16777216,mode=1777]
+    tmpfs: ["/tmp:rw,noexec,nosuid,nodev,size=16777216,mode=1777"]
     depends_on: {postgres: {condition: service_healthy}}
     networks: [data]
     logging: *logging

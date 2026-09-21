@@ -49,11 +49,12 @@ run "private_delivery_scope" {
     vpc_id                   = "vpc-00000000000000000"
     public_subnet_id         = "subnet-00000000000000000"
     availability_zone        = "ap-northeast-2a"
+    github_oidc_subject      = "repo:h66rogi@123/rogi-collector@456:ref:refs/heads/main"
     github_oidc_provider_arn = "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com"
     marble_security_group_id = "sg-00000000000000000"
   }
   assert {
-    condition     = jsondecode(aws_iam_role.github_delivery[0].assume_role_policy).Statement[0].Condition.StringEquals["token.actions.githubusercontent.com:sub"] == "repo:h66rogi/rogi-collector:ref:refs/heads/main"
+    condition     = jsondecode(aws_iam_role.github_delivery[0].assume_role_policy).Statement[0].Condition.StringEquals["token.actions.githubusercontent.com:sub"] == "repo:h66rogi@123/rogi-collector@456:ref:refs/heads/main"
     error_message = "Delivery must trust only this repository's main branch."
   }
   assert {

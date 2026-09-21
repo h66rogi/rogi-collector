@@ -64,7 +64,7 @@ PostgreSQL and Redis have internal networks only and no host ports. Role health 
 
 ## CI and release boundary
 
-Public pull-request CI may run Go/contract tests, shell syntax, manifest fixture validation, secret scanning, and static infrastructure checks. It receives no AWS, SSH, registry-push, production manifest, or secret access. A future image publishing workflow must be limited to manual dispatch or a protected trusted branch, build the selected 40-character source SHA, publish immutable image digests, and emit a manifest input artifact. It must not apply Terraform or deploy to a host. No release workflow is added here because action commit pins and registry trust policy have not yet been approved; inventing pins would weaken the boundary.
+Public pull-request CI runs Go/contract tests, shell syntax, manifest fixture validation, secret scanning, and static infrastructure checks with read-only repository permission. It receives no AWS, SSH, registry-push, production manifest, or secret access. The trusted `release` workflow runs only for `main` push or an explicit `main` dispatch, repeats the test gate, publishes immutable private GHCR digests, and emits public checksummed release metadata/source assets without secret values. Its separate privileged `private-deploy` `workflow_run` consumer accepts only this repository's successful `main` push release, checks out no triggering code, assumes the scoped AWS role through OIDC, and invokes the parameter-free product SSM document. The host receives only a temporary packages-read job credential through the dedicated registry Secrets Manager entry; it receives no human PAT.
 
 ## Verification status
 
@@ -73,6 +73,13 @@ Public pull-request CI may run Go/contract tests, shell syntax, manifest fixture
 ## Public release updater, monitoring, and backups
 
 `rogi-collector-update.timer` polls the configured public repository every ten minutes without a GitHub token. The fetcher accepts only non-draft `production-<sourceSha>` assets whose archive checksum, embedded manifest SHA, and successful `.github/workflows/release.yml` push on `main` agree. It safely extracts into `/opt/rogi-collector/app/releases`, strictly merges root-owned `/etc/rogi-collector/runtime-overlay.json`, and invokes the same locked deploy helper. `deploy/release-source.example.json` and `deploy/runtime-overlay.example.json` document the non-secret host input shape.
+
+Public polling covers release metadata and healthy deployed-receipt no-op checks. Pulling a new private digest is driven by the matching
+`private-deploy` run while its packages-read job token is temporarily available: the workflow writes exact `{username,token}` JSON to
+the dedicated Secrets Manager entry, invokes the fixed SSM document, waits for its result, and clears the value on exit. The host creates
+a root-only Docker config under `/run` for the pull and deletes it on success or failure. Without that credential a new-image pull fails
+closed and preserves the current release. Retry by rerunning the failed `private-deploy` run to obtain a fresh job token; do not add an
+anonymous fallback, persistent login, or human PAT. Public Release assets do not make GHCR images public.
 
 `rogi-collector-backup.timer` creates a daily PostgreSQL custom-format logical dump under the data EBS and retains seven days. `production-status.py` reports target/container state, data-disk usage, latest backup age, deployed receipt, and the explicit health-only capability profile. These checks do not claim that collection or gRPC 7443 is available.
 
