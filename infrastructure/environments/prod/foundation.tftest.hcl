@@ -39,3 +39,29 @@ run "collector_host_contract" {
     error_message = "SSH ingress is forbidden."
   }
 }
+
+run "private_delivery_scope" {
+  command = apply
+  variables {
+    aws_account_id           = "123456789012"
+    region                   = "ap-northeast-2"
+    ami_id                   = "ami-0123456789abcdef0"
+    vpc_id                   = "vpc-00000000000000000"
+    public_subnet_id         = "subnet-00000000000000000"
+    availability_zone        = "ap-northeast-2a"
+    github_oidc_provider_arn = "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com"
+    marble_security_group_id = "sg-00000000000000000"
+  }
+  assert {
+    condition     = jsondecode(aws_iam_role.github_delivery[0].assume_role_policy).Statement[0].Condition.StringEquals["token.actions.githubusercontent.com:sub"] == "repo:h66rogi/rogi-collector:ref:refs/heads/main"
+    error_message = "Delivery must trust only this repository's main branch."
+  }
+  assert {
+    condition     = jsondecode(aws_iam_role_policy.github_delivery[0].policy).Statement[0].Resource == [aws_secretsmanager_secret.registry_pull[0].arn]
+    error_message = "The workflow may write only its ephemeral registry secret."
+  }
+  assert {
+    condition     = length(jsondecode(aws_iam_role_policy.github_delivery[0].policy).Statement[1].Resource) == 2 && contains(jsondecode(aws_iam_role_policy.github_delivery[0].policy).Statement[1].Resource, aws_ssm_document.delivery[0].arn)
+    error_message = "SSM must bind the fixed document and exactly one host."
+  }
+}

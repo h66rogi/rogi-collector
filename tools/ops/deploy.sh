@@ -44,9 +44,16 @@ sed "s|^RELEASE_ROOT=.*|RELEASE_ROOT='$target_real'|" "$runtime_root/runtime.env
 
 cd "$target_real"
 $docker_bin compose --env-file "$runtime_root/candidate.env" -f deploy/compose.production.yaml config --quiet
-$docker_bin compose --env-file "$runtime_root/candidate.env" -f deploy/compose.production.yaml pull
+registry_auth=$runtime_root/docker-auth
+rm -rf "$registry_auth"
+trap 'rm -rf "$registry_auth"' EXIT HUP INT TERM
+"$target_real/tools/ops/load-registry-auth.py" --metadata "$config_root/registry.json" --output "$registry_auth"
+$docker_bin --config "$registry_auth" compose --env-file "$runtime_root/candidate.env" -f deploy/compose.production.yaml pull
+rm -rf "$registry_auth";trap - EXIT HUP INT TERM
 $docker_bin compose --env-file "$runtime_root/candidate.env" -f deploy/compose.production.yaml up --no-deps --wait postgres redis
 $docker_bin compose --env-file "$runtime_root/candidate.env" -f deploy/compose.production.yaml run --rm migrate
+
+"$target_real/deploy/install-runtime.sh" --update-only
 
 ln -sfn "$target_real" "$release_root/current.next"
 mv -Tf "$release_root/current.next" "$release_root/current"

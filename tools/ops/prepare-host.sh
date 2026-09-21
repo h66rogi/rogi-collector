@@ -19,12 +19,7 @@ if [ -x "$config_root/load-secrets" ]; then
 else
   "$library_root/load-secrets-aws.py" "$runtime_root"
 fi
-for name in postgres-admin-password postgres-migrate-password migrate.pgpass redis-password discover.env coordinator.env worker.env query.env; do
-  path=$runtime_root/$name
-  [ -s "$path" ] || { echo "missing secret file: $name" >&2; exit 78; }
-  mode=$(stat -c '%a' "$path")
-  case "$mode" in 600|400) :;; *) echo "unsafe secret mode $mode: $name" >&2; exit 78;; esac
-done
+"$library_root/validate-runtime-secrets.sh" "$runtime_root"
 chown 70:70 "$runtime_root/postgres-admin-password" "$runtime_root/postgres-migrate-password" "$runtime_root/migrate.pgpass"
 chown 999:1000 "$runtime_root/redis-password"
 chown 65532:65532 "$runtime_root/discover.env" "$runtime_root/coordinator.env" "$runtime_root/worker.env" "$runtime_root/query.env"

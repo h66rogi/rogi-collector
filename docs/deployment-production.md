@@ -28,7 +28,7 @@ The real manifest is a private release input and is not committed. It lives at t
 - a sorted `migrations` array that exactly lists every on-disk `deploy/migrations/*.sql` file once with its SHA-256;
 - `runtimeNonSecret` with the fixed host roots, non-secret database role names, Compose project name, and `capabilities.grpc7443=unavailable-health-only`.
 
-The validator rejects tags without digests, unknown product/profile paths, migration traversal, missing files, and checksum drift. Missing, duplicate, or changed allow-listed runtime files also reject the bundle before image pull or database access. It does not accept secret values. Image registry authentication, database passwords, TLS material, AWS state, host addresses, and the actual manifest remain outside Git.
+The validator rejects tags without digests, unknown product/profile paths, migration traversal, missing files, and checksum drift. Missing, duplicate, or changed allow-listed runtime files also reject the bundle before image pull or database access. It does not accept secret values. Private GHCR authentication comes from the dedicated registry Secrets Manager entry into a root-only `/run` Docker config used only for pull and immediately removed. Database passwords, TLS material, AWS state, host addresses, and the actual manifest remain outside Git.
 
 ## Secrets and database roles
 

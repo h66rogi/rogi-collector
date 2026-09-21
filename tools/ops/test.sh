@@ -8,21 +8,13 @@ cp "$root/deploy/compose.production.yaml" "$tmp/deploy/compose.production.yaml"
 cp "$root/deploy/migrations/001_foundation.sql" "$tmp/deploy/migrations/001_foundation.sql"
 cp "$root/deploy/run-migrations.sh" "$tmp/deploy/run-migrations.sh"
 cp "$root/deploy/initdb/010_migrate_role.sh" "$tmp/deploy/initdb/010_migrate_role.sh"
-cp "$root/deploy/install-runtime.sh" "$tmp/deploy/install-runtime.sh"
-cp "$root/deploy/systemd/rogi-collector-update.service" "$tmp/deploy/systemd/rogi-collector-update.service"
-cp "$root/deploy/systemd/rogi-collector-update.timer" "$tmp/deploy/systemd/rogi-collector-update.timer"
-cp "$root/deploy/systemd/rogi-collector-backup.service" "$tmp/deploy/systemd/rogi-collector-backup.service"
-cp "$root/deploy/systemd/rogi-collector-backup.timer" "$tmp/deploy/systemd/rogi-collector-backup.timer"
-cp "$root/tools/ops/fetch-release.py" "$tmp/tools/ops/fetch-release.py"
-cp "$root/tools/ops/production-status.py" "$tmp/tools/ops/production-status.py"
-cp "$root/tools/ops/backup-postgres.sh" "$tmp/tools/ops/backup-postgres.sh"
-cp "$root/tools/ops/load-secrets-aws.py" "$tmp/tools/ops/load-secrets-aws.py"
-cp "$root/tools/ops/upload-backup-s3.py" "$tmp/tools/ops/upload-backup-s3.py"
+runtime_paths='deploy/install-runtime.sh deploy/systemd/rogi-collector-host-ready.service deploy/systemd/rogi-collector-migrate.service deploy/systemd/rogi-collector-role@.service deploy/systemd/rogi-collector-update.service deploy/systemd/rogi-collector-update.timer deploy/systemd/rogi-collector-backup.service deploy/systemd/rogi-collector-backup.timer deploy/systemd/rogi-collector.target tools/ops/deploy.sh tools/ops/status.sh tools/ops/prepare-host.sh tools/ops/validate-manifest.mjs tools/ops/render-runtime-env.mjs tools/ops/fetch-release.py tools/ops/production-status.py tools/ops/backup-postgres.sh tools/ops/load-secrets-aws.py tools/ops/upload-backup-s3.py tools/ops/validate-runtime-secrets.sh tools/ops/load-registry-auth.py'
+for path in $runtime_paths;do mkdir -p "$tmp/$(dirname "$path")";cp "$root/$path" "$tmp/$path";done
 compose_sha=$(sha256sum "$tmp/deploy/compose.production.yaml" | awk '{print $1}')
 migration_sha=$(sha256sum "$tmp/deploy/migrations/001_foundation.sql" | awk '{print $1}')
 runner_sha=$(sha256sum "$tmp/deploy/run-migrations.sh" | awk '{print $1}')
 initdb_sha=$(sha256sum "$tmp/deploy/initdb/010_migrate_role.sh" | awk '{print $1}')
-runtime_json=$(node -e "const fs=require('fs'),crypto=require('crypto'),root=process.argv[1],paths=process.argv.slice(2);console.log(JSON.stringify(paths.map(path=>({path,sha256:crypto.createHash('sha256').update(fs.readFileSync(root+'/'+path)).digest('hex')}))))" "$tmp" 'deploy/run-migrations.sh' 'deploy/initdb/010_migrate_role.sh' 'deploy/install-runtime.sh' 'deploy/systemd/rogi-collector-update.service' 'deploy/systemd/rogi-collector-update.timer' 'deploy/systemd/rogi-collector-backup.service' 'deploy/systemd/rogi-collector-backup.timer' 'tools/ops/fetch-release.py' 'tools/ops/production-status.py' 'tools/ops/backup-postgres.sh' 'tools/ops/load-secrets-aws.py' 'tools/ops/upload-backup-s3.py')
+runtime_json=$(node -e "const fs=require('fs'),crypto=require('crypto'),root=process.argv[1],paths=process.argv.slice(2);console.log(JSON.stringify(paths.map(path=>({path,sha256:crypto.createHash('sha256').update(fs.readFileSync(root+'/'+path)).digest('hex')}))))" "$tmp" deploy/run-migrations.sh deploy/initdb/010_migrate_role.sh $runtime_paths)
 digest=$(printf 'a%.0s' $(seq 1 64))
 cat > "$tmp/manifest.json" <<EOF
 {"schemaVersion":1,"product":"rogi-collector","profile":"feedback","sourceSha":"1111111111111111111111111111111111111111","releaseId":"test-release","contractVersion":"v1","composeSha256":"$compose_sha","runtimeFiles":$runtime_json,"images":{"postgres":"registry.example/test/postgres@sha256:$digest","redis":"registry.example/test/redis@sha256:$digest","discover":"registry.example/test/discover@sha256:$digest","coordinator":"registry.example/test/coordinator@sha256:$digest","worker":"registry.example/test/worker@sha256:$digest","query":"registry.example/test/query@sha256:$digest"},"migrations":[{"path":"deploy/migrations/001_foundation.sql","sha256":"$migration_sha"}],"runtimeNonSecret":{"composeProjectName":"rogi-collector","dataRoot":"/srv/rogi-collector","secretsRoot":"/run/rogi-collector","releaseRoot":"/opt/rogi-collector/app/current","postgresDatabase":"collector","postgresAdminUser":"collector_admin","postgresMigrateUser":"collector_migrate","capabilities":{"grpc7443":"unavailable-health-only"}}}
@@ -59,4 +51,6 @@ grep -q 'ExecStop=/usr/local/lib/rogi-collector/load-secrets-aws.py --cleanup /r
 python3 "$root/tools/ops/test_fetch_release.py" >/dev/null
 python3 "$root/tools/ops/test_load_secrets_aws.py" >/dev/null
 python3 "$root/tools/ops/test_upload_backup_s3.py" >/dev/null
+python3 "$root/tools/ops/test_registry_auth.py" >/dev/null
+"$root/tools/ops/test_validate_runtime_secrets.sh" >/dev/null
 echo 'collector production runtime static tests passed (no Docker or EC2 execution)'
