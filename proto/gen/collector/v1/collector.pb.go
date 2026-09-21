@@ -1863,6 +1863,259 @@ func (x *BroadcastStatus) GetCached() bool {
 	return false
 }
 
+// Ephemeral chat tests have no journal, subscription or game-side effects.
+type ChatTestRequest struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	ConsumerId      string                 `protobuf:"bytes,1,opt,name=consumer_id,json=consumerId,proto3" json:"consumer_id,omitempty"`
+	ChannelId       string                 `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
+	TargetChannelId string                 `protobuf:"bytes,3,opt,name=target_channel_id,json=targetChannelId,proto3" json:"target_channel_id,omitempty"`
+	SessionId       string                 `protobuf:"bytes,4,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *ChatTestRequest) Reset() {
+	*x = ChatTestRequest{}
+	mi := &file_collector_v1_collector_proto_msgTypes[20]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChatTestRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChatTestRequest) ProtoMessage() {}
+
+func (x *ChatTestRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_collector_v1_collector_proto_msgTypes[20]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChatTestRequest.ProtoReflect.Descriptor instead.
+func (*ChatTestRequest) Descriptor() ([]byte, []int) {
+	return file_collector_v1_collector_proto_rawDescGZIP(), []int{20}
+}
+
+func (x *ChatTestRequest) GetConsumerId() string {
+	if x != nil {
+		return x.ConsumerId
+	}
+	return ""
+}
+
+func (x *ChatTestRequest) GetChannelId() string {
+	if x != nil {
+		return x.ChannelId
+	}
+	return ""
+}
+
+func (x *ChatTestRequest) GetTargetChannelId() string {
+	if x != nil {
+		return x.TargetChannelId
+	}
+	return ""
+}
+
+func (x *ChatTestRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+type ChatTestSample struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Sequence      uint64                 `protobuf:"varint,1,opt,name=sequence,proto3" json:"sequence,omitempty"`
+	DisplayName   string                 `protobuf:"bytes,2,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
+	Message       string                 `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
+	ReceivedAt    *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=received_at,json=receivedAt,proto3" json:"received_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ChatTestSample) Reset() {
+	*x = ChatTestSample{}
+	mi := &file_collector_v1_collector_proto_msgTypes[21]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChatTestSample) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChatTestSample) ProtoMessage() {}
+
+func (x *ChatTestSample) ProtoReflect() protoreflect.Message {
+	mi := &file_collector_v1_collector_proto_msgTypes[21]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChatTestSample.ProtoReflect.Descriptor instead.
+func (*ChatTestSample) Descriptor() ([]byte, []int) {
+	return file_collector_v1_collector_proto_rawDescGZIP(), []int{21}
+}
+
+func (x *ChatTestSample) GetSequence() uint64 {
+	if x != nil {
+		return x.Sequence
+	}
+	return 0
+}
+
+func (x *ChatTestSample) GetDisplayName() string {
+	if x != nil {
+		return x.DisplayName
+	}
+	return ""
+}
+
+func (x *ChatTestSample) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *ChatTestSample) GetReceivedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ReceivedAt
+	}
+	return nil
+}
+
+type ChatTestStatus struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	SessionId      string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	ChannelId      string                 `protobuf:"bytes,2,opt,name=channel_id,json=channelId,proto3" json:"channel_id,omitempty"`
+	State          string                 `protobuf:"bytes,3,opt,name=state,proto3" json:"state,omitempty"`
+	Active         bool                   `protobuf:"varint,4,opt,name=active,proto3" json:"active,omitempty"`
+	StartedAt      *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=started_at,json=startedAt,proto3,oneof" json:"started_at,omitempty"`
+	ExpiresAt      *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=expires_at,json=expiresAt,proto3,oneof" json:"expires_at,omitempty"`
+	JoinedAt       *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=joined_at,json=joinedAt,proto3,oneof" json:"joined_at,omitempty"`
+	LastReceivedAt *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=last_received_at,json=lastReceivedAt,proto3,oneof" json:"last_received_at,omitempty"`
+	ReceivedCount  uint64                 `protobuf:"varint,9,opt,name=received_count,json=receivedCount,proto3" json:"received_count,omitempty"`
+	Messages       []*ChatTestSample      `protobuf:"bytes,10,rep,name=messages,proto3" json:"messages,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *ChatTestStatus) Reset() {
+	*x = ChatTestStatus{}
+	mi := &file_collector_v1_collector_proto_msgTypes[22]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChatTestStatus) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChatTestStatus) ProtoMessage() {}
+
+func (x *ChatTestStatus) ProtoReflect() protoreflect.Message {
+	mi := &file_collector_v1_collector_proto_msgTypes[22]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChatTestStatus.ProtoReflect.Descriptor instead.
+func (*ChatTestStatus) Descriptor() ([]byte, []int) {
+	return file_collector_v1_collector_proto_rawDescGZIP(), []int{22}
+}
+
+func (x *ChatTestStatus) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *ChatTestStatus) GetChannelId() string {
+	if x != nil {
+		return x.ChannelId
+	}
+	return ""
+}
+
+func (x *ChatTestStatus) GetState() string {
+	if x != nil {
+		return x.State
+	}
+	return ""
+}
+
+func (x *ChatTestStatus) GetActive() bool {
+	if x != nil {
+		return x.Active
+	}
+	return false
+}
+
+func (x *ChatTestStatus) GetStartedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.StartedAt
+	}
+	return nil
+}
+
+func (x *ChatTestStatus) GetExpiresAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ExpiresAt
+	}
+	return nil
+}
+
+func (x *ChatTestStatus) GetJoinedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.JoinedAt
+	}
+	return nil
+}
+
+func (x *ChatTestStatus) GetLastReceivedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.LastReceivedAt
+	}
+	return nil
+}
+
+func (x *ChatTestStatus) GetReceivedCount() uint64 {
+	if x != nil {
+		return x.ReceivedCount
+	}
+	return 0
+}
+
+func (x *ChatTestStatus) GetMessages() []*ChatTestSample {
+	if x != nil {
+		return x.Messages
+	}
+	return nil
+}
+
 type Empty struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -1871,7 +2124,7 @@ type Empty struct {
 
 func (x *Empty) Reset() {
 	*x = Empty{}
-	mi := &file_collector_v1_collector_proto_msgTypes[20]
+	mi := &file_collector_v1_collector_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1883,7 +2136,7 @@ func (x *Empty) String() string {
 func (*Empty) ProtoMessage() {}
 
 func (x *Empty) ProtoReflect() protoreflect.Message {
-	mi := &file_collector_v1_collector_proto_msgTypes[20]
+	mi := &file_collector_v1_collector_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1896,7 +2149,7 @@ func (x *Empty) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Empty.ProtoReflect.Descriptor instead.
 func (*Empty) Descriptor() ([]byte, []int) {
-	return file_collector_v1_collector_proto_rawDescGZIP(), []int{20}
+	return file_collector_v1_collector_proto_rawDescGZIP(), []int{23}
 }
 
 var File_collector_v1_collector_proto protoreflect.FileDescriptor
@@ -2094,7 +2347,42 @@ const file_collector_v1_collector_proto_rawDesc = "" +
 	"\fbroadcast_id\x18\x05 \x01(\tR\vbroadcastId\x129\n" +
 	"\n" +
 	"checked_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tcheckedAt\x12\x16\n" +
-	"\x06cached\x18\a \x01(\bR\x06cached\"\a\n" +
+	"\x06cached\x18\a \x01(\bR\x06cached\"\x9c\x01\n" +
+	"\x0fChatTestRequest\x12\x1f\n" +
+	"\vconsumer_id\x18\x01 \x01(\tR\n" +
+	"consumerId\x12\x1d\n" +
+	"\n" +
+	"channel_id\x18\x02 \x01(\tR\tchannelId\x12*\n" +
+	"\x11target_channel_id\x18\x03 \x01(\tR\x0ftargetChannelId\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x04 \x01(\tR\tsessionId\"\xa6\x01\n" +
+	"\x0eChatTestSample\x12\x1a\n" +
+	"\bsequence\x18\x01 \x01(\x04R\bsequence\x12!\n" +
+	"\fdisplay_name\x18\x02 \x01(\tR\vdisplayName\x12\x18\n" +
+	"\amessage\x18\x03 \x01(\tR\amessage\x12;\n" +
+	"\vreceived_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"receivedAt\"\xac\x04\n" +
+	"\x0eChatTestStatus\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x1d\n" +
+	"\n" +
+	"channel_id\x18\x02 \x01(\tR\tchannelId\x12\x14\n" +
+	"\x05state\x18\x03 \x01(\tR\x05state\x12\x16\n" +
+	"\x06active\x18\x04 \x01(\bR\x06active\x12>\n" +
+	"\n" +
+	"started_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampH\x00R\tstartedAt\x88\x01\x01\x12>\n" +
+	"\n" +
+	"expires_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampH\x01R\texpiresAt\x88\x01\x01\x12<\n" +
+	"\tjoined_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampH\x02R\bjoinedAt\x88\x01\x01\x12I\n" +
+	"\x10last_received_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampH\x03R\x0elastReceivedAt\x88\x01\x01\x12%\n" +
+	"\x0ereceived_count\x18\t \x01(\x04R\rreceivedCount\x12=\n" +
+	"\bmessages\x18\n" +
+	" \x03(\v2!.rogi.collector.v1.ChatTestSampleR\bmessagesB\r\n" +
+	"\v_started_atB\r\n" +
+	"\v_expires_atB\f\n" +
+	"\n" +
+	"_joined_atB\x13\n" +
+	"\x11_last_received_at\"\a\n" +
 	"\x05Empty*7\n" +
 	"\bPlatform\x12\x18\n" +
 	"\x14PLATFORM_UNSPECIFIED\x10\x00\x12\x11\n" +
@@ -2112,8 +2400,11 @@ const file_collector_v1_collector_proto_rawDesc = "" +
 	"\x1bIDENTITY_STATUS_UNSPECIFIED\x10\x00\x12\x1d\n" +
 	"\x19IDENTITY_STATUS_SOURCE_ID\x10\x01\x12$\n" +
 	" IDENTITY_STATUS_OBSERVATION_ONLY\x10\x02\x12'\n" +
-	"#IDENTITY_STATUS_RECONNECT_AMBIGUOUS\x10\x032\xd6\x06\n" +
-	"\x10CollectorService\x12^\n" +
+	"#IDENTITY_STATUS_RECONNECT_AMBIGUOUS\x10\x032\xdb\b\n" +
+	"\x10CollectorService\x12V\n" +
+	"\rStartChatTest\x12\".rogi.collector.v1.ChatTestRequest\x1a!.rogi.collector.v1.ChatTestStatus\x12T\n" +
+	"\vGetChatTest\x12\".rogi.collector.v1.ChatTestRequest\x1a!.rogi.collector.v1.ChatTestStatus\x12U\n" +
+	"\fStopChatTest\x12\".rogi.collector.v1.ChatTestRequest\x1a!.rogi.collector.v1.ChatTestStatus\x12^\n" +
 	"\x0eCheckBroadcast\x12(.rogi.collector.v1.CheckBroadcastRequest\x1a\".rogi.collector.v1.BroadcastStatus\x12i\n" +
 	"\x13GetCollectionStatus\x12-.rogi.collector.v1.GetCollectionStatusRequest\x1a#.rogi.collector.v1.CollectionStatus\x12}\n" +
 	"\x16SetChannelSubscription\x120.rogi.collector.v1.SetChannelSubscriptionRequest\x1a1.rogi.collector.v1.SetChannelSubscriptionResponse\x12b\n" +
@@ -2136,7 +2427,7 @@ func file_collector_v1_collector_proto_rawDescGZIP() []byte {
 }
 
 var file_collector_v1_collector_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_collector_v1_collector_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
+var file_collector_v1_collector_proto_msgTypes = make([]protoimpl.MessageInfo, 24)
 var file_collector_v1_collector_proto_goTypes = []any{
 	(Platform)(0),                           // 0: rogi.collector.v1.Platform
 	(NativeCurrency)(0),                     // 1: rogi.collector.v1.NativeCurrency
@@ -2162,28 +2453,31 @@ var file_collector_v1_collector_proto_goTypes = []any{
 	(*ResolveConsumerRecoveryResponse)(nil), // 21: rogi.collector.v1.ResolveConsumerRecoveryResponse
 	(*CheckBroadcastRequest)(nil),           // 22: rogi.collector.v1.CheckBroadcastRequest
 	(*BroadcastStatus)(nil),                 // 23: rogi.collector.v1.BroadcastStatus
-	(*Empty)(nil),                           // 24: rogi.collector.v1.Empty
-	(*timestamppb.Timestamp)(nil),           // 25: google.protobuf.Timestamp
+	(*ChatTestRequest)(nil),                 // 24: rogi.collector.v1.ChatTestRequest
+	(*ChatTestSample)(nil),                  // 25: rogi.collector.v1.ChatTestSample
+	(*ChatTestStatus)(nil),                  // 26: rogi.collector.v1.ChatTestStatus
+	(*Empty)(nil),                           // 27: rogi.collector.v1.Empty
+	(*timestamppb.Timestamp)(nil),           // 28: google.protobuf.Timestamp
 }
 var file_collector_v1_collector_proto_depIdxs = []int32{
 	2,  // 0: rogi.collector.v1.ContractErrorDetail.code:type_name -> rogi.collector.v1.ContractErrorCode
 	4,  // 1: rogi.collector.v1.ContractErrorDetail.requested_cursor:type_name -> rogi.collector.v1.Cursor
 	4,  // 2: rogi.collector.v1.ContractErrorDetail.earliest_cursor:type_name -> rogi.collector.v1.Cursor
 	4,  // 3: rogi.collector.v1.ContractErrorDetail.current_cursor:type_name -> rogi.collector.v1.Cursor
-	25, // 4: rogi.collector.v1.DonationEvent.source_timestamp:type_name -> google.protobuf.Timestamp
+	28, // 4: rogi.collector.v1.DonationEvent.source_timestamp:type_name -> google.protobuf.Timestamp
 	4,  // 5: rogi.collector.v1.DonationEvent.cursor:type_name -> rogi.collector.v1.Cursor
 	3,  // 6: rogi.collector.v1.DonationEvent.identity_status:type_name -> rogi.collector.v1.IdentityStatus
 	0,  // 7: rogi.collector.v1.DonationEvent.platform:type_name -> rogi.collector.v1.Platform
-	25, // 8: rogi.collector.v1.DonationEvent.observed_at:type_name -> google.protobuf.Timestamp
-	25, // 9: rogi.collector.v1.DonationEvent.occurred_at:type_name -> google.protobuf.Timestamp
+	28, // 8: rogi.collector.v1.DonationEvent.observed_at:type_name -> google.protobuf.Timestamp
+	28, // 9: rogi.collector.v1.DonationEvent.occurred_at:type_name -> google.protobuf.Timestamp
 	1,  // 10: rogi.collector.v1.DonationEvent.native_currency:type_name -> rogi.collector.v1.NativeCurrency
 	5,  // 11: rogi.collector.v1.ChatEvent.cursor:type_name -> rogi.collector.v1.ChatCursor
-	25, // 12: rogi.collector.v1.ChatEvent.occurred_at:type_name -> google.protobuf.Timestamp
-	25, // 13: rogi.collector.v1.ChatEvent.observed_at:type_name -> google.protobuf.Timestamp
+	28, // 12: rogi.collector.v1.ChatEvent.occurred_at:type_name -> google.protobuf.Timestamp
+	28, // 13: rogi.collector.v1.ChatEvent.observed_at:type_name -> google.protobuf.Timestamp
 	0,  // 14: rogi.collector.v1.ChatEvent.platform:type_name -> rogi.collector.v1.Platform
 	4,  // 15: rogi.collector.v1.CollectionStatus.earliest_cursor:type_name -> rogi.collector.v1.Cursor
 	4,  // 16: rogi.collector.v1.CollectionStatus.current_cursor:type_name -> rogi.collector.v1.Cursor
-	25, // 17: rogi.collector.v1.CollectionStatus.last_received_at:type_name -> google.protobuf.Timestamp
+	28, // 17: rogi.collector.v1.CollectionStatus.last_received_at:type_name -> google.protobuf.Timestamp
 	9,  // 18: rogi.collector.v1.SetChannelSubscriptionResponse.status:type_name -> rogi.collector.v1.CollectionStatus
 	4,  // 19: rogi.collector.v1.ListDonationsRequest.after_cursor:type_name -> rogi.collector.v1.Cursor
 	7,  // 20: rogi.collector.v1.ListDonationsResponse.donations:type_name -> rogi.collector.v1.DonationEvent
@@ -2200,28 +2494,40 @@ var file_collector_v1_collector_proto_depIdxs = []int32{
 	4,  // 31: rogi.collector.v1.ResolveConsumerRecoveryResponse.previous_cursor:type_name -> rogi.collector.v1.Cursor
 	4,  // 32: rogi.collector.v1.ResolveConsumerRecoveryResponse.resume_from:type_name -> rogi.collector.v1.Cursor
 	19, // 33: rogi.collector.v1.ResolveConsumerRecoveryResponse.unrecovered_ranges:type_name -> rogi.collector.v1.RecoveryRange
-	25, // 34: rogi.collector.v1.BroadcastStatus.checked_at:type_name -> google.protobuf.Timestamp
-	22, // 35: rogi.collector.v1.CollectorService.CheckBroadcast:input_type -> rogi.collector.v1.CheckBroadcastRequest
-	10, // 36: rogi.collector.v1.CollectorService.GetCollectionStatus:input_type -> rogi.collector.v1.GetCollectionStatusRequest
-	11, // 37: rogi.collector.v1.CollectorService.SetChannelSubscription:input_type -> rogi.collector.v1.SetChannelSubscriptionRequest
-	13, // 38: rogi.collector.v1.CollectorService.ListDonations:input_type -> rogi.collector.v1.ListDonationsRequest
-	15, // 39: rogi.collector.v1.CollectorService.WatchDonations:input_type -> rogi.collector.v1.WatchDonationsRequest
-	16, // 40: rogi.collector.v1.CollectorService.AckDonations:input_type -> rogi.collector.v1.AckDonationsRequest
-	18, // 41: rogi.collector.v1.CollectorService.WatchChat:input_type -> rogi.collector.v1.WatchChatRequest
-	20, // 42: rogi.collector.v1.CollectorService.ResolveConsumerRecovery:input_type -> rogi.collector.v1.ResolveConsumerRecoveryRequest
-	23, // 43: rogi.collector.v1.CollectorService.CheckBroadcast:output_type -> rogi.collector.v1.BroadcastStatus
-	9,  // 44: rogi.collector.v1.CollectorService.GetCollectionStatus:output_type -> rogi.collector.v1.CollectionStatus
-	12, // 45: rogi.collector.v1.CollectorService.SetChannelSubscription:output_type -> rogi.collector.v1.SetChannelSubscriptionResponse
-	14, // 46: rogi.collector.v1.CollectorService.ListDonations:output_type -> rogi.collector.v1.ListDonationsResponse
-	7,  // 47: rogi.collector.v1.CollectorService.WatchDonations:output_type -> rogi.collector.v1.DonationEvent
-	17, // 48: rogi.collector.v1.CollectorService.AckDonations:output_type -> rogi.collector.v1.AckDonationsResponse
-	8,  // 49: rogi.collector.v1.CollectorService.WatchChat:output_type -> rogi.collector.v1.ChatEvent
-	21, // 50: rogi.collector.v1.CollectorService.ResolveConsumerRecovery:output_type -> rogi.collector.v1.ResolveConsumerRecoveryResponse
-	43, // [43:51] is the sub-list for method output_type
-	35, // [35:43] is the sub-list for method input_type
-	35, // [35:35] is the sub-list for extension type_name
-	35, // [35:35] is the sub-list for extension extendee
-	0,  // [0:35] is the sub-list for field type_name
+	28, // 34: rogi.collector.v1.BroadcastStatus.checked_at:type_name -> google.protobuf.Timestamp
+	28, // 35: rogi.collector.v1.ChatTestSample.received_at:type_name -> google.protobuf.Timestamp
+	28, // 36: rogi.collector.v1.ChatTestStatus.started_at:type_name -> google.protobuf.Timestamp
+	28, // 37: rogi.collector.v1.ChatTestStatus.expires_at:type_name -> google.protobuf.Timestamp
+	28, // 38: rogi.collector.v1.ChatTestStatus.joined_at:type_name -> google.protobuf.Timestamp
+	28, // 39: rogi.collector.v1.ChatTestStatus.last_received_at:type_name -> google.protobuf.Timestamp
+	25, // 40: rogi.collector.v1.ChatTestStatus.messages:type_name -> rogi.collector.v1.ChatTestSample
+	24, // 41: rogi.collector.v1.CollectorService.StartChatTest:input_type -> rogi.collector.v1.ChatTestRequest
+	24, // 42: rogi.collector.v1.CollectorService.GetChatTest:input_type -> rogi.collector.v1.ChatTestRequest
+	24, // 43: rogi.collector.v1.CollectorService.StopChatTest:input_type -> rogi.collector.v1.ChatTestRequest
+	22, // 44: rogi.collector.v1.CollectorService.CheckBroadcast:input_type -> rogi.collector.v1.CheckBroadcastRequest
+	10, // 45: rogi.collector.v1.CollectorService.GetCollectionStatus:input_type -> rogi.collector.v1.GetCollectionStatusRequest
+	11, // 46: rogi.collector.v1.CollectorService.SetChannelSubscription:input_type -> rogi.collector.v1.SetChannelSubscriptionRequest
+	13, // 47: rogi.collector.v1.CollectorService.ListDonations:input_type -> rogi.collector.v1.ListDonationsRequest
+	15, // 48: rogi.collector.v1.CollectorService.WatchDonations:input_type -> rogi.collector.v1.WatchDonationsRequest
+	16, // 49: rogi.collector.v1.CollectorService.AckDonations:input_type -> rogi.collector.v1.AckDonationsRequest
+	18, // 50: rogi.collector.v1.CollectorService.WatchChat:input_type -> rogi.collector.v1.WatchChatRequest
+	20, // 51: rogi.collector.v1.CollectorService.ResolveConsumerRecovery:input_type -> rogi.collector.v1.ResolveConsumerRecoveryRequest
+	26, // 52: rogi.collector.v1.CollectorService.StartChatTest:output_type -> rogi.collector.v1.ChatTestStatus
+	26, // 53: rogi.collector.v1.CollectorService.GetChatTest:output_type -> rogi.collector.v1.ChatTestStatus
+	26, // 54: rogi.collector.v1.CollectorService.StopChatTest:output_type -> rogi.collector.v1.ChatTestStatus
+	23, // 55: rogi.collector.v1.CollectorService.CheckBroadcast:output_type -> rogi.collector.v1.BroadcastStatus
+	9,  // 56: rogi.collector.v1.CollectorService.GetCollectionStatus:output_type -> rogi.collector.v1.CollectionStatus
+	12, // 57: rogi.collector.v1.CollectorService.SetChannelSubscription:output_type -> rogi.collector.v1.SetChannelSubscriptionResponse
+	14, // 58: rogi.collector.v1.CollectorService.ListDonations:output_type -> rogi.collector.v1.ListDonationsResponse
+	7,  // 59: rogi.collector.v1.CollectorService.WatchDonations:output_type -> rogi.collector.v1.DonationEvent
+	17, // 60: rogi.collector.v1.CollectorService.AckDonations:output_type -> rogi.collector.v1.AckDonationsResponse
+	8,  // 61: rogi.collector.v1.CollectorService.WatchChat:output_type -> rogi.collector.v1.ChatEvent
+	21, // 62: rogi.collector.v1.CollectorService.ResolveConsumerRecovery:output_type -> rogi.collector.v1.ResolveConsumerRecoveryResponse
+	52, // [52:63] is the sub-list for method output_type
+	41, // [41:52] is the sub-list for method input_type
+	41, // [41:41] is the sub-list for extension type_name
+	41, // [41:41] is the sub-list for extension extendee
+	0,  // [0:41] is the sub-list for field type_name
 }
 
 func init() { file_collector_v1_collector_proto_init() }
@@ -2237,13 +2543,14 @@ func file_collector_v1_collector_proto_init() {
 	file_collector_v1_collector_proto_msgTypes[10].OneofWrappers = []any{}
 	file_collector_v1_collector_proto_msgTypes[11].OneofWrappers = []any{}
 	file_collector_v1_collector_proto_msgTypes[14].OneofWrappers = []any{}
+	file_collector_v1_collector_proto_msgTypes[22].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_collector_v1_collector_proto_rawDesc), len(file_collector_v1_collector_proto_rawDesc)),
 			NumEnums:      4,
-			NumMessages:   21,
+			NumMessages:   24,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

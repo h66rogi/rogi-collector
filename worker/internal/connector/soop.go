@@ -285,23 +285,25 @@ func (c *SoopConnector) dialWithFallback(ctx context.Context, wsURL, domain stri
 
 func (c *SoopConnector) Disconnect() error {
 	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	if !c.alive {
-		return nil
-	}
+	conn, cancel, wasAlive := c.conn, c.cancel, c.alive
 	c.alive = false
-	if c.cancel != nil {
-		c.cancel()
+	c.mu.Unlock()
+	if cancel != nil {
+		cancel()
 	}
-	if c.conn != nil {
-		// Serialize close-frame write through wmu to prevent concurrent write race
-		// with pingLoop or other writers.
-		c.wmu.Lock()
-		_ = c.conn.WriteMessage(gorilla.CloseMessage,
-			gorilla.FormatCloseMessage(gorilla.CloseNormalClosure, "disconnect"))
-		c.wmu.Unlock()
-		return c.conn.Close()
+	// A read-loop error may already mark the connector dead. The socket still
+	// needs closing, and a silent peer must not hold up test/worker shutdown.
+	if conn != nil {
+		if wasAlive {
+			c.wmu.Lock()
+			_ = conn.WriteControl(gorilla.CloseMessage, gorilla.FormatCloseMessage(gorilla.CloseNormalClosure, "disconnect"), time.Now().Add(time.Second))
+			c.wmu.Unlock()
+		}
+		err := conn.Close()
+		if errors.Is(err, net.ErrClosed) {
+			return nil
+		}
+		return err
 	}
 	return nil
 }

@@ -685,10 +685,11 @@
         "Go module/import address changed to target repository",
         "기존 Server lifecycle에서 제품 mTLS 7443·범위 인증·collector v1·보존 정리 실행",
         "Load the mounted role environment as data and wire explicit single-channel live-test authentication",
-        "Connect read-only broadcast diagnostics through discover cookie boundary; preserve production subscription scope."
+        "Connect read-only broadcast diagnostics through discover cookie boundary; preserve production subscription scope.",
+        "Add bounded operator chat tests using the existing SOOP connector; close disconnected sockets reliably without production ingestion."
       ],
       "importSha256": "d2a5b154ad86dfb34a655b8289473d70a6d047409dc3dd1434785f832832179c",
-      "currentSha256": "972a811380edf19d1ddcd37af74730f511304dba1cad3c1e98d1d50ba33e87cd"
+      "currentSha256": "56cbad6c156ac91b8a31c6eafba84622aef28f7fd0e3659d80c63a3ad14cdec5"
     },
     {
       "sourcePath": "query/go.mod",
@@ -1105,10 +1106,11 @@
         "Connect existing SOOP discovery/connector construction to the cookie-auth JSON snapshot reader; preserve original lifecycle and interfaces",
         "기존 manager에 후원 spool/journal/소유권과 outbox 재시도 연결",
         "Load the mounted role environment as data and wire explicit single-channel live-test authentication",
-        "Correct command dispatch blocking/order and readiness/stop-deadline comments; behavior unchanged"
+        "Correct command dispatch blocking/order and readiness/stop-deadline comments; behavior unchanged",
+        "Add bounded operator chat tests using the existing SOOP connector; close disconnected sockets reliably without production ingestion."
       ],
       "importSha256": "52b2b984c02465d8914fc0d7ec4cb31f6f9b6adf68067b81f803fc9f4f8cee1e",
-      "currentSha256": "16f143616a181ca573112bc2daa5c4bc9f33a5908442cd50312beee03c73a0cc"
+      "currentSha256": "c8eb9d062044290f516894d741cb7bb10f9b0529514ac5f6a01c29c3ced535aa"
     },
     {
       "sourcePath": "worker/cmd/main_test.go",
@@ -1267,10 +1269,11 @@
       "changes": [
         "Go module/import address changed to target repository",
         "Connect existing SOOP discovery/connector construction to the cookie-auth JSON snapshot reader; preserve original lifecycle and interfaces",
-        "실제 join ACK 대기, 현재 player API, epoch ID, 정수 별풍선의 채팅 drop 이전 저장 분리"
+        "실제 join ACK 대기, 현재 player API, epoch ID, 정수 별풍선의 채팅 drop 이전 저장 분리",
+        "Add bounded operator chat tests using the existing SOOP connector; close disconnected sockets reliably without production ingestion."
       ],
       "importSha256": "8a900c65f43bfd1c7f71e5433d2c3d924cffc2bcb6f4b2dbcf437a195c55e93b",
-      "currentSha256": "5b36864e251d57319b2de68b847b819988e6b9df9a9714d04681e6c96f03a630"
+      "currentSha256": "282eb68e74f137a515437ba267c12cad320c2a98f9a1d0707073956d1e8ed54b"
     },
     {
       "sourcePath": "worker/internal/connector/soop_test.go",

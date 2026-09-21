@@ -38,8 +38,15 @@ message ResolveConsumerRecoveryResponse { string previous_generation = 1; string
 // target_channel_id may name another channel and never changes subscriptions.
 message CheckBroadcastRequest { string consumer_id = 1; string channel_id = 2; string target_channel_id = 3; }
 message BroadcastStatus { string channel_id = 1; string state = 2; string title = 3; string display_name = 4; string broadcast_id = 5; google.protobuf.Timestamp checked_at = 6; bool cached = 7; }
+// Ephemeral chat tests have no journal, subscription or game-side effects.
+message ChatTestRequest { string consumer_id = 1; string channel_id = 2; string target_channel_id = 3; string session_id = 4; }
+message ChatTestSample { uint64 sequence = 1; string display_name = 2; string message = 3; google.protobuf.Timestamp received_at = 4; }
+message ChatTestStatus { string session_id = 1; string channel_id = 2; string state = 3; bool active = 4; optional google.protobuf.Timestamp started_at = 5; optional google.protobuf.Timestamp expires_at = 6; optional google.protobuf.Timestamp joined_at = 7; optional google.protobuf.Timestamp last_received_at = 8; uint64 received_count = 9; repeated ChatTestSample messages = 10; }
 message Empty {}
 service CollectorService {
+  rpc StartChatTest(ChatTestRequest) returns (ChatTestStatus);
+  rpc GetChatTest(ChatTestRequest) returns (ChatTestStatus);
+  rpc StopChatTest(ChatTestRequest) returns (ChatTestStatus);
   rpc CheckBroadcast(CheckBroadcastRequest) returns (BroadcastStatus);
   rpc GetCollectionStatus(GetCollectionStatusRequest) returns (CollectionStatus);
   rpc SetChannelSubscription(SetChannelSubscriptionRequest) returns (SetChannelSubscriptionResponse);

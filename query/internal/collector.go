@@ -24,6 +24,7 @@ import (
 // ProductAccess is deliberately one configured product and channel. Certificate
 // URIs authorize scopes; request fields never establish caller identity.
 type ProductAccess struct {
+	ChatTest                                           func(context.Context, string, string, string) (*pb.ChatTestStatus, error)
 	Consumer, Channel, ReadURI, ManageURI, RecoveryURI string
 	BroadcastCheck                                     func(context.Context, string) (*pb.BroadcastStatus, error)
 }
