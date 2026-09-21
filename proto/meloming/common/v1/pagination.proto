@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package meloming.common.v1;
+
+option go_package = "github.com/h66rogi/rogi-collector/proto/gen/go/meloming/common/v1;commonv1";
+
+// PaginationRequest contains standard pagination parameters.
+message PaginationRequest {
+  int32 page = 1;
+  int32 size = 2;
+}
+
+// PaginationResponse contains pagination metadata for list responses.
+message PaginationResponse {
+  int64 total = 1;
+  int32 page = 2;
+  int32 size = 3;
+}

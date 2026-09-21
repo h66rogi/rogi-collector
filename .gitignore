@@ -38,3 +38,11 @@ coverage/
 # Generated Python runtime checks.
 __pycache__/
 *.pyc
+
+# Cookie acquisition runtime files; use an external private directory.
+/cookie-auth/.venv/
+/cookie-auth/runtime/
+/cookie-auth/cookies*.json*
+
+# Optional local collector runtime directory (external paths are preferred).
+/collector-runtime/

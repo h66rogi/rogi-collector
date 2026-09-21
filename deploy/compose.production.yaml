@@ -10,13 +10,13 @@ x-role: &role
   cap_drop: [ALL]
   security_opt: [no-new-privileges:true]
   pids_limit: 128
-  mem_limit: 192m
+  mem_limit: 256m
   cpus: 0.50
   tmpfs: ["/tmp:rw,noexec,nosuid,nodev,size=16777216,mode=1777"]
-  networks: [services]
+  networks: [data]
   logging: *logging
   healthcheck:
-    test: [CMD, /service, -healthcheck, http://127.0.0.1:8080/health]
+    test: [CMD, /healthcheck]
     interval: 10s
     timeout: 3s
     retries: 6
@@ -95,10 +95,19 @@ services:
     depends_on: {postgres: {condition: service_healthy}}
     networks: [data]
     logging: *logging
+  app-migrate:
+    <<: *role
+    image: ${QUERY_IMAGE:?required}
+    entrypoint: [/migrate]
+    healthcheck: {disable: true}
+    volumes: [{type: bind, source: "${SECRETS_ROOT}/app-migrate.env", target: /run/secrets/role.env, read_only: true, bind: {create_host_path: false}}]
   discover:
     <<: *role
     image: ${DISCOVER_IMAGE:?set immutable DISCOVER_IMAGE digest}
-    volumes: [{type: bind, source: "${SECRETS_ROOT:?set SECRETS_ROOT}/discover.env", target: /run/secrets/role.env, read_only: true, bind: {create_host_path: false}}]
+    networks: [data, egress]
+    volumes:
+      - {type: bind, source: "${SECRETS_ROOT}/discover.env", target: /run/secrets/role.env, read_only: true, bind: {create_host_path: false}}
+      - {type: bind, source: "${DATA_ROOT}/cookies", target: /cookies, read_only: true, bind: {create_host_path: false}}
     depends_on: {postgres: {condition: service_healthy}, redis: {condition: service_healthy}}
   coordinator:
     <<: *role
@@ -108,17 +117,46 @@ services:
   worker:
     <<: *role
     image: ${WORKER_IMAGE:?set immutable WORKER_IMAGE digest}
+    networks: [data, egress]
     volumes:
       - {type: bind, source: "${SECRETS_ROOT:?set SECRETS_ROOT}/worker.env", target: /run/secrets/role.env, read_only: true, bind: {create_host_path: false}}
+      - {type: bind, source: "${DATA_ROOT}/cookies", target: /cookies, read_only: true, bind: {create_host_path: false}}
       - {type: bind, source: "${DATA_ROOT:?set DATA_ROOT}/spool", target: /srv/rogi-collector/spool, bind: {create_host_path: false}}
     depends_on: {postgres: {condition: service_healthy}, redis: {condition: service_healthy}}
   query:
     <<: *role
     image: ${QUERY_IMAGE:?set immutable QUERY_IMAGE digest}
-    volumes: [{type: bind, source: "${SECRETS_ROOT:?set SECRETS_ROOT}/query.env", target: /run/secrets/role.env, read_only: true, bind: {create_host_path: false}}]
+    volumes:
+      - {type: bind, source: "${SECRETS_ROOT}/query.env", target: /run/secrets/role.env, read_only: true, bind: {create_host_path: false}}
+      - {type: bind, source: "${DATA_ROOT}/tls", target: /tls, read_only: true, bind: {create_host_path: false}}
     depends_on: {postgres: {condition: service_healthy}, redis: {condition: service_healthy}}
-    # Current image is health-only. Do not publish 7443 until authenticated mTLS gRPC exists.
+    networks: [data, egress]
+    ports: ["${QUERY_BIND_IP:?private IP required}:7443:7443"]
 
+  cookie-auth:
+    image: ${COOKIE_AUTH_IMAGE:?required}
+    init: true
+    restart: "no"
+    user: "65532:65532"
+    read_only: true
+    security_opt: [seccomp:unconfined, apparmor:rogi-collector-cookie-auth]
+    mem_limit: 1400m
+    cpus: 1.0
+    pids_limit: 256
+    shm_size: 256m
+    tmpfs: ["/tmp:rw,nosuid,nodev,size=268435456,mode=1777", "/home/collector:rw,nosuid,nodev,size=67108864,uid=65532,gid=65532"]
+    environment: {ROLE_ENV_FILE: /run/secrets/role.env, SOOP_COOKIE_FILE: /cookies/cookies.json, SOOP_COOKIE_BIND: 0.0.0.0}
+    volumes:
+      - {type: bind, source: "${SECRETS_ROOT}/cookie-auth.env", target: /run/secrets/role.env, read_only: true, bind: {create_host_path: false}}
+      - {type: bind, source: "${DATA_ROOT}/cookies", target: /cookies, bind: {create_host_path: false}}
+    networks: [egress]
+    logging: *logging
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8091/healthz', timeout=2)"]
+      interval: 15s
+      timeout: 3s
+      retries: 12
+      start_period: 120s
 networks:
-  services: {internal: true}
   data: {internal: true}
+  egress: {}

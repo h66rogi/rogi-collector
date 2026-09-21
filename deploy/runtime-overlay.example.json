@@ -1,1 +1,13 @@
-{"composeProjectName":"rogi-collector","dataRoot":"/srv/rogi-collector","secretsRoot":"/run/rogi-collector","releaseRoot":"/opt/rogi-collector/app/current","postgresDatabase":"collector","postgresAdminUser":"collector_admin","postgresMigrateUser":"collector_migrate","capabilities":{"grpc7443":"unavailable-health-only"}}
+{
+  "composeProjectName": "rogi-collector",
+  "dataRoot": "/srv/rogi-collector",
+  "secretsRoot": "/run/rogi-collector",
+  "releaseRoot": "/opt/rogi-collector/app/current",
+  "postgresDatabase": "collector",
+  "postgresAdminUser": "collector_admin",
+  "postgresMigrateUser": "collector_migrate",
+  "capabilities": {
+    "grpc7443": "mtls-collector-v1"
+  },
+  "queryBindIp": "10.0.0.10"
+}

@@ -1,0 +1,8 @@
+[Unit]
+Description=Renew Collector private gRPC server certificate
+After=rogi-collector-host-ready.service
+Requires=rogi-collector-host-ready.service
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/rogi-collector/rotate-server-tls.py --restart
+UMask=0077

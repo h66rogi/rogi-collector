@@ -792,6 +792,10 @@ type CollectionStatus struct {
 	CollectionActive bool                   `protobuf:"varint,3,opt,name=collection_active,json=collectionActive,proto3" json:"collection_active,omitempty"`
 	ProcessHealth    string                 `protobuf:"bytes,4,opt,name=process_health,json=processHealth,proto3" json:"process_health,omitempty"`
 	QualityReasons   []string               `protobuf:"bytes,5,rep,name=quality_reasons,json=qualityReasons,proto3" json:"quality_reasons,omitempty"`
+	EarliestCursor   *Cursor                `protobuf:"bytes,6,opt,name=earliest_cursor,json=earliestCursor,proto3,oneof" json:"earliest_cursor,omitempty"`
+	CurrentCursor    *Cursor                `protobuf:"bytes,7,opt,name=current_cursor,json=currentCursor,proto3,oneof" json:"current_cursor,omitempty"`
+	RecoveryRevision uint64                 `protobuf:"varint,8,opt,name=recovery_revision,json=recoveryRevision,proto3" json:"recovery_revision,omitempty"`
+	LastReceivedAt   *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=last_received_at,json=lastReceivedAt,proto3,oneof" json:"last_received_at,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -857,6 +861,34 @@ func (x *CollectionStatus) GetProcessHealth() string {
 func (x *CollectionStatus) GetQualityReasons() []string {
 	if x != nil {
 		return x.QualityReasons
+	}
+	return nil
+}
+
+func (x *CollectionStatus) GetEarliestCursor() *Cursor {
+	if x != nil {
+		return x.EarliestCursor
+	}
+	return nil
+}
+
+func (x *CollectionStatus) GetCurrentCursor() *Cursor {
+	if x != nil {
+		return x.CurrentCursor
+	}
+	return nil
+}
+
+func (x *CollectionStatus) GetRecoveryRevision() uint64 {
+	if x != nil {
+		return x.RecoveryRevision
+	}
+	return 0
+}
+
+func (x *CollectionStatus) GetLastReceivedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.LastReceivedAt
 	}
 	return nil
 }
@@ -1791,7 +1823,7 @@ const file_collector_v1_collector_proto_rawDesc = "" +
 	"\x13platform_channel_id\x18\n" +
 	" \x01(\tR\x11platformChannelId\x12*\n" +
 	"\x11user_display_name\x18\v \x01(\tR\x0fuserDisplayNameB\x0e\n" +
-	"\f_occurred_at\"\xce\x01\n" +
+	"\f_occurred_at\"\x92\x04\n" +
 	"\x10CollectionStatus\x12\x1d\n" +
 	"\n" +
 	"channel_id\x18\x01 \x01(\tR\tchannelId\x12\x1e\n" +
@@ -1800,7 +1832,14 @@ const file_collector_v1_collector_proto_rawDesc = "" +
 	"configured\x12+\n" +
 	"\x11collection_active\x18\x03 \x01(\bR\x10collectionActive\x12%\n" +
 	"\x0eprocess_health\x18\x04 \x01(\tR\rprocessHealth\x12'\n" +
-	"\x0fquality_reasons\x18\x05 \x03(\tR\x0equalityReasons\"\\\n" +
+	"\x0fquality_reasons\x18\x05 \x03(\tR\x0equalityReasons\x12G\n" +
+	"\x0fearliest_cursor\x18\x06 \x01(\v2\x19.rogi.collector.v1.CursorH\x00R\x0eearliestCursor\x88\x01\x01\x12E\n" +
+	"\x0ecurrent_cursor\x18\a \x01(\v2\x19.rogi.collector.v1.CursorH\x01R\rcurrentCursor\x88\x01\x01\x12+\n" +
+	"\x11recovery_revision\x18\b \x01(\x04R\x10recoveryRevision\x12I\n" +
+	"\x10last_received_at\x18\t \x01(\v2\x1a.google.protobuf.TimestampH\x02R\x0elastReceivedAt\x88\x01\x01B\x12\n" +
+	"\x10_earliest_cursorB\x11\n" +
+	"\x0f_current_cursorB\x13\n" +
+	"\x11_last_received_at\"\\\n" +
 	"\x1aGetCollectionStatusRequest\x12\x1f\n" +
 	"\vconsumer_id\x18\x01 \x01(\tR\n" +
 	"consumerId\x12\x1d\n" +
@@ -1969,41 +2008,44 @@ var file_collector_v1_collector_proto_depIdxs = []int32{
 	23, // 12: rogi.collector.v1.ChatEvent.occurred_at:type_name -> google.protobuf.Timestamp
 	23, // 13: rogi.collector.v1.ChatEvent.observed_at:type_name -> google.protobuf.Timestamp
 	0,  // 14: rogi.collector.v1.ChatEvent.platform:type_name -> rogi.collector.v1.Platform
-	9,  // 15: rogi.collector.v1.SetChannelSubscriptionResponse.status:type_name -> rogi.collector.v1.CollectionStatus
-	4,  // 16: rogi.collector.v1.ListDonationsRequest.after_cursor:type_name -> rogi.collector.v1.Cursor
-	7,  // 17: rogi.collector.v1.ListDonationsResponse.donations:type_name -> rogi.collector.v1.DonationEvent
-	4,  // 18: rogi.collector.v1.ListDonationsResponse.earliest_cursor:type_name -> rogi.collector.v1.Cursor
-	4,  // 19: rogi.collector.v1.ListDonationsResponse.current_cursor:type_name -> rogi.collector.v1.Cursor
-	4,  // 20: rogi.collector.v1.WatchDonationsRequest.after_cursor:type_name -> rogi.collector.v1.Cursor
-	4,  // 21: rogi.collector.v1.AckDonationsRequest.cursor:type_name -> rogi.collector.v1.Cursor
-	4,  // 22: rogi.collector.v1.AckDonationsResponse.accepted_cursor:type_name -> rogi.collector.v1.Cursor
-	5,  // 23: rogi.collector.v1.WatchChatRequest.after_cursor:type_name -> rogi.collector.v1.ChatCursor
-	4,  // 24: rogi.collector.v1.RecoveryRange.start:type_name -> rogi.collector.v1.Cursor
-	4,  // 25: rogi.collector.v1.RecoveryRange.end:type_name -> rogi.collector.v1.Cursor
-	4,  // 26: rogi.collector.v1.ResolveConsumerRecoveryRequest.resume_from:type_name -> rogi.collector.v1.Cursor
-	19, // 27: rogi.collector.v1.ResolveConsumerRecoveryRequest.unrecovered_ranges:type_name -> rogi.collector.v1.RecoveryRange
-	4,  // 28: rogi.collector.v1.ResolveConsumerRecoveryResponse.previous_cursor:type_name -> rogi.collector.v1.Cursor
-	4,  // 29: rogi.collector.v1.ResolveConsumerRecoveryResponse.resume_from:type_name -> rogi.collector.v1.Cursor
-	19, // 30: rogi.collector.v1.ResolveConsumerRecoveryResponse.unrecovered_ranges:type_name -> rogi.collector.v1.RecoveryRange
-	10, // 31: rogi.collector.v1.CollectorService.GetCollectionStatus:input_type -> rogi.collector.v1.GetCollectionStatusRequest
-	11, // 32: rogi.collector.v1.CollectorService.SetChannelSubscription:input_type -> rogi.collector.v1.SetChannelSubscriptionRequest
-	13, // 33: rogi.collector.v1.CollectorService.ListDonations:input_type -> rogi.collector.v1.ListDonationsRequest
-	15, // 34: rogi.collector.v1.CollectorService.WatchDonations:input_type -> rogi.collector.v1.WatchDonationsRequest
-	16, // 35: rogi.collector.v1.CollectorService.AckDonations:input_type -> rogi.collector.v1.AckDonationsRequest
-	18, // 36: rogi.collector.v1.CollectorService.WatchChat:input_type -> rogi.collector.v1.WatchChatRequest
-	20, // 37: rogi.collector.v1.CollectorService.ResolveConsumerRecovery:input_type -> rogi.collector.v1.ResolveConsumerRecoveryRequest
-	9,  // 38: rogi.collector.v1.CollectorService.GetCollectionStatus:output_type -> rogi.collector.v1.CollectionStatus
-	12, // 39: rogi.collector.v1.CollectorService.SetChannelSubscription:output_type -> rogi.collector.v1.SetChannelSubscriptionResponse
-	14, // 40: rogi.collector.v1.CollectorService.ListDonations:output_type -> rogi.collector.v1.ListDonationsResponse
-	7,  // 41: rogi.collector.v1.CollectorService.WatchDonations:output_type -> rogi.collector.v1.DonationEvent
-	17, // 42: rogi.collector.v1.CollectorService.AckDonations:output_type -> rogi.collector.v1.AckDonationsResponse
-	8,  // 43: rogi.collector.v1.CollectorService.WatchChat:output_type -> rogi.collector.v1.ChatEvent
-	21, // 44: rogi.collector.v1.CollectorService.ResolveConsumerRecovery:output_type -> rogi.collector.v1.ResolveConsumerRecoveryResponse
-	38, // [38:45] is the sub-list for method output_type
-	31, // [31:38] is the sub-list for method input_type
-	31, // [31:31] is the sub-list for extension type_name
-	31, // [31:31] is the sub-list for extension extendee
-	0,  // [0:31] is the sub-list for field type_name
+	4,  // 15: rogi.collector.v1.CollectionStatus.earliest_cursor:type_name -> rogi.collector.v1.Cursor
+	4,  // 16: rogi.collector.v1.CollectionStatus.current_cursor:type_name -> rogi.collector.v1.Cursor
+	23, // 17: rogi.collector.v1.CollectionStatus.last_received_at:type_name -> google.protobuf.Timestamp
+	9,  // 18: rogi.collector.v1.SetChannelSubscriptionResponse.status:type_name -> rogi.collector.v1.CollectionStatus
+	4,  // 19: rogi.collector.v1.ListDonationsRequest.after_cursor:type_name -> rogi.collector.v1.Cursor
+	7,  // 20: rogi.collector.v1.ListDonationsResponse.donations:type_name -> rogi.collector.v1.DonationEvent
+	4,  // 21: rogi.collector.v1.ListDonationsResponse.earliest_cursor:type_name -> rogi.collector.v1.Cursor
+	4,  // 22: rogi.collector.v1.ListDonationsResponse.current_cursor:type_name -> rogi.collector.v1.Cursor
+	4,  // 23: rogi.collector.v1.WatchDonationsRequest.after_cursor:type_name -> rogi.collector.v1.Cursor
+	4,  // 24: rogi.collector.v1.AckDonationsRequest.cursor:type_name -> rogi.collector.v1.Cursor
+	4,  // 25: rogi.collector.v1.AckDonationsResponse.accepted_cursor:type_name -> rogi.collector.v1.Cursor
+	5,  // 26: rogi.collector.v1.WatchChatRequest.after_cursor:type_name -> rogi.collector.v1.ChatCursor
+	4,  // 27: rogi.collector.v1.RecoveryRange.start:type_name -> rogi.collector.v1.Cursor
+	4,  // 28: rogi.collector.v1.RecoveryRange.end:type_name -> rogi.collector.v1.Cursor
+	4,  // 29: rogi.collector.v1.ResolveConsumerRecoveryRequest.resume_from:type_name -> rogi.collector.v1.Cursor
+	19, // 30: rogi.collector.v1.ResolveConsumerRecoveryRequest.unrecovered_ranges:type_name -> rogi.collector.v1.RecoveryRange
+	4,  // 31: rogi.collector.v1.ResolveConsumerRecoveryResponse.previous_cursor:type_name -> rogi.collector.v1.Cursor
+	4,  // 32: rogi.collector.v1.ResolveConsumerRecoveryResponse.resume_from:type_name -> rogi.collector.v1.Cursor
+	19, // 33: rogi.collector.v1.ResolveConsumerRecoveryResponse.unrecovered_ranges:type_name -> rogi.collector.v1.RecoveryRange
+	10, // 34: rogi.collector.v1.CollectorService.GetCollectionStatus:input_type -> rogi.collector.v1.GetCollectionStatusRequest
+	11, // 35: rogi.collector.v1.CollectorService.SetChannelSubscription:input_type -> rogi.collector.v1.SetChannelSubscriptionRequest
+	13, // 36: rogi.collector.v1.CollectorService.ListDonations:input_type -> rogi.collector.v1.ListDonationsRequest
+	15, // 37: rogi.collector.v1.CollectorService.WatchDonations:input_type -> rogi.collector.v1.WatchDonationsRequest
+	16, // 38: rogi.collector.v1.CollectorService.AckDonations:input_type -> rogi.collector.v1.AckDonationsRequest
+	18, // 39: rogi.collector.v1.CollectorService.WatchChat:input_type -> rogi.collector.v1.WatchChatRequest
+	20, // 40: rogi.collector.v1.CollectorService.ResolveConsumerRecovery:input_type -> rogi.collector.v1.ResolveConsumerRecoveryRequest
+	9,  // 41: rogi.collector.v1.CollectorService.GetCollectionStatus:output_type -> rogi.collector.v1.CollectionStatus
+	12, // 42: rogi.collector.v1.CollectorService.SetChannelSubscription:output_type -> rogi.collector.v1.SetChannelSubscriptionResponse
+	14, // 43: rogi.collector.v1.CollectorService.ListDonations:output_type -> rogi.collector.v1.ListDonationsResponse
+	7,  // 44: rogi.collector.v1.CollectorService.WatchDonations:output_type -> rogi.collector.v1.DonationEvent
+	17, // 45: rogi.collector.v1.CollectorService.AckDonations:output_type -> rogi.collector.v1.AckDonationsResponse
+	8,  // 46: rogi.collector.v1.CollectorService.WatchChat:output_type -> rogi.collector.v1.ChatEvent
+	21, // 47: rogi.collector.v1.CollectorService.ResolveConsumerRecovery:output_type -> rogi.collector.v1.ResolveConsumerRecoveryResponse
+	41, // [41:48] is the sub-list for method output_type
+	34, // [34:41] is the sub-list for method input_type
+	34, // [34:34] is the sub-list for extension type_name
+	34, // [34:34] is the sub-list for extension extendee
+	0,  // [0:34] is the sub-list for field type_name
 }
 
 func init() { file_collector_v1_collector_proto_init() }
@@ -2014,6 +2056,7 @@ func file_collector_v1_collector_proto_init() {
 	file_collector_v1_collector_proto_msgTypes[2].OneofWrappers = []any{}
 	file_collector_v1_collector_proto_msgTypes[3].OneofWrappers = []any{}
 	file_collector_v1_collector_proto_msgTypes[4].OneofWrappers = []any{}
+	file_collector_v1_collector_proto_msgTypes[5].OneofWrappers = []any{}
 	file_collector_v1_collector_proto_msgTypes[9].OneofWrappers = []any{}
 	file_collector_v1_collector_proto_msgTypes[10].OneofWrappers = []any{}
 	file_collector_v1_collector_proto_msgTypes[11].OneofWrappers = []any{}

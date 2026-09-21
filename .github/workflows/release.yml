@@ -12,9 +12,16 @@ jobs:
       - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
         with: {ref: '${{ github.sha }}'}
       - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
-        with: {go-version: '1.27.1', cache: true}
+        with: {go-version: '1.27.1', cache: true, cache-dependency-path: '**/go.sum'}
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with: {node-version: 22.22.0, cache: npm}
+      - name: Verify cookie component and certificate renewal
+        run: |
+          python3 -m venv /tmp/collector-cookie-tests
+          /tmp/collector-cookie-tests/bin/pip install -r cookie-auth/requirements.txt
+          /tmp/collector-cookie-tests/bin/python -m unittest discover -s cookie-auth
+          python3 tools/ops/test_rotate_server_tls.py
+          make source-check
       - run: npm ci && make test && make build && ./tools/ops/test.sh && python3 tools/ops/test_fetch_release.py && python3 tools/ops/test_load_secrets_aws.py && python3 tools/ops/test_upload_backup_s3.py && python3 tools/ops/test_load_secrets_aws.py && python3 tools/ops/test_upload_backup_s3.py
       - id: release_state
         name: Preserve an existing immutable release
@@ -93,6 +100,18 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
           tags: 'ghcr.io/${{ steps.names.outputs.owner }}/rogi-collector-query:sha-${{ github.sha }}'
           build-args: ROLE=query
+      - id: cookie_auth
+        if: steps.release_state.outputs.exists != 'true'
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
+        with:
+          context: .
+          file: deploy/Dockerfile.cookie-auth
+          platforms: linux/amd64
+          push: true
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          tags: 'ghcr.io/${{ steps.names.outputs.owner }}/rogi-collector-cookie-auth:sha-${{ github.sha }}'
       - name: Build checksummed release bundle
         if: steps.release_state.outputs.exists != 'true'
         env:
@@ -102,6 +121,7 @@ jobs:
           IMAGE_DISCOVER: 'ghcr.io/${{ steps.names.outputs.owner }}/rogi-collector-discover@${{ steps.discover.outputs.digest }}'
           IMAGE_COORDINATOR: 'ghcr.io/${{ steps.names.outputs.owner }}/rogi-collector-coordinator@${{ steps.coordinator.outputs.digest }}'
           IMAGE_WORKER: 'ghcr.io/${{ steps.names.outputs.owner }}/rogi-collector-worker@${{ steps.worker.outputs.digest }}'
+          IMAGE_COOKIE_AUTH: 'ghcr.io/${{ steps.names.outputs.owner }}/rogi-collector-cookie-auth@${{ steps.cookie_auth.outputs.digest }}'
           IMAGE_QUERY: 'ghcr.io/${{ steps.names.outputs.owner }}/rogi-collector-query@${{ steps.query.outputs.digest }}'
         run: node tools/release/build-bundle.mjs
       - name: Attest release bundle provenance
@@ -118,4 +138,4 @@ jobs:
         shell: bash
         run: |
           tag="production-${GITHUB_SHA}"
-          gh release create "$tag" dist/release/release-bundle.tar.gz dist/release/release-bundle.tar.gz.sha256 --target "$GITHUB_SHA" --title "$tag" --notes "Immutable production feedback release for $GITHUB_SHA"
+          gh release create "$tag" dist/release/release-bundle.tar.gz dist/release/release-bundle.tar.gz.sha256 --target "$GITHUB_SHA" --title "$tag" --notes "Immutable production SOOP collector release for $GITHUB_SHA"

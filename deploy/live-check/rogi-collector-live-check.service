@@ -1,0 +1,26 @@
+# Validation deployment only. Provision /run secrets before starting; do not enable
+# at boot until the production secret-fetch and certificate rotation are integrated.
+[Unit]
+Description=Rogi collector isolated live validation
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+ConditionPathIsMountPoint=/srv/rogi-collector
+ConditionPathExists=/run/rogi-collector-live-check/cookie-auth.env
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/rogi-collector/live-check
+ExecStartPre=/usr/bin/test -s /run/rogi-collector-live-check/query.env
+ExecStartPre=/usr/bin/test -s /run/rogi-collector-live-check/server.key
+ExecStartPre=/usr/bin/docker compose --env-file compose.env -f compose.yaml config --quiet
+ExecStartPre=/usr/bin/docker compose --env-file compose.env -f compose.yaml up -d --wait postgres redis
+ExecStart=/usr/bin/docker compose --env-file compose.env -f compose.yaml up --abort-on-container-exit --no-color
+ExecStop=/usr/bin/docker compose --env-file compose.env -f compose.yaml stop --timeout 30
+Restart=always
+RestartSec=10
+TimeoutStartSec=150
+TimeoutStopSec=120
+UMask=0077

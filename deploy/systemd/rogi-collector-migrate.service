@@ -10,6 +10,7 @@ EnvironmentFile=/etc/rogi-collector/runtime.env
 WorkingDirectory=/opt/rogi-collector/app/current
 ExecStart=/usr/bin/docker compose --env-file /etc/rogi-collector/runtime.env -f deploy/compose.production.yaml up --no-deps --wait postgres redis
 ExecStart=/usr/bin/docker compose --env-file /etc/rogi-collector/runtime.env -f deploy/compose.production.yaml run --rm migrate
+ExecStart=/usr/bin/docker compose --env-file /etc/rogi-collector/runtime.env -f deploy/compose.production.yaml run --rm app-migrate
 ExecStop=/usr/bin/docker compose --env-file /etc/rogi-collector/runtime.env -f deploy/compose.production.yaml stop -t 30 postgres redis
 TimeoutStartSec=300
 
