@@ -82,5 +82,13 @@ for role in discover coordinator worker query; do
   done
   [ "$healthy" = true ] || { echo "$role health smoke failed" >&2; exit 70; }
 done
+containers_healthy=false
+for attempt in $(seq 1 60);do
+  compose_status=$($docker_bin compose --env-file "$config_root/runtime.env" -f deploy/compose.production.yaml ps --format json 2>/dev/null || true)
+  if printf '%s' "$compose_status" | $node_bin -e '
+let raw="";process.stdin.on("data",chunk=>raw+=chunk).on("end",()=>{try{let rows;try{const value=JSON.parse(raw);rows=Array.isArray(value)?value:[value]}catch{rows=raw.split(/\n/).filter(Boolean).map(line=>JSON.parse(line))}const required=new Set(["postgres","redis","discover","coordinator","worker","query"]);for(const row of rows){if(row&&required.has(row.Service)&&row.State==="running"&&row.Health==="healthy")required.delete(row.Service)}process.exit(required.size===0?0:1)}catch{process.exit(1)}})';then containers_healthy=true;break;fi
+  sleep 1
+done
+[ "$containers_healthy" = true ] || { echo 'collector containers did not become Docker-healthy' >&2; exit 70; }
 $install_bin -m 0600 "$manifest" "$config_root/deployed-release.json"
 echo "collector release $release_id activated; profile feedback is health-only and gRPC 7443 remains unavailable"
