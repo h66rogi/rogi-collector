@@ -1,0 +1,8 @@
+[Unit]
+Description=Schedule Rogi Collector PostgreSQL backups
+[Timer]
+OnCalendar=*-*-* 18:40:00 UTC
+RandomizedDelaySec=20min
+Persistent=true
+[Install]
+WantedBy=timers.target

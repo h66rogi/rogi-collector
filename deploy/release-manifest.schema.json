@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rogi.chat/schemas/release-manifest-v1.json",
+  "title": "Rogi Collector release manifest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "product", "profile", "sourceSha", "releaseId", "contractVersion", "composeSha256", "runtimeFiles", "images", "migrations", "runtimeNonSecret"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "product": {"const": "rogi-collector"},
+    "profile": {"const": "feedback"},
+    "sourceSha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "releaseId": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,96}$"},
+    "contractVersion": {"type": "string", "pattern": "^v[0-9]+(?:\\.[0-9]+){0,2}$"},
+    "composeSha256": {"$ref": "#/$defs/sha256"},
+    "runtimeFiles": {
+      "type": "array", "minItems": 10, "maxItems": 10,
+      "items": {"type": "object", "additionalProperties": false, "required": ["path", "sha256"], "properties": {"path": {"enum": ["deploy/run-migrations.sh", "deploy/initdb/010_migrate_role.sh", "deploy/install-runtime.sh", "deploy/systemd/rogi-collector-update.service", "deploy/systemd/rogi-collector-update.timer", "deploy/systemd/rogi-collector-backup.service", "deploy/systemd/rogi-collector-backup.timer", "tools/ops/fetch-release.py", "tools/ops/production-status.py", "tools/ops/backup-postgres.sh"]}, "sha256": {"$ref": "#/$defs/sha256"}}}
+    },
+    "images": {
+      "type": "object", "additionalProperties": false,
+      "required": ["postgres", "redis", "discover", "coordinator", "worker", "query"],
+      "properties": {
+        "postgres": {"$ref": "#/$defs/image"}, "redis": {"$ref": "#/$defs/image"},
+        "discover": {"$ref": "#/$defs/image"}, "coordinator": {"$ref": "#/$defs/image"},
+        "worker": {"$ref": "#/$defs/image"}, "query": {"$ref": "#/$defs/image"}
+      }
+    },
+    "migrations": {"type": "array", "minItems": 1, "items": {"type": "object", "additionalProperties": false, "required": ["path", "sha256"], "properties": {"path": {"type": "string", "pattern": "^deploy/migrations/[A-Za-z0-9._-]+\\.sql$"}, "sha256": {"$ref": "#/$defs/sha256"}}}},
+    "runtimeNonSecret": {
+      "type": "object", "additionalProperties": false,
+      "required": ["composeProjectName", "dataRoot", "secretsRoot", "releaseRoot", "postgresDatabase", "postgresAdminUser", "postgresMigrateUser", "capabilities"],
+      "properties": {
+        "composeProjectName": {"const": "rogi-collector"}, "dataRoot": {"const": "/srv/rogi-collector"},
+        "secretsRoot": {"const": "/run/rogi-collector"}, "releaseRoot": {"const": "/opt/rogi-collector/app/current"},
+        "postgresDatabase": {"type": "string", "pattern": "^[a-z_][a-z0-9_]{0,62}$"},
+        "postgresAdminUser": {"type": "string", "pattern": "^[a-z_][a-z0-9_]{0,62}$"},
+        "postgresMigrateUser": {"type": "string", "pattern": "^[a-z_][a-z0-9_]{0,62}$"},
+        "capabilities": {"type": "object", "additionalProperties": false, "required": ["grpc7443"], "properties": {"grpc7443": {"const": "unavailable-health-only"}}}
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "image": {"type": "string", "pattern": "^[a-z0-9][a-z0-9._/-]*(?::[A-Za-z0-9._-]+)?@sha256:[0-9a-f]{64}$"}
+  }
+}

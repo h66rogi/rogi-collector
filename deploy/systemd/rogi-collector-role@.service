@@ -1,0 +1,18 @@
+[Unit]
+Description=Rogi Collector container role %i
+After=rogi-collector-host-ready.service rogi-collector-container-imds-guard.service docker.service rogi-collector-migrate.service
+Requires=rogi-collector-host-ready.service rogi-collector-container-imds-guard.service docker.service rogi-collector-migrate.service
+PartOf=rogi-collector.target
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/rogi-collector/runtime.env
+WorkingDirectory=/opt/rogi-collector/app/current
+ExecStart=/usr/bin/docker compose --env-file /etc/rogi-collector/runtime.env -f deploy/compose.production.yaml up --no-deps %i
+ExecStop=/usr/bin/docker compose --env-file /etc/rogi-collector/runtime.env -f deploy/compose.production.yaml stop -t 30 %i
+Restart=always
+RestartSec=5
+TimeoutStopSec=45
+
+[Install]
+WantedBy=rogi-collector.target

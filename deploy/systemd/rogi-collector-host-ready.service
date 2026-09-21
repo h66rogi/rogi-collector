@@ -1,0 +1,17 @@
+[Unit]
+Description=Verify Rogi Collector data mount and prepare runtime secrets
+After=local-fs.target network-online.target
+Before=docker.service rogi-collector-migrate.service
+Wants=network-online.target
+AssertPathIsMountPoint=/srv/rogi-collector
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/lib/rogi-collector/prepare-host.sh
+ExecStop=/usr/bin/rm -f /run/rogi-collector/postgres-admin-password /run/rogi-collector/postgres-migrate-password /run/rogi-collector/migrate.pgpass /run/rogi-collector/redis-password /run/rogi-collector/discover.env /run/rogi-collector/coordinator.env /run/rogi-collector/worker.env /run/rogi-collector/query.env
+PrivateTmp=yes
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=rogi-collector.target

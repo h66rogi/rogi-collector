@@ -1,0 +1,46 @@
+syntax = "proto3";
+package rogi.collector.v1;
+option go_package = "github.com/h66rogi/rogi-collector/proto/gen/collector/v1;collectorv1";
+
+import "google/protobuf/timestamp.proto";
+
+message Cursor { string journal_generation = 1; uint64 channel_offset = 2; }
+message ChatCursor { string stream_generation = 1; string stream_id = 2; bool gap_before = 3; }
+enum Platform { PLATFORM_UNSPECIFIED = 0; PLATFORM_SOOP = 1; }
+enum NativeCurrency { NATIVE_CURRENCY_UNSPECIFIED = 0; NATIVE_CURRENCY_SOOP_BALLOON = 1; }
+enum ContractErrorCode { CONTRACT_ERROR_CODE_UNSPECIFIED = 0; CONTRACT_ERROR_CODE_CURSOR_EXPIRED = 1; CONTRACT_ERROR_CODE_GENERATION_MISMATCH = 2; CONTRACT_ERROR_CODE_RECOVERY_REVISION_MISMATCH = 3; CONTRACT_ERROR_CODE_SCOPE_DENIED = 4; }
+message ContractErrorDetail { ContractErrorCode code = 1; string consumer_id = 2; string channel_id = 3; optional Cursor requested_cursor = 4; optional Cursor earliest_cursor = 5; optional Cursor current_cursor = 6; uint64 expected_recovery_revision = 7; uint64 actual_recovery_revision = 8; string required_scope = 9; }
+enum IdentityStatus { IDENTITY_STATUS_UNSPECIFIED = 0; IDENTITY_STATUS_SOURCE_ID = 1; IDENTITY_STATUS_OBSERVATION_ONLY = 2; IDENTITY_STATUS_RECONNECT_AMBIGUOUS = 3; }
+message DonationEvent {
+  string event_id = 1; string channel_id = 2; int64 native_balloon_count = 3; string donation_kind = 4;
+  optional string source_event_id = 5; optional string broadcast_id = 6; optional google.protobuf.Timestamp source_timestamp = 7;
+  string donor_id = 8; string connection_epoch = 9; uint64 connection_sequence = 10; Cursor cursor = 11;
+  IdentityStatus identity_status = 12; repeated string quality_reasons = 13; repeated string related_observation_ids = 14;
+  string schema_version = 15; string event_type = 16; Platform platform = 17; string platform_channel_id = 18;
+  google.protobuf.Timestamp observed_at = 19; optional google.protobuf.Timestamp occurred_at = 20;
+  NativeCurrency native_currency = 21; string donor_display_name = 22; string message = 23;
+}
+message ChatEvent { string event_id = 1; string channel_id = 2; string user_id = 3; string message = 4; ChatCursor cursor = 5; optional google.protobuf.Timestamp occurred_at = 6; google.protobuf.Timestamp observed_at = 7; string schema_version = 8; Platform platform = 9; string platform_channel_id = 10; string user_display_name = 11; }
+message CollectionStatus { string channel_id = 1; bool configured = 2; bool collection_active = 3; string process_health = 4; repeated string quality_reasons = 5; }
+message GetCollectionStatusRequest { string consumer_id = 1; string channel_id = 2; }
+message SetChannelSubscriptionRequest { string consumer_id = 1; string channel_id = 2; bool subscribed = 3; string idempotency_key = 4; }
+message SetChannelSubscriptionResponse { CollectionStatus status = 1; }
+message ListDonationsRequest { string consumer_id = 1; string channel_id = 2; optional Cursor after_cursor = 3; uint32 limit = 4; uint64 recovery_revision = 5; }
+message ListDonationsResponse { repeated DonationEvent donations = 1; optional Cursor earliest_cursor = 2; optional Cursor current_cursor = 3; uint64 recovery_revision = 4; }
+message WatchDonationsRequest { string consumer_id = 1; string channel_id = 2; optional Cursor after_cursor = 3; uint64 recovery_revision = 4; }
+message AckDonationsRequest { string consumer_id = 1; string channel_id = 2; Cursor cursor = 3; uint64 recovery_revision = 4; }
+message AckDonationsResponse { Cursor accepted_cursor = 1; uint64 recovery_revision = 2; }
+message WatchChatRequest { string consumer_id = 1; string channel_id = 2; optional ChatCursor after_cursor = 3; }
+message RecoveryRange { Cursor start = 1; Cursor end = 2; }
+message ResolveConsumerRecoveryRequest { string consumer_id = 1; string channel_id = 2; string previous_generation = 3; string new_generation = 4; Cursor resume_from = 5; repeated RecoveryRange unrecovered_ranges = 6; string reason = 7; string operator_id = 8; string idempotency_key = 9; uint64 expected_revision = 10; }
+message ResolveConsumerRecoveryResponse { string previous_generation = 1; string new_generation = 2; Cursor previous_cursor = 3; Cursor resume_from = 4; uint64 recovery_revision = 5; repeated RecoveryRange unrecovered_ranges = 6; string idempotency_key = 7; }
+message Empty {}
+service CollectorService {
+  rpc GetCollectionStatus(GetCollectionStatusRequest) returns (CollectionStatus);
+  rpc SetChannelSubscription(SetChannelSubscriptionRequest) returns (SetChannelSubscriptionResponse);
+  rpc ListDonations(ListDonationsRequest) returns (ListDonationsResponse);
+  rpc WatchDonations(WatchDonationsRequest) returns (stream DonationEvent);
+  rpc AckDonations(AckDonationsRequest) returns (AckDonationsResponse);
+  rpc WatchChat(WatchChatRequest) returns (stream ChatEvent);
+  rpc ResolveConsumerRecovery(ResolveConsumerRecoveryRequest) returns (ResolveConsumerRecoveryResponse);
+}

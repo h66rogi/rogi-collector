@@ -1,0 +1,8 @@
+[Unit]
+Description=Rogi Collector production roles
+Requires=rogi-collector-host-ready.service
+Wants=rogi-collector-role@postgres.service rogi-collector-role@redis.service rogi-collector-role@discover.service rogi-collector-role@coordinator.service rogi-collector-role@worker.service rogi-collector-role@query.service
+After=network-online.target rogi-collector-host-ready.service
+
+[Install]
+WantedBy=multi-user.target

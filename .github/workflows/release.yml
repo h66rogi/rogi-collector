@@ -1,0 +1,116 @@
+name: release
+on:
+  push: {branches: [main]}
+  workflow_dispatch:
+permissions: {contents: write, packages: write}
+concurrency: {group: production-release, cancel-in-progress: false}
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main' && github.repository_owner != ''
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+        with: {ref: '${{ github.sha }}'}
+      - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        with: {go-version: '1.27.1', cache: true}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with: {node-version: 22.22.0, cache: npm}
+      - run: npm ci && make test && make build && ./tools/ops/test.sh && python3 tools/ops/test_fetch_release.py
+      - id: release_state
+        name: Preserve an existing immutable release
+        env: {GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'}
+        shell: bash
+        run: |
+          tag="production-${GITHUB_SHA}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            mkdir -p existing-release/unpacked
+            gh release download "$tag" --dir existing-release --pattern release-bundle.tar.gz --pattern release-bundle.tar.gz.sha256
+            (cd existing-release && sha256sum -c release-bundle.tar.gz.sha256)
+            tar -xzf existing-release/release-bundle.tar.gz -C existing-release/unpacked
+            python3 -c 'import json,os; assert json.load(open("existing-release/unpacked/manifest.build.json"))["sourceSha"] == os.environ["GITHUB_SHA"]'
+            echo 'exists=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'exists=false' >> "$GITHUB_OUTPUT"
+          fi
+      - uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+        if: steps.release_state.outputs.exists != 'true'
+      - uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
+        if: steps.release_state.outputs.exists != 'true'
+        with: {registry: ghcr.io, username: '${{ github.actor }}', password: '${{ secrets.GITHUB_TOKEN }}'}
+      - id: names
+        if: steps.release_state.outputs.exists != 'true'
+        shell: bash
+        run: echo "owner=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+      - id: discover
+        if: steps.release_state.outputs.exists != 'true'
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
+        with:
+          context: .
+          file: deploy/Dockerfile
+          platforms: linux/amd64
+          push: true
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          tags: 'ghcr.io/${{ steps.names.outputs.owner }}/rogi-collector-discover:sha-${{ github.sha }}'
+          build-args: ROLE=discover
+      - id: coordinator
+        if: steps.release_state.outputs.exists != 'true'
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
+        with:
+          context: .
+          file: deploy/Dockerfile
+          platforms: linux/amd64
+          push: true
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          tags: 'ghcr.io/${{ steps.names.outputs.owner }}/rogi-collector-coordinator:sha-${{ github.sha }}'
+          build-args: ROLE=coordinator
+      - id: worker
+        if: steps.release_state.outputs.exists != 'true'
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
+        with:
+          context: .
+          file: deploy/Dockerfile
+          platforms: linux/amd64
+          push: true
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          tags: 'ghcr.io/${{ steps.names.outputs.owner }}/rogi-collector-worker:sha-${{ github.sha }}'
+          build-args: ROLE=worker
+      - id: query
+        if: steps.release_state.outputs.exists != 'true'
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
+        with:
+          context: .
+          file: deploy/Dockerfile
+          platforms: linux/amd64
+          push: true
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          tags: 'ghcr.io/${{ steps.names.outputs.owner }}/rogi-collector-query:sha-${{ github.sha }}'
+          build-args: ROLE=query
+      - name: Build checksummed release bundle
+        if: steps.release_state.outputs.exists != 'true'
+        env:
+          SOURCE_SHA: '${{ github.sha }}'
+          IMAGE_POSTGRES: '${{ vars.POSTGRES_IMAGE }}'
+          IMAGE_REDIS: '${{ vars.REDIS_IMAGE }}'
+          IMAGE_DISCOVER: 'ghcr.io/${{ steps.names.outputs.owner }}/rogi-collector-discover@${{ steps.discover.outputs.digest }}'
+          IMAGE_COORDINATOR: 'ghcr.io/${{ steps.names.outputs.owner }}/rogi-collector-coordinator@${{ steps.coordinator.outputs.digest }}'
+          IMAGE_WORKER: 'ghcr.io/${{ steps.names.outputs.owner }}/rogi-collector-worker@${{ steps.worker.outputs.digest }}'
+          IMAGE_QUERY: 'ghcr.io/${{ steps.names.outputs.owner }}/rogi-collector-query@${{ steps.query.outputs.digest }}'
+        run: node tools/release/build-bundle.mjs
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: steps.release_state.outputs.exists != 'true'
+        with: {name: rogi-collector-production-release, path: 'dist/release/*', if-no-files-found: error, retention-days: 30}
+      - name: Publish anonymous release assets
+        if: steps.release_state.outputs.exists != 'true'
+        env: {GH_TOKEN: '${{ secrets.GITHUB_TOKEN }}'}
+        shell: bash
+        run: |
+          tag="production-${GITHUB_SHA}"
+          gh release create "$tag" dist/release/release-bundle.tar.gz dist/release/release-bundle.tar.gz.sha256 --target "$GITHUB_SHA" --title "$tag" --notes "Immutable production feedback release for $GITHUB_SHA"

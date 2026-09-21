@@ -1,0 +1,17 @@
+[Unit]
+Description=Rogi Collector verified database migration
+After=rogi-collector-host-ready.service rogi-collector-container-imds-guard.service docker.service
+Requires=rogi-collector-host-ready.service rogi-collector-container-imds-guard.service docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+EnvironmentFile=/etc/rogi-collector/runtime.env
+WorkingDirectory=/opt/rogi-collector/app/current
+ExecStart=/usr/bin/docker compose --env-file /etc/rogi-collector/runtime.env -f deploy/compose.production.yaml up --no-deps --wait postgres redis
+ExecStart=/usr/bin/docker compose --env-file /etc/rogi-collector/runtime.env -f deploy/compose.production.yaml run --rm migrate
+ExecStop=/usr/bin/docker compose --env-file /etc/rogi-collector/runtime.env -f deploy/compose.production.yaml stop -t 30 postgres redis
+TimeoutStartSec=300
+
+[Install]
+WantedBy=rogi-collector.target

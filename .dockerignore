@@ -1,0 +1,13 @@
+.git
+.env
+deploy/.env
+deploy/.preview
+**/*credentials*
+bin
+dist
+coverage
+_references
+.tools
+node_modules
+contracts/typescript/dist
+contracts/fixtures

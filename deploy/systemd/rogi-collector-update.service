@@ -1,0 +1,14 @@
+[Unit]
+Description=Fetch and deploy latest trusted Rogi Collector release
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/rogi-collector/fetch-release.py
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/rogi-collector/app /run/rogi-collector /usr/local/lib/rogi-collector /etc/systemd/system /etc/rogi-collector

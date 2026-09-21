@@ -1,0 +1,10 @@
+go 1.27.0
+
+use (
+	./cmd/coordinator
+	./cmd/discover
+	./cmd/query
+	./cmd/worker
+	./pkg/shared
+	./proto
+)

@@ -1,0 +1,16 @@
+{
+  "contractVersion": "1.0.0",
+  "schemaSha256": "1bdb1fb988244d037e895a1d2e22097ca701c4085e2efa1243bc1ad303df0fc0",
+  "sourceSha": "uncommitted",
+  "tools": {
+    "protoc": "33.0",
+    "protoc-gen-go": "1.36.10",
+    "protoc-gen-es": "2.10.1",
+    "typescript": "5.9.3"
+  },
+  "bundleSha256": {
+    "contracts/typescript/src/collector/v1/collector_pb.ts": "2b149f606ed6f12b03982ac31e200319e3f5f0bb4ab87e87c0db794f01f5b2a9",
+    "contracts/typescript/src/validate.ts": "dcedc9ff6f31fc4f846a6f87d29911618470a3de63fab69ad9dc2d27622f7376",
+    "proto/gen/collector/v1/collector.pb.go": "769672643f4d21704a850b5682de77d7e2651095383891a5f9ea8404f44b395f"
+  }
+}

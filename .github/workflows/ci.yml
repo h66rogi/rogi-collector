@@ -1,0 +1,20 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches-ignore: [main]
+permissions: {contents: read}
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+      - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        with: {go-version: '1.27.1', cache: true}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with: {node-version: 22.22.0, cache: npm}
+      - run: npm ci
+      - run: make test
+      - run: make build
+      - run: ./tools/ops/test.sh
+      - run: python3 tools/ops/test_fetch_release.py

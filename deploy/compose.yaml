@@ -1,0 +1,53 @@
+name: ${COMPOSE_PROJECT_NAME:-rogi-collector-preview}
+x-role: &role
+  restart: unless-stopped
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  networks: [services]
+  healthcheck: {test: [CMD, /service, -healthcheck, http://127.0.0.1:8080/health], interval: 5s, timeout: 3s, retries: 10}
+services:
+  postgres:
+    image: postgres:17.6-alpine
+    restart: unless-stopped
+    environment: {POSTGRES_DB: "${POSTGRES_DB:?required}", POSTGRES_USER: "${POSTGRES_USER:?required}", POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?required}"}
+    volumes: [postgres-data:/var/lib/postgresql/data]
+    networks: [data]
+    healthcheck: {test: [CMD-SHELL, "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"], interval: 3s, timeout: 3s, retries: 20}
+  redis:
+    image: redis:8.2.1-alpine
+    restart: unless-stopped
+    command: [redis-server, --appendonly, "yes"]
+    volumes: [redis-data:/data]
+    networks: [data]
+    healthcheck: {test: [CMD, redis-cli, ping], interval: 3s, timeout: 3s, retries: 20}
+  migrate:
+    image: postgres:17.6-alpine
+    restart: "no"
+    environment: {PGPASSWORD: "${POSTGRES_PASSWORD:?required}"}
+    command: [psql, -h, postgres, -U, "${POSTGRES_USER}", -d, "${POSTGRES_DB}", -v, ON_ERROR_STOP=1, -f, /migrations/001_foundation.sql]
+    volumes: [./migrations:/migrations:ro]
+    networks: [data]
+    depends_on: {postgres: {condition: service_healthy}}
+  discover:
+    <<: *role
+    build: {context: .., dockerfile: deploy/Dockerfile, args: {ROLE: discover}}
+    depends_on: {migrate: {condition: service_completed_successfully}, redis: {condition: service_healthy}}
+  coordinator:
+    <<: *role
+    build: {context: .., dockerfile: deploy/Dockerfile, args: {ROLE: coordinator}}
+    depends_on: {migrate: {condition: service_completed_successfully}, redis: {condition: service_healthy}}
+  worker:
+    <<: *role
+    build: {context: .., dockerfile: deploy/Dockerfile, args: {ROLE: worker}}
+    depends_on: {migrate: {condition: service_completed_successfully}, redis: {condition: service_healthy}}
+  query:
+    <<: *role
+    build: {context: .., dockerfile: deploy/Dockerfile, args: {ROLE: query}}
+    depends_on: {migrate: {condition: service_completed_successfully}, redis: {condition: service_healthy}}
+networks:
+  services: {internal: true}
+  data: {internal: true}
+volumes:
+  postgres-data:
+  redis-data:

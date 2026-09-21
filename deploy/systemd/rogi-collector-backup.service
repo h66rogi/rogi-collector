@@ -1,0 +1,13 @@
+[Unit]
+Description=Create Rogi Collector PostgreSQL logical backup
+After=rogi-collector.target
+Requires=rogi-collector.target
+[Service]
+Type=oneshot
+ExecStart=/usr/local/lib/rogi-collector/backup-postgres.sh
+Nice=10
+IOSchedulingClass=idle
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/rogi-collector/backups

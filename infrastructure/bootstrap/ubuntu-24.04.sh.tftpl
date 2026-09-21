@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export DEBIAN_FRONTEND=noninteractive
+. /etc/os-release
+[ "$ID" = ubuntu ] && [ "$VERSION_ID" = 24.04 ] || { echo "Ubuntu 24.04 required" >&2; exit 1; }
+[ "$(dpkg --print-architecture)" = amd64 ] || { echo "amd64 required" >&2; exit 1; }
+apt-get update
+apt-get install -y --no-install-recommends ca-certificates curl git gnupg iptables python3 util-linux xz-utils
+install -d -m 0755 /etc/apt/keyrings
+curl --fail --silent --show-error --location https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+chmod 0644 /etc/apt/keyrings/docker.asc
+printf 'deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu noble stable\n' > /etc/apt/sources.list.d/docker.list
+apt-get update
+apt-get install -y --no-install-recommends docker-ce=${docker_ce_version} docker-ce-cli=${docker_ce_version} containerd.io=${containerd_version} docker-buildx-plugin=${buildx_version} docker-compose-plugin=${compose_version}
+curl --fail --silent --show-error --location "https://nodejs.org/dist/v${node_version}/node-v${node_version}-linux-x64.tar.xz" -o /tmp/node.tar.xz
+printf '%s  %s\n' '${node_linux_x64_sha256}' /tmp/node.tar.xz | sha256sum --check --strict
+tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1
+rm -f /tmp/node.tar.xz
+node --version
+npm --version
+python3 --version
+git --version
+flock --version
+findmnt --version
+if systemctl cat amazon-ssm-agent.service >/dev/null 2>&1; then
+  ssm_unit=amazon-ssm-agent.service
+elif systemctl cat snap.amazon-ssm-agent.amazon-ssm-agent.service >/dev/null 2>&1; then
+  ssm_unit=snap.amazon-ssm-agent.amazon-ssm-agent.service
+else
+  echo "selected Canonical AMI must include amazon-ssm-agent" >&2
+  exit 1
+fi
+systemctl enable --now docker.service "$ssm_unit"
+docker compose version
+install -d -m 0755 /opt/${product}/app /usr/local/lib/${product}
+install -d -m 0750 /etc/${product} /srv/${product}
+printf 'd /run/${product} 0750 root root -\n' > /etc/tmpfiles.d/${product}.conf
+systemd-tmpfiles --create /etc/tmpfiles.d/${product}.conf
+cat > /usr/local/sbin/${product}-block-container-imds <<'GUARD'
+#!/bin/sh
+set -eu
+iptables -w -C DOCKER-USER -d 169.254.169.254/32 -j REJECT 2>/dev/null || iptables -w -I DOCKER-USER 1 -d 169.254.169.254/32 -j REJECT
+if command -v ip6tables >/dev/null 2>&1 && ip6tables -w -S DOCKER-USER >/dev/null 2>&1; then
+  ip6tables -w -C DOCKER-USER -d fd00:ec2::254/128 -j REJECT 2>/dev/null || ip6tables -w -I DOCKER-USER 1 -d fd00:ec2::254/128 -j REJECT
+fi
+GUARD
+chmod 0755 /usr/local/sbin/${product}-block-container-imds
+cat > /etc/systemd/system/${product}-container-imds-guard.service <<GUARDUNIT
+[Unit]
+Description=Block ${product} containers from EC2 instance metadata
+Requires=docker.service
+After=docker.service
+PartOf=docker.service
+Before=${product}.target ${product}-app.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/${product}-block-container-imds
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+GUARDUNIT
+systemctl daemon-reload
+systemctl enable --now ${product}-container-imds-guard.service
+# The separate data EBS is intentionally neither formatted nor mounted here.
