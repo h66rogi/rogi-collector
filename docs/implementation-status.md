@@ -10,12 +10,13 @@
 | C01 등록·연결 | 미착수 | 프로세스 health가 등록 채널 0과 collection inactive를 표시 | 구독·lease·connector·합성 SOOP 입력 |
 | C02 journal·spool | 미착수 | 없음 | PostgreSQL journal/outbox, durable spool, fencing |
 | C03 query RPC | 미착수 | health에 `rpcImplementation=unimplemented` 표시 | 인증 gRPC, replay/watch/ACK/recovery 구현 |
-| 운영 배포 | 기반 적용·최신 기동 대기 | 전용 `t8i.medium` EC2와 data EBS mount, cloud-init/SSM/Docker, private GHCR 4개 role image 발행, exact OIDC role assume와 실제 private pull 확인 | 최신 release role 기동, 재부팅/복구·백업 검증 |
+| 운영 배포 | 실제 health·backup 확인 | 전용 `t8i.medium` EC2/data EBS, private GHCR 4개 role image, exact OIDC/private pull, 최신 6개 container healthy, 암호화 S3 logical backup과 archive 목록 검증 | 최종 CI와 재부팅/복구 검증 |
 
 사용자 요청으로 로컬 Compose를 중지했고 named DB volume은 보존했다. 수집기 전용 EC2와 별도 data EBS를
 생성·마운트했고 cloud-init, SSM, Docker 준비를 확인했다. public source 저장소에는 private 원본 전체나 원본 Git 이력을
 반입하지 않았고 source audit/CI를 통과한 private GHCR role image 4개를 발행했다. exact immutable OIDC trust의 실제
-role assume와 임시 registry credential을 사용한 digest pull도 성공했다. 최신 role 기동과 복구/backup 검증은 남아 있다.
+role assume와 임시 registry credential을 사용한 digest pull도 성공했다. 최신 release의 6개 container가 healthy이고
+암호화된 S3 logical backup을 `pg_restore --list`로 검증했다. 최종 CI와 재부팅 복구 검증은 진행 중이다.
 
 현재 Go와 TypeScript 테스트는 generated protobuf 타입과 동일 binary fixture로 wire 호환성을 검증한다.
 JSON 소비 경계에서는 generated TypeScript bigint를 문자열로 변환해야 하며 이를 API schema에서 별도로 고정해야 한다.
