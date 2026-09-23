@@ -59,13 +59,14 @@ func TestArchiveExportPreservesDedupIndex(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := objects.PutVerified(ctx, segment); err != nil {
+	verified, err := objects.PutVerified(ctx, segment)
+	if err != nil {
 		t.Fatal(err)
 	}
-	if err := exporter.CommitSegment(ctx, segment, "disposable-bucket"); err != nil {
+	if err := exporter.CommitSegment(ctx, verified); err != nil {
 		t.Fatal(err)
 	}
-	if err := exporter.CommitSegment(ctx, segment, "disposable-bucket"); err != nil {
+	if err := exporter.CommitSegment(ctx, verified); err != nil {
 		t.Fatalf("idempotent commit: %v", err)
 	}
 	rows, err = exporter.NextBatch(ctx, time.Now().Add(time.Minute), 1000)

@@ -27,6 +27,13 @@ type S3ObjectStore struct {
 	bucket string
 }
 
+// VerifiedSegment can only be issued after an object has been uploaded and
+// read back through S3ObjectStore. Its fields are private to this package.
+type VerifiedSegment struct {
+	segment Segment
+	bucket  string
+}
+
 func NewS3ObjectStore(client S3Client, bucket string) (*S3ObjectStore, error) {
 	if client == nil || bucket == "" {
 		return nil, errors.New("S3 client and archive bucket required")
@@ -44,29 +51,30 @@ func validObject(key, checksum string) bool {
 	return err == nil && len(decoded) == 32
 }
 
-func (s *S3ObjectStore) PutVerified(ctx context.Context, segment Segment) error {
+func (s *S3ObjectStore) PutVerified(ctx context.Context, segment Segment) (VerifiedSegment, error) {
 	if !validObject(segment.ObjectKey(), segment.SHA256) || len(segment.Body) == 0 || len(segment.Body) > MaxSegmentGzipBytes {
-		return errors.New("invalid archive object")
+		return VerifiedSegment{}, errors.New("invalid archive object")
 	}
 	sum := sha256.Sum256(segment.Body)
 	if hex.EncodeToString(sum[:]) != segment.SHA256 {
-		return errors.New("archive object checksum mismatch")
+		return VerifiedSegment{}, errors.New("archive object checksum mismatch")
 	}
 	_, err := s.client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(s.bucket), Key: aws.String(segment.ObjectKey()), Body: bytes.NewReader(segment.Body),
 		ContentLength: aws.Int64(int64(len(segment.Body))), ContentType: aws.String("application/x-ndjson"), ContentEncoding: aws.String("gzip"),
 	})
 	if err != nil {
-		return err
+		return VerifiedSegment{}, err
 	}
 	readback, err := s.GetVerified(ctx, segment.ObjectKey(), segment.SHA256)
 	if err != nil {
-		return err
+		return VerifiedSegment{}, err
 	}
 	if !bytes.Equal(readback, segment.Body) {
-		return errors.New("archive object readback differs")
+		return VerifiedSegment{}, errors.New("archive object readback differs")
 	}
-	return nil
+	segment.Body = append([]byte(nil), segment.Body...)
+	return VerifiedSegment{segment: segment, bucket: s.bucket}, nil
 }
 
 func (s *S3ObjectStore) GetVerified(ctx context.Context, key, checksum string) ([]byte, error) {

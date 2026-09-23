@@ -50,14 +50,14 @@ func TestS3ObjectStoreReadbackAndChecksum(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := store.PutVerified(context.Background(), segment); err != nil {
+	if _, err := store.PutVerified(context.Background(), segment); err != nil {
 		t.Fatal(err)
 	}
 	client.corrupt = true
 	if _, err := store.GetVerified(context.Background(), segment.ObjectKey(), segment.SHA256); err == nil {
 		t.Fatal("corrupt archive object was accepted")
 	}
-	if err := store.PutVerified(context.Background(), segment); err == nil {
+	if _, err := store.PutVerified(context.Background(), segment); err == nil {
 		t.Fatal("upload with corrupt readback was accepted")
 	}
 }

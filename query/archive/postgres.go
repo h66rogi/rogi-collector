@@ -89,7 +89,8 @@ func (p *PgArchive) NextBatch(ctx context.Context, cutoff time.Time, limit int) 
 // CommitSegment is called only after the exact object has been uploaded and
 // read back. Index insertion and hot-row deletion are one PostgreSQL commit;
 // the permanent event-ID index remains intact for replay deduplication.
-func (p *PgArchive) CommitSegment(ctx context.Context, segment Segment, bucket string) error {
+func (p *PgArchive) CommitSegment(ctx context.Context, verified VerifiedSegment) error {
+	segment, bucket := verified.segment, verified.bucket
 	if bucket == "" {
 		return errors.New("archive bucket required")
 	}
@@ -111,12 +112,14 @@ func (p *PgArchive) CommitSegment(ctx context.Context, segment Segment, bucket s
 	if !owned {
 		return errors.New("archive session outside configured channel")
 	}
-	var existingKey, existingSHA string
-	err = tx.QueryRow(ctx, `SELECT object_key,sha256 FROM archive_segments
+	var existingKey, existingSHA, existingBucket string
+	var existingCount int
+	var existingFirst, existingLast int64
+	err = tx.QueryRow(ctx, `SELECT object_key,sha256,object_bucket,message_count,first_position,last_position FROM archive_segments
 		WHERE session_id=$1 AND NOT (last_position<$2 OR first_position>$3)
-		LIMIT 1`, segment.SessionID, segment.FirstPosition, segment.LastPosition).Scan(&existingKey, &existingSHA)
+		LIMIT 1`, segment.SessionID, segment.FirstPosition, segment.LastPosition).Scan(&existingKey, &existingSHA, &existingBucket, &existingCount, &existingFirst, &existingLast)
 	if err == nil {
-		if existingKey == segment.ObjectKey() && existingSHA == segment.SHA256 {
+		if existingKey == segment.ObjectKey() && existingSHA == segment.SHA256 && existingBucket == bucket && existingCount == segment.Count && existingFirst == segment.FirstPosition && existingLast == segment.LastPosition {
 			return tx.Commit(ctx)
 		}
 		return errors.New("overlapping archive segment")
