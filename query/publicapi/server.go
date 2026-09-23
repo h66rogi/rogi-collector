@@ -3,11 +3,13 @@
 package publicapi
 
 import (
+	"bufio"
 	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"log/slog"
+	"net"
 	"net/http"
 	"strconv"
 	"sync"
@@ -60,7 +62,53 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /v1/chat/stream", s.stream)
 	mux.HandleFunc("GET /v1/broadcasts", archiveUnavailable)
 	mux.HandleFunc("GET /v1/broadcasts/{sessionId}/chats", archiveUnavailable)
-	return mux
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		started := time.Now()
+		observed := &observedWriter{ResponseWriter: w, status: http.StatusOK}
+		mux.ServeHTTP(observed, r)
+		pattern := r.Pattern
+		if pattern == "" {
+			pattern = "unmatched"
+		}
+		s.logger.Info("access", "method", r.Method, "route", pattern, "status", observed.status, "durationMs", time.Since(started).Milliseconds())
+	})
+}
+
+type observedWriter struct {
+	http.ResponseWriter
+	status int
+	wrote  bool
+}
+
+func (w *observedWriter) Unwrap() http.ResponseWriter { return w.ResponseWriter }
+func (w *observedWriter) WriteHeader(status int) {
+	if w.wrote {
+		return
+	}
+	w.status, w.wrote = status, true
+	w.ResponseWriter.WriteHeader(status)
+}
+func (w *observedWriter) Write(p []byte) (int, error) {
+	if !w.wrote {
+		w.WriteHeader(http.StatusOK)
+	}
+	return w.ResponseWriter.Write(p)
+}
+func (w *observedWriter) Flush() {
+	if f, ok := w.ResponseWriter.(http.Flusher); ok {
+		f.Flush()
+	}
+}
+func (w *observedWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	h, ok := w.ResponseWriter.(http.Hijacker)
+	if !ok {
+		return nil, nil, http.ErrNotSupported
+	}
+	conn, rw, err := h.Hijack()
+	if err == nil {
+		w.status, w.wrote = http.StatusSwitchingProtocols, true
+	}
+	return conn, rw, err
 }
 
 func writeJSON(w http.ResponseWriter, status int, value any) {
@@ -309,10 +357,21 @@ func (s *Server) stream(w http.ResponseWriter, r *http.Request) {
 	generation := initial.Generation
 	broadcast, checkErr := s.checkBroadcast(ctx)
 	broadcastState := "lookup_failed"
+	broadcastID := ""
+	broadcastTitle := ""
 	if checkErr == nil && broadcast != nil {
 		broadcastState = broadcast.State
+		broadcastID = broadcast.BroadcastId
+		broadcastTitle = broadcast.Title
 	}
-	if err = wsjson.Write(ctx, conn, map[string]any{"type": "hello", "version": "v1", "serverTime": time.Now().UTC(), "broadcastState": broadcastState, "cursorRetention": "up to 24 hours and 10000 stream entries"}); err != nil {
+	var currentCursor, earliestCursor any
+	if generation != "" && initial.Latest != "" {
+		currentCursor = encodeCursor(chatCursor{generation, initial.Latest})
+	}
+	if generation != "" && initial.Earliest != "" {
+		earliestCursor = encodeCursor(chatCursor{generation, initial.Earliest})
+	}
+	if err = wsjson.Write(ctx, conn, map[string]any{"type": "hello", "version": "v1", "serverTime": time.Now().UTC(), "broadcastState": broadcastState, "broadcastId": broadcastID, "title": broadcastTitle, "currentCursor": currentCursor, "earliestCursor": earliestCursor, "cursorRetention": "up to 24 hours and 10000 stream entries"}); err != nil {
 		return
 	}
 	if cursor.ID != "" && (cursor.Generation != generation || (initial.Earliest != "" && store.StreamIDBefore(cursor.ID, initial.Earliest))) {
@@ -376,11 +435,13 @@ func (s *Server) stream(w http.ResponseWriter, r *http.Request) {
 		}
 		if time.Since(lastStatus) >= 10*time.Second {
 			value, err := s.checkBroadcast(ctx)
-			if err == nil && value != nil && value.State != broadcastState {
+			if err == nil && value != nil && (value.State != broadcastState || value.BroadcastId != broadcastID || value.Title != broadcastTitle) {
 				if wsjson.Write(ctx, conn, map[string]any{"type": "broadcast.status", "state": value.State, "broadcastId": value.BroadcastId, "checkedAt": value.CheckedAt.AsTime()}) != nil {
 					return
 				}
 				broadcastState = value.State
+				broadcastID = value.BroadcastId
+				broadcastTitle = value.Title
 			}
 			lastStatus = time.Now()
 		}
