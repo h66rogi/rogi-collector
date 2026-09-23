@@ -6,6 +6,8 @@ class Test(unittest.TestCase):
   manifest={'sourceSha':'a'*40,'releaseId':'r1','images':{'query':'digest'}};units={'target':{'ok':True},**{name:{'ok':True} for name in m.REQUIRED}};rows=[{'Service':name,'State':'running','Health':'healthy'} for name in m.REQUIRED];return manifest,units,{'ok':True,'output':json.dumps(rows)}
  def test_all_required_healthy_and_matching_receipt_is_green(self):
   manifest,units,compose=self.fixture();self.assertTrue(m.evaluate(manifest,dict(manifest),units,compose)['ok'])
+ def test_cloudflared_running_without_container_healthcheck_is_green(self):
+  manifest,units,compose=self.fixture();rows=json.loads(compose['output']);next(row for row in rows if row['Service']=='cloudflared')['Health']='';compose['output']=json.dumps(rows);self.assertTrue(m.evaluate(manifest,dict(manifest),units,compose)['ok'])
  def test_empty_receipt_and_manifest_are_never_a_match(self):
   _,units,compose=self.fixture();self.assertFalse(m.evaluate({}, {}, units,compose)['receiptMatchesCurrent'])
  def test_compose_output_is_not_truncated_before_json_parsing(self):

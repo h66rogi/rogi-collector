@@ -18,4 +18,6 @@ class TestLoader(unittest.TestCase):
    client=type('Client',(),{'get_secret_value':lambda self,**kwargs:{'SecretString':json.dumps(values)}})()
    m.load(meta,root/'run',require_root=False,client=client)
    self.assertFalse((root/'run'/'data-api.env').exists())
+   self.assertFalse((root/'run'/'archive-exporter.env').exists())
+   self.assertFalse((root/'run'/'tunnel-token').exists())
 if __name__=='__main__':unittest.main()

@@ -26,7 +26,7 @@ try {
   const sidecars = ['deploy/local.env', 'deploy/.env.production', 'deploy/cookies.json', 'deploy/server.pem', 'deploy/migrations/999_local.sql', 'deploy/initdb/local.sql', 'tools/ops/local-note.txt'];
   for (const path of sidecars) await writeFile(join(sandbox, path), 'synthetic-local-only-marker\n');
   const env = {...process.env, SOURCE_SHA: '1'.repeat(40)};
-  for (const role of ['POSTGRES', 'REDIS', 'DISCOVER', 'COORDINATOR', 'WORKER', 'QUERY', 'COOKIE_AUTH']) {
+  for (const role of ['POSTGRES', 'REDIS', 'DISCOVER', 'COORDINATOR', 'WORKER', 'QUERY', 'CLOUDFLARED', 'COOKIE_AUTH']) {
     env[`IMAGE_${role}`] = `registry.example/fixture/${role.toLowerCase()}@sha256:${'a'.repeat(64)}`;
   }
   run(process.execPath, ['tools/release/build-bundle.mjs'], {env});
@@ -37,7 +37,7 @@ try {
   for (const path of sidecars) assert(!contents.has(path), `local file leaked: ${path}`);
   const manifest = JSON.parse(run('tar', ['-xOzf', archive, './manifest.build.json']));
   assert.equal(manifest.profile, 'soop-single-channel');
-  assert.equal(Object.keys(manifest.images).length, 7);
+  assert.equal(Object.keys(manifest.images).length, 8);
   assert(!manifest.migrations.some(x => x.path.endsWith('999_local.sql')));
   assert(!manifest.runtimeFiles.some(x => x.path.endsWith('local.sql')));
   assert(!run('tar', ['-xOzf', archive]).includes('synthetic-local-only-marker'));

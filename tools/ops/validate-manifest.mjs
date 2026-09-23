@@ -28,7 +28,7 @@ for (const item of manifest.runtimeFiles) {
   if (sha256(await readFile(file)) !== item.sha256) fail(`runtime file checksum mismatch: ${item.path}`);
 }
 if (requiredRuntimeFiles.size) fail('runtimeFiles allowlist is incomplete');
-const requiredImages = ['postgres', 'redis', 'discover', 'coordinator', 'worker', 'query', 'cookie-auth'];
+const requiredImages = ['postgres', 'redis', 'discover', 'coordinator', 'worker', 'query', 'cloudflared', 'cookie-auth'];
 for (const role of requiredImages) exact(manifest.images?.[role], /^[a-z0-9][a-z0-9._/-]*(?::[A-Za-z0-9._-]+)?@sha256:[0-9a-f]{64}$/, `images.${role}`);
 if (!Array.isArray(manifest.migrations) || manifest.migrations.length < 1) fail('migrations must be non-empty');
 const diskMigrationPaths = (await readdir(resolve(root, 'deploy/migrations'), {withFileTypes: true})).filter(item => item.isFile() && item.name.endsWith('.sql')).map(item => `deploy/migrations/${item.name}`).sort();

@@ -27,4 +27,6 @@ chown 70:70 "$runtime_root/postgres-admin-password" "$runtime_root/postgres-migr
 chown 999:1000 "$runtime_root/redis-password"
 chown 65532:65532 "$runtime_root/discover.env" "$runtime_root/coordinator.env" "$runtime_root/worker.env" "$runtime_root/query.env" "$runtime_root/cookie-auth.env" "$runtime_root/app-migrate.env"
 [ ! -e "$runtime_root/data-api.env" ] || chown 65532:65532 "$runtime_root/data-api.env"
+[ ! -e "$runtime_root/archive-exporter.env" ] || chown 65532:65532 "$runtime_root/archive-exporter.env"
+[ ! -e "$runtime_root/tunnel-token" ] || chown 65532:65532 "$runtime_root/tunnel-token"
 "$library_root/rotate-server-tls.py"

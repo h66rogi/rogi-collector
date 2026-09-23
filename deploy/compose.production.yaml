@@ -143,6 +143,31 @@ services:
     networks: [data, egress]
     depends_on: {postgres: {condition: service_healthy}, redis: {condition: service_healthy}}
 
+  archive-exporter:
+    <<: *role
+    image: ${QUERY_IMAGE:?set immutable QUERY_IMAGE digest}
+    entrypoint: [/archive-exporter]
+    volumes: [{type: bind, source: "${SECRETS_ROOT:?set SECRETS_ROOT}/archive-exporter.env", target: /run/secrets/role.env, read_only: true, bind: {create_host_path: false}}]
+    networks: [data, egress]
+    depends_on: {postgres: {condition: service_healthy}}
+
+  cloudflared:
+    image: ${CLOUDFLARED_IMAGE:?set immutable CLOUDFLARED_IMAGE digest}
+    init: true
+    restart: "no"
+    user: "65532:65532"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 128m
+    cpus: 0.50
+    command: [tunnel, --no-autoupdate, run, --token-file, /run/secrets/tunnel-token]
+    volumes: [{type: bind, source: "${SECRETS_ROOT:?set SECRETS_ROOT}/tunnel-token", target: /run/secrets/tunnel-token, read_only: true, bind: {create_host_path: false}}]
+    networks: [data, egress]
+    depends_on: {data-api: {condition: service_healthy}}
+    logging: *logging
+
   cookie-auth:
     image: ${COOKIE_AUTH_IMAGE:?required}
     init: true

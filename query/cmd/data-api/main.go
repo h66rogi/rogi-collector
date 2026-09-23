@@ -84,6 +84,12 @@ func run() error {
 		if err != nil {
 			return err
 		}
+		probeCtx, probeCancel := context.WithTimeout(context.Background(), 5*time.Second)
+		err = objects.Probe(probeCtx)
+		probeCancel()
+		if err != nil {
+			return err
+		}
 		if err := api.EnableHistory(archiveDatabase, objects, []byte(os.Getenv("HISTORY_CURSOR_HMAC_KEY"))); err != nil {
 			return err
 		}

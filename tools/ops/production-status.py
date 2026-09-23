@@ -2,7 +2,7 @@
 from __future__ import annotations
 import json,shutil,subprocess,time
 from pathlib import Path
-REQUIRED=('postgres','redis','discover','coordinator','worker','query','data-api','cookie-auth')
+REQUIRED=('postgres','redis','discover','coordinator','worker','query','data-api','archive-exporter','cloudflared','cookie-auth')
 def command(argv):
  r=subprocess.run(argv,text=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE);return {'ok':r.returncode==0,'output':(r.stdout or r.stderr).strip()}
 def parse_containers(raw):
@@ -14,7 +14,7 @@ def parse_containers(raw):
  return {row.get('Service'):row for row in rows if isinstance(row,dict) and isinstance(row.get('Service'),str)}
 def evaluate(current_manifest,receipt,units,compose):
  containers=parse_containers(compose.get('output','')) if compose.get('ok') else {}
- container_state={name:{'running':containers.get(name,{}).get('State')=='running','healthy':containers.get(name,{}).get('Health')=='healthy'} for name in REQUIRED}
+ container_state={name:{'running':containers.get(name,{}).get('State')=='running','healthy':containers.get(name,{}).get('Health')=='healthy' or (name=='cloudflared' and not containers.get(name,{}).get('Health'))} for name in REQUIRED}
  required_receipt=('sourceSha','releaseId','images')
  receipt_complete=isinstance(receipt,dict) and all(receipt.get(key) for key in required_receipt)
  manifest_complete=isinstance(current_manifest,dict) and all(current_manifest.get(key) for key in required_receipt)

@@ -44,13 +44,35 @@ type Server struct {
 	statusWait  chan struct{}
 	connections chan struct{}
 	history     *historyAccess
+	rateMu      sync.Mutex
+	rateTokens  float64
+	rateAt      time.Time
 }
 
 func New(channel string, collection CollectionReader, chat ChatReader, check BroadcastChecker, logger *slog.Logger, maxConnections int) (*Server, error) {
 	if channel == "" || collection == nil || chat == nil || check == nil || logger == nil || maxConnections < 1 {
 		return nil, errors.New("public API dependencies and positive connection limit required")
 	}
-	return &Server{channel: channel, collection: collection, chat: chat, check: check, logger: logger, connections: make(chan struct{}, maxConnections)}, nil
+	return &Server{channel: channel, collection: collection, chat: chat, check: check, logger: logger, connections: make(chan struct{}, maxConnections), rateTokens: 60, rateAt: time.Now()}, nil
+}
+
+// A single bounded token bucket protects the small public origin from
+// accidental or abusive HTTP polling. WebSocket connections have a separate
+// concurrent limit and consume only a token for their handshake.
+func (s *Server) allowRequest() bool {
+	s.rateMu.Lock()
+	defer s.rateMu.Unlock()
+	now := time.Now()
+	s.rateTokens += now.Sub(s.rateAt).Seconds() * 20
+	if s.rateTokens > 60 {
+		s.rateTokens = 60
+	}
+	s.rateAt = now
+	if s.rateTokens < 1 {
+		return false
+	}
+	s.rateTokens--
+	return true
 }
 
 func (s *Server) Handler() http.Handler {
@@ -67,12 +89,22 @@ func (s *Server) Handler() http.Handler {
 		started := time.Now()
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		observed := &observedWriter{ResponseWriter: w, status: http.StatusOK}
-		mux.ServeHTTP(observed, r)
+		if r.URL.Path != "/healthz" && r.URL.Path != "/readyz" && r.URL.Path != "/ready" && !s.allowRequest() {
+			observed.Header().Set("Retry-After", "1")
+			writeJSON(observed, http.StatusTooManyRequests, map[string]string{"code": "rate_limited"})
+		} else {
+			mux.ServeHTTP(observed, r)
+		}
 		pattern := r.Pattern
 		if pattern == "" {
 			pattern = "unmatched"
 		}
-		s.logger.Info("access", "method", r.Method, "route", pattern, "status", observed.status, "durationMs", time.Since(started).Milliseconds())
+		clientIP := net.ParseIP(r.Header.Get("CF-Connecting-IP"))
+		if clientIP != nil {
+			s.logger.Info("access", "method", r.Method, "route", pattern, "status", observed.status, "durationMs", time.Since(started).Milliseconds(), "clientIP", clientIP.String())
+		} else {
+			s.logger.Info("access", "method", r.Method, "route", pattern, "status", observed.status, "durationMs", time.Since(started).Milliseconds(), "remoteAddr", r.RemoteAddr)
+		}
 	})
 }
 

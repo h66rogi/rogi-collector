@@ -22,8 +22,15 @@ jobs:
       - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
         with: {go-version: '1.27.1', cache: true, cache-dependency-path: '**/go.sum'}
       - run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f deploy/migrations/001_foundation.sql
+      - run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c 'CREATE ROLE collector_query; CREATE ROLE collector_worker;'
       - run: go run ./shared/cmd/migrate && go run ./shared/cmd/migrate
       - run: test "$(psql "$DATABASE_URL" -At -v ON_ERROR_STOP=1 -c "SELECT name FROM collector_app_migrations WHERE name='007_public_chat_archive.sql' AND EXISTS (SELECT 1 FROM pg_class WHERE relname='archive_segments')")" = 007_public_chat_archive.sql
+      - run: >-
+          test "$(psql "$DATABASE_URL" -At -v ON_ERROR_STOP=1 -c
+          "SELECT has_table_privilege('collector_query','archive_segments','SELECT')
+          AND NOT has_table_privilege('collector_query','archive_segments','INSERT')
+          AND has_table_privilege('collector_worker','archive_segments','INSERT')
+          AND has_sequence_privilege('collector_worker','archive_segments_segment_id_seq','USAGE')")" = t
       - run: COLLECTOR_TEST_DATABASE_URL="$DATABASE_URL" go test ./shared/store -run '^TestArchiveChatSessionAndReplay$' -count=1
       - run: COLLECTOR_TEST_DATABASE_URL="$DATABASE_URL" go test ./query/archive -run '^TestArchiveExportPreservesDedupIndex$' -count=1
   verify:

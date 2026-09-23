@@ -81,6 +81,24 @@ func TestRecentRejectsExpiredGeneration(t *testing.T) {
 	}
 }
 
+func TestPublicRequestBudgetLimitsPollingButKeepsHealthAvailable(t *testing.T) {
+	s := testServer(t, store.ChatBatch{}, func(context.Context, string) (*pb.BroadcastStatus, error) { return nil, nil })
+	s.rateMu.Lock()
+	s.rateTokens = 0
+	s.rateAt = time.Now()
+	s.rateMu.Unlock()
+	limited := httptest.NewRecorder()
+	s.Handler().ServeHTTP(limited, httptest.NewRequest(http.MethodGet, "/v1/chats/recent", nil))
+	if limited.Code != http.StatusTooManyRequests || limited.Header().Get("Retry-After") != "1" {
+		t.Fatalf("expected bounded polling, got %d", limited.Code)
+	}
+	health := httptest.NewRecorder()
+	s.Handler().ServeHTTP(health, httptest.NewRequest(http.MethodGet, "/healthz", nil))
+	if health.Code != http.StatusOK {
+		t.Fatalf("health check was rate limited: %d", health.Code)
+	}
+}
+
 func TestWebSocketReportsGapAfterGenerationChange(t *testing.T) {
 	s := testServer(t, store.ChatBatch{Generation: "new", Earliest: "2-0", Latest: "2-0"}, func(context.Context, string) (*pb.BroadcastStatus, error) { return nil, nil })
 	httpServer := httptest.NewServer(s.Handler())

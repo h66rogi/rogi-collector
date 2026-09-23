@@ -15,6 +15,7 @@ import (
 )
 
 type S3Client interface {
+	HeadBucket(context.Context, *s3.HeadBucketInput, ...func(*s3.Options)) (*s3.HeadBucketOutput, error)
 	PutObject(context.Context, *s3.PutObjectInput, ...func(*s3.Options)) (*s3.PutObjectOutput, error)
 	GetObject(context.Context, *s3.GetObjectInput, ...func(*s3.Options)) (*s3.GetObjectOutput, error)
 }
@@ -28,6 +29,13 @@ type S3ObjectStore struct {
 }
 
 func (s *S3ObjectStore) Bucket() string { return s.bucket }
+
+// Probe validates that the configured bucket and scoped credentials are usable
+// before a quiet archive is reported as ready.
+func (s *S3ObjectStore) Probe(ctx context.Context) error {
+	_, err := s.client.HeadBucket(ctx, &s3.HeadBucketInput{Bucket: aws.String(s.bucket)})
+	return err
+}
 
 // VerifiedSegment can only be issued after an object has been uploaded and
 // read back through S3ObjectStore. Its fields are private to this package.

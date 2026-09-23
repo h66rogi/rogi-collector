@@ -13,8 +13,16 @@ import (
 )
 
 type memoryS3 struct {
-	objects map[string][]byte
-	corrupt bool
+	objects  map[string][]byte
+	corrupt  bool
+	probeErr error
+}
+
+func (m *memoryS3) HeadBucket(_ context.Context, _ *s3.HeadBucketInput, _ ...func(*s3.Options)) (*s3.HeadBucketOutput, error) {
+	if m.probeErr != nil {
+		return nil, m.probeErr
+	}
+	return &s3.HeadBucketOutput{}, nil
 }
 
 func (m *memoryS3) PutObject(_ context.Context, input *s3.PutObjectInput, _ ...func(*s3.Options)) (*s3.PutObjectOutput, error) {
@@ -53,6 +61,11 @@ func TestS3ObjectStoreReadbackAndChecksum(t *testing.T) {
 	if _, err := store.PutVerified(context.Background(), segment); err != nil {
 		t.Fatal(err)
 	}
+	client.probeErr = errors.New("bucket unavailable")
+	if err := store.Probe(context.Background()); err == nil {
+		t.Fatal("unavailable bucket was reported ready")
+	}
+	client.probeErr = nil
 	client.corrupt = true
 	if _, err := store.GetVerified(context.Background(), segment.ObjectKey(), segment.SHA256); err == nil {
 		t.Fatal("corrupt archive object was accepted")

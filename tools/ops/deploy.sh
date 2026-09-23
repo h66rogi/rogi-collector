@@ -67,7 +67,7 @@ for attempt in $(seq 1 60);do
   $systemctl_bin start rogi-collector.target >/dev/null 2>&1 || true
   if $systemctl_bin is-active --quiet rogi-collector.target;then
     units_ready=true
-    for role in postgres redis discover coordinator worker query data-api cookie-auth;do
+    for role in postgres redis discover coordinator worker query data-api archive-exporter cloudflared cookie-auth;do
       if ! $systemctl_bin is-active --quiet "rogi-collector-role@$role.service";then units_ready=false;break;fi
     done
     [ "$units_ready" = true ] && break
@@ -75,7 +75,7 @@ for attempt in $(seq 1 60);do
   sleep 1
 done
 [ "$units_ready" = true ] || { echo 'collector supervised units did not become active' >&2; exit 70; }
-for role in discover coordinator worker query data-api; do
+for role in discover coordinator worker query data-api archive-exporter; do
   healthy=false
   for attempt in $(seq 1 60);do
     if $docker_bin compose --env-file "$config_root/runtime.env" -f deploy/compose.production.yaml exec -T "$role" /healthcheck >/dev/null 2>&1;then healthy=true;break;fi
@@ -87,7 +87,7 @@ containers_healthy=false
 for attempt in $(seq 1 60);do
   compose_status=$($docker_bin compose --env-file "$config_root/runtime.env" -f deploy/compose.production.yaml ps --format json 2>/dev/null || true)
   if printf '%s' "$compose_status" | $node_bin -e '
-let raw="";process.stdin.on("data",chunk=>raw+=chunk).on("end",()=>{try{let rows;try{const value=JSON.parse(raw);rows=Array.isArray(value)?value:[value]}catch{rows=raw.split(/\n/).filter(Boolean).map(line=>JSON.parse(line))}const required=new Set(["postgres","redis","discover","coordinator","worker","query","data-api","cookie-auth"]);for(const row of rows){if(row&&required.has(row.Service)&&row.State==="running"&&row.Health==="healthy")required.delete(row.Service)}process.exit(required.size===0?0:1)}catch{process.exit(1)}})';then containers_healthy=true;break;fi
+let raw="";process.stdin.on("data",chunk=>raw+=chunk).on("end",()=>{try{let rows;try{const value=JSON.parse(raw);rows=Array.isArray(value)?value:[value]}catch{rows=raw.split(/\n/).filter(Boolean).map(line=>JSON.parse(line))}const required=new Set(["postgres","redis","discover","coordinator","worker","query","data-api","archive-exporter","cloudflared","cookie-auth"]);for(const row of rows){if(row&&required.has(row.Service)&&row.State==="running"&&(row.Health==="healthy"||(row.Service==="cloudflared"&&!row.Health)))required.delete(row.Service)}process.exit(required.size===0?0:1)}catch{process.exit(1)}})';then containers_healthy=true;break;fi
   sleep 1
 done
 [ "$containers_healthy" = true ] || { echo 'collector containers did not become Docker-healthy' >&2; exit 70; }
