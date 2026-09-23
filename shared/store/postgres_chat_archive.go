@@ -57,6 +57,11 @@ func (s *PgStore) AppendArchiveChat(ctx context.Context, record ArchiveChatRecor
 		return false, err
 	}
 	defer tx.Rollback(ctx)
+	// Match query/archive.archivePositionLock. Export snapshots serialize with
+	// position allocation so a late commit cannot land inside an indexed range.
+	if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(7266467100622)`); err != nil {
+		return false, err
+	}
 	rows, err := tx.Query(ctx, `
 		SELECT started_at, session_seq FROM broadcast_sessions
 		WHERE platform=$1 AND channel_id=$2 AND started_observed_at <= $3
