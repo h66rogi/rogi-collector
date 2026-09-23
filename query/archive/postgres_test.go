@@ -160,7 +160,7 @@ func TestArchiveSmallPageReadsOnlyNeededSegment(t *testing.T) {
 	}
 	writer := store.NewPgStore(pool)
 	writer.SetCollectionChannel(channel)
-	for i := range 2 {
+	for i := range 3 {
 		record := store.ArchiveChatRecord{SpoolID: uuid.NewString(), EventID: uuid.NewString(), Platform: model.PlatformSoop,
 			ChannelID: channel, ReceivedAt: time.Now().UTC(), UserIDVersion: 1,
 			PublicUserID: strings.Repeat("a", 64), DisplayName: "viewer", Message: "chat"}
@@ -177,8 +177,12 @@ func TestArchiveSmallPageReadsOnlyNeededSegment(t *testing.T) {
 		t.Fatal(err)
 	}
 	for i := range 2 {
-		rows, err := exporter.NextBatch(ctx, time.Now().Add(time.Minute), 1)
-		if err != nil || len(rows) != 1 {
+		batchLimit := 1
+		if i == 0 {
+			batchLimit = 2
+		}
+		rows, err := exporter.NextBatch(ctx, time.Now().Add(time.Minute), batchLimit)
+		if err != nil || len(rows) != batchLimit {
 			t.Fatalf("batch %d: rows=%d err=%v", i, len(rows), err)
 		}
 		segment, err := Build(rows)
