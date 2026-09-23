@@ -11,8 +11,14 @@ COPY shared shared
 COPY proto proto
 COPY cleanup cleanup
 COPY chat-exporter chat-exporter
-RUN test "$ROLE" = discover -o "$ROLE" = coordinator -o "$ROLE" = worker -o "$ROLE" = query
-RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/service ./${ROLE}/cmd && \
+RUN test "$ROLE" = discover -o "$ROLE" = coordinator -o "$ROLE" = worker -o "$ROLE" = query -o "$ROLE" = data-api
+RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build target="./${ROLE}/cmd"; \
+    if [ "$ROLE" = data-api ]; then target=./query/cmd/data-api; fi; \
+    CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/service "$target" && \
+    if [ "$ROLE" = query ]; then \
+      CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/data-api ./query/cmd/data-api && \
+      CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/archive-exporter ./query/cmd/archive-exporter; \
+    fi && \
     CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/healthcheck ./shared/cmd/healthcheck && \
     CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/migrate ./shared/cmd/migrate && \
     CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/collector-check ./shared/cmd/collector-check

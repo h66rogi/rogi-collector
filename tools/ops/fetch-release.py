@@ -28,7 +28,7 @@ def deployed_healthy(receipt:Path,destination:Path,manifest:dict,current:Path|No
   saved=read_json(receipt)
   if saved.get('sourceSha')!=manifest.get('sourceSha') or saved.get('images')!=manifest.get('images') or not destination.exists():return False
   if current is not None and (not current.exists() or current.resolve()!=destination.resolve()):return False
-  units=['rogi-collector.target']+[f'rogi-collector-role@{role}.service' for role in ('postgres','redis','discover','coordinator','worker','query','cookie-auth')]
+  units=['rogi-collector.target']+[f'rogi-collector-role@{role}.service' for role in ('postgres','redis','discover','coordinator','worker','query','data-api','archive-exporter','cloudflared','cookie-auth')]
   return all(subprocess.run(['systemctl','is-active','--quiet',unit],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL).returncode==0 for unit in units)
  except (OSError,ValueError,json.JSONDecodeError):return False
 

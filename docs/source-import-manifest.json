@@ -263,10 +263,11 @@
         "단일 채널·구독 설정과 인증/방송 상태를 기존 discover loop에 연결",
         "Load the mounted role environment as data and wire explicit single-channel live-test authentication",
         "Clarify that single-SOOP validation precedes the retained generic allowlist parser; comments only",
-        "Connect read-only broadcast diagnostics through discover cookie boundary; preserve production subscription scope."
+        "Connect read-only broadcast diagnostics through discover cookie boundary; preserve production subscription scope.",
+        "Allow PostgreSQL-only broadcast session history with VIEWER_HISTORY_ENABLED=false while preserving existing ClickHouse default."
       ],
       "importSha256": "b0d2ef284b9aad71fe9708a3f45d85a948fbed03c389ed47c5385b219677b5c5",
-      "currentSha256": "64d02914078a0a13036cb6df3b09882e66136d4c7418f4be63b800e0b88141e7"
+      "currentSha256": "8fc12e58fb22a93b02e89ba6405e5f439f4ca9fb99d9cd0efbd498ad78fda01a"
     },
     {
       "sourcePath": "discover/cmd/main_test.go",
@@ -696,18 +697,23 @@
       "targetPath": "query/go.mod",
       "sourceSha256": "dd9b10577b47fac760501e60be99fe710faf729dcfa30786f1ef79121ebb3081",
       "changes": [
-        "Go module/import address changed to target repository"
+        "Go module/import address changed to target repository",
+        "Add the isolated public API standard WebSocket dependency for the Go query module.",
+        "Add AWS SDK v2 S3 client dependencies for the bounded, verified archive object adapter."
       ],
       "importSha256": "7a20e701a1c3b0aa91d220e0b1a0fe668f97f8184216e1c086ab866d4556d38e",
-      "currentSha256": "7a20e701a1c3b0aa91d220e0b1a0fe668f97f8184216e1c086ab866d4556d38e"
+      "currentSha256": "08f636d8d9178f27d48d21a9d698203d2d1b0b669913b4d19150aaa88a9f6337"
     },
     {
       "sourcePath": "query/go.sum",
       "targetPath": "query/go.sum",
       "sourceSha256": "ac4126b37c424fda53b107fbd6c226efeac5e6a3b89f71f06e052921e4f8e779",
-      "changes": [],
+      "changes": [
+        "Add the isolated public API standard WebSocket dependency for the Go query module.",
+        "Add AWS SDK v2 S3 client dependencies for the bounded, verified archive object adapter."
+      ],
       "importSha256": "ac4126b37c424fda53b107fbd6c226efeac5e6a3b89f71f06e052921e4f8e779",
-      "currentSha256": "ac4126b37c424fda53b107fbd6c226efeac5e6a3b89f71f06e052921e4f8e779"
+      "currentSha256": "199b0748b0da5b2e1b2349e79249bdc3e033144aa0f5bb7f110fc3b15ca2be6c"
     },
     {
       "sourcePath": "query/internal/admin_http.go",
@@ -1107,10 +1113,11 @@
         "기존 manager에 후원 spool/journal/소유권과 outbox 재시도 연결",
         "Load the mounted role environment as data and wire explicit single-channel live-test authentication",
         "Correct command dispatch blocking/order and readiness/stop-deadline comments; behavior unchanged",
-        "Add bounded operator chat tests using the existing SOOP connector; close disconnected sockets reliably without production ingestion."
+        "Add bounded operator chat tests using the existing SOOP connector; close disconnected sockets reliably without production ingestion.",
+        "Wire an opt-in fsynced public chat archive spool and backlog replay using the existing worker lifecycle."
       ],
       "importSha256": "52b2b984c02465d8914fc0d7ec4cb31f6f9b6adf68067b81f803fc9f4f8cee1e",
-      "currentSha256": "c8eb9d062044290f516894d741cb7bb10f9b0529514ac5f6a01c29c3ced535aa"
+      "currentSha256": "f063011fe88c13d257a9ec427793ad6343d04b80d69e90b305999c9c3896be31"
     },
     {
       "sourcePath": "worker/cmd/main_test.go",
@@ -1291,10 +1298,11 @@
       "sourceSha256": "82a52fcc7310331ab6e8d2135643ca1ef32ef0462da0498a00e2ef0921dfaafd",
       "changes": [
         "Go module/import address changed to target repository",
-        "대상 밖 접속 차단, 동시 중복 dial 예약 방지, 기존 lifecycle에 소유권 수락/해제 연결"
+        "대상 밖 접속 차단, 동시 중복 dial 예약 방지, 기존 lifecycle에 소유권 수락/해제 연결",
+        "Accept ordinary chat into the durable archive spool before existing Redis publication; retain the original manager and connector flow."
       ],
       "importSha256": "d7221c680d5f9b7df62bdc5b47a83150b5d0fa034235283306ce95a49248a070",
-      "currentSha256": "58d9d36744a59af1eedcd8d294ea7e7932bdf564697bff254f3ada47bae89506"
+      "currentSha256": "c40b0ddf71770097816fc2862ae957e81d60e211ec3bc88a4aaed2cf3aef4f0b"
     },
     {
       "sourcePath": "worker/internal/manager_test.go",
@@ -1310,9 +1318,11 @@
       "sourcePath": "worker/internal/metrics.go",
       "targetPath": "worker/internal/metrics.go",
       "sourceSha256": "1b57d9b345bbc937b31aa6d8dbee06bc6b34054b38540049d49448f2111f05ff",
-      "changes": [],
+      "changes": [
+        "Expose archive acceptance, replay failure and backlog metrics for the existing worker registry."
+      ],
       "importSha256": "1b57d9b345bbc937b31aa6d8dbee06bc6b34054b38540049d49448f2111f05ff",
-      "currentSha256": "1b57d9b345bbc937b31aa6d8dbee06bc6b34054b38540049d49448f2111f05ff"
+      "currentSha256": "fff73e34eedf599967870329181f62126fd278a322e3f76d875e3b058ad98b8f"
     },
     {
       "sourcePath": "worker/internal/metrics_test.go",

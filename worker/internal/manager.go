@@ -107,6 +107,7 @@ type handoffAcker interface {
 type Manager struct {
 	collectionStore   *store.PgStore
 	donationSpool     *pipeline.DonationSpool
+	chatArchive       *pipeline.ChatArchiveSpool
 	collectionChannel *string
 	connecting        map[string]bool
 	workerID          string
@@ -200,7 +201,8 @@ func NewManager(ctx context.Context, workerID string, maxConn int, maxMsgPerSec 
 	}
 }
 
-func (m *Manager) SetCollectionChannel(channel string) { m.collectionChannel = &channel }
+func (m *Manager) SetCollectionChannel(channel string)             { m.collectionChannel = &channel }
+func (m *Manager) SetChatArchive(spool *pipeline.ChatArchiveSpool) { m.chatArchive = spool }
 func (m *Manager) permits(channel model.LiveChannel) bool {
 	return m.collectionChannel == nil || (*m.collectionChannel != "" && channel.Platform == model.PlatformSoop && channel.ChannelID == *m.collectionChannel)
 }
@@ -781,6 +783,16 @@ func (m *Manager) forwardMessages(ctx context.Context, key string, ac *activeCon
 				m.chatBufferWriter.Enqueue(row)
 				if m.metrics != nil {
 					m.metrics.ChatCHBufferEnqueueTotal.WithLabelValues(platform).Inc()
+				}
+			}
+			if m.chatArchive != nil && msg.Type == model.MessageTypeChat {
+				if err := m.chatArchive.Save(msg, time.Now()); err != nil {
+					slog.Error("chat archive acceptance failed", "key", key, "error", err)
+					if m.metrics != nil {
+						m.metrics.ChatArchiveSaveErrorsTotal.Inc()
+					}
+				} else if m.metrics != nil {
+					m.metrics.ChatArchiveAcceptedTotal.Inc()
 				}
 			}
 			var err error

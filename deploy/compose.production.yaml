@@ -101,6 +101,25 @@ services:
     entrypoint: [/migrate]
     healthcheck: {disable: true}
     volumes: [{type: bind, source: "${SECRETS_ROOT}/app-migrate.env", target: /run/secrets/role.env, read_only: true, bind: {create_host_path: false}}]
+  provision-public-api-role:
+    image: ${POSTGRES_IMAGE:?set immutable POSTGRES_IMAGE digest}
+    restart: "no"
+    user: "70:70"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      PGHOST: postgres
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB}
+      POSTGRES_ADMIN_USER: ${POSTGRES_ADMIN_USER:?set POSTGRES_ADMIN_USER}
+    command: [/release/provision-public-api-role.sh]
+    volumes:
+      - {type: bind, source: "${RELEASE_ROOT:?set RELEASE_ROOT}/deploy/provision-public-api-role.sh", target: /release/provision-public-api-role.sh, read_only: true, bind: {create_host_path: false}}
+      - {type: bind, source: "${SECRETS_ROOT:?set SECRETS_ROOT}/postgres-admin-password", target: /run/secrets/postgres-admin-password, read_only: true, bind: {create_host_path: false}}
+      - {type: bind, source: "${SECRETS_ROOT:?set SECRETS_ROOT}/public-api-db-password", target: /run/secrets/public-api-db-password, read_only: true, bind: {create_host_path: false}}
+    depends_on: {postgres: {condition: service_healthy}}
+    networks: [data]
+    logging: *logging
   discover:
     <<: *role
     image: ${DISCOVER_IMAGE:?set immutable DISCOVER_IMAGE digest}
@@ -134,6 +153,39 @@ services:
     depends_on: {postgres: {condition: service_healthy}, redis: {condition: service_healthy}}
     networks: [data, egress]
     ports: ["${QUERY_BIND_IP:?private IP required}:7443:7443"]
+
+  data-api:
+    <<: *role
+    image: ${QUERY_IMAGE:?set immutable QUERY_IMAGE digest}
+    entrypoint: [/data-api]
+    volumes: [{type: bind, source: "${SECRETS_ROOT:?set SECRETS_ROOT}/data-api.env", target: /run/secrets/role.env, read_only: true, bind: {create_host_path: false}}]
+    networks: [data, egress]
+    depends_on: {postgres: {condition: service_healthy}, redis: {condition: service_healthy}}
+
+  archive-exporter:
+    <<: *role
+    image: ${QUERY_IMAGE:?set immutable QUERY_IMAGE digest}
+    entrypoint: [/archive-exporter]
+    volumes: [{type: bind, source: "${SECRETS_ROOT:?set SECRETS_ROOT}/archive-exporter.env", target: /run/secrets/role.env, read_only: true, bind: {create_host_path: false}}]
+    networks: [data, egress]
+    depends_on: {postgres: {condition: service_healthy}}
+
+  cloudflared:
+    image: ${CLOUDFLARED_IMAGE:?set immutable CLOUDFLARED_IMAGE digest}
+    init: true
+    restart: "no"
+    user: "65532:65532"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 128m
+    cpus: 0.50
+    command: [tunnel, --no-autoupdate, run, --token-file, /run/secrets/tunnel-token]
+    volumes: [{type: bind, source: "${SECRETS_ROOT:?set SECRETS_ROOT}/tunnel-token", target: /run/secrets/tunnel-token, read_only: true, bind: {create_host_path: false}}]
+    networks: [data, egress]
+    depends_on: {data-api: {condition: service_healthy}}
+    logging: *logging
 
   cookie-auth:
     image: ${COOKIE_AUTH_IMAGE:?required}

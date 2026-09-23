@@ -17,7 +17,7 @@ exact(manifest.releaseId, /^[A-Za-z0-9._-]{1,96}$/, 'releaseId');
 exact(manifest.contractVersion, /^v[0-9]+(?:\.[0-9]+){0,2}$/, 'contractVersion');
 exact(manifest.composeSha256, /^[0-9a-f]{64}$/, 'composeSha256');
 const initdbNames = (await readdir(resolve(root, 'deploy/initdb'), {withFileTypes: true})).filter(item => item.isFile()).map(item => `deploy/initdb/${item.name}`).sort();
-const requiredRuntimePaths = ['deploy/cookie-auth.apparmor','deploy/systemd/rogi-collector-tls.service','deploy/systemd/rogi-collector-tls.timer','deploy/run-migrations.sh','deploy/install-runtime.sh','deploy/systemd/rogi-collector-host-ready.service','deploy/systemd/rogi-collector-migrate.service','deploy/systemd/rogi-collector-role@.service','deploy/systemd/rogi-collector-update.service','deploy/systemd/rogi-collector-update.timer','deploy/systemd/rogi-collector-backup.service','deploy/systemd/rogi-collector-backup.timer','deploy/systemd/rogi-collector.target',...['deploy.sh','status.sh','prepare-host.sh','validate-manifest.mjs','render-runtime-env.mjs','fetch-release.py','production-status.py','backup-postgres.sh','load-secrets-aws.py','upload-backup-s3.py','validate-runtime-secrets.sh','load-registry-auth.py','rotate-server-tls.py'].map(name=>`tools/ops/${name}`),...initdbNames];
+const requiredRuntimePaths = ['deploy/cookie-auth.apparmor','deploy/systemd/rogi-collector-tls.service','deploy/systemd/rogi-collector-tls.timer','deploy/run-migrations.sh','deploy/provision-public-api-role.sh','deploy/install-runtime.sh','deploy/systemd/rogi-collector-host-ready.service','deploy/systemd/rogi-collector-migrate.service','deploy/systemd/rogi-collector-role@.service','deploy/systemd/rogi-collector-update.service','deploy/systemd/rogi-collector-update.timer','deploy/systemd/rogi-collector-backup.service','deploy/systemd/rogi-collector-backup.timer','deploy/systemd/rogi-collector.target',...['deploy.sh','status.sh','prepare-host.sh','validate-manifest.mjs','render-runtime-env.mjs','fetch-release.py','production-status.py','backup-postgres.sh','load-secrets-aws.py','upload-backup-s3.py','validate-runtime-secrets.sh','load-registry-auth.py','rotate-server-tls.py'].map(name=>`tools/ops/${name}`),...initdbNames];
 const requiredRuntimeFiles = new Set(requiredRuntimePaths);
 if (!Array.isArray(manifest.runtimeFiles) || manifest.runtimeFiles.length !== requiredRuntimeFiles.size) fail('runtimeFiles must contain the exact executable allowlist');
 for (const item of manifest.runtimeFiles) {
@@ -28,7 +28,7 @@ for (const item of manifest.runtimeFiles) {
   if (sha256(await readFile(file)) !== item.sha256) fail(`runtime file checksum mismatch: ${item.path}`);
 }
 if (requiredRuntimeFiles.size) fail('runtimeFiles allowlist is incomplete');
-const requiredImages = ['postgres', 'redis', 'discover', 'coordinator', 'worker', 'query', 'cookie-auth'];
+const requiredImages = ['postgres', 'redis', 'discover', 'coordinator', 'worker', 'query', 'cloudflared', 'cookie-auth'];
 for (const role of requiredImages) exact(manifest.images?.[role], /^[a-z0-9][a-z0-9._/-]*(?::[A-Za-z0-9._-]+)?@sha256:[0-9a-f]{64}$/, `images.${role}`);
 if (!Array.isArray(manifest.migrations) || manifest.migrations.length < 1) fail('migrations must be non-empty');
 const diskMigrationPaths = (await readdir(resolve(root, 'deploy/migrations'), {withFileTypes: true})).filter(item => item.isFile() && item.name.endsWith('.sql')).map(item => `deploy/migrations/${item.name}`).sort();

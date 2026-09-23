@@ -94,12 +94,17 @@ type WorkerMetrics struct {
 	// ChatCHEnqueueTotal counts messages enqueued for ClickHouse by platform.
 	ChatCHEnqueueTotal *prometheus.CounterVec
 
-	ChatCHBufferFlushTotal   *prometheus.CounterVec
-	ChatCHBufferBatchSize    prometheus.Histogram
-	ChatCHBufferDroppedTotal prometheus.Counter
-	ChatCHBufferRetryTotal   prometheus.Counter
-	ChatCHBufferPending      prometheus.Gauge
-	ChatCHBufferEnqueueTotal *prometheus.CounterVec
+	ChatCHBufferFlushTotal      *prometheus.CounterVec
+	ChatCHBufferBatchSize       prometheus.Histogram
+	ChatCHBufferDroppedTotal    prometheus.Counter
+	ChatCHBufferRetryTotal      prometheus.Counter
+	ChatCHBufferPending         prometheus.Gauge
+	ChatCHBufferEnqueueTotal    *prometheus.CounterVec
+	ChatArchiveAcceptedTotal    prometheus.Counter
+	ChatArchiveSaveErrorsTotal  prometheus.Counter
+	ChatArchiveDrainErrorsTotal prometheus.Counter
+	ChatArchiveBacklogFiles     prometheus.Gauge
+	ChatArchiveBacklogBytes     prometheus.Gauge
 }
 
 // NewMetricsRegistry creates a Prometheus registry and returns it along with
@@ -273,6 +278,11 @@ func NewMetricsRegistry() (*prometheus.Registry, *WorkerMetrics) {
 			Name: "meloming_chat_worker_ch_buffer_enqueue_total",
 			Help: "Total messages offered to the secondary ClickHouse buffer by platform.",
 		}, []string{"platform"}),
+		ChatArchiveAcceptedTotal:    prometheus.NewCounter(prometheus.CounterOpts{Name: "rogi_chat_archive_accepted_total", Help: "Chat messages fsynced to the local archive spool."}),
+		ChatArchiveSaveErrorsTotal:  prometheus.NewCounter(prometheus.CounterOpts{Name: "rogi_chat_archive_save_errors_total", Help: "Chat messages that could not be accepted by the archive spool."}),
+		ChatArchiveDrainErrorsTotal: prometheus.NewCounter(prometheus.CounterOpts{Name: "rogi_chat_archive_drain_errors_total", Help: "Failed archive spool replay attempts."}),
+		ChatArchiveBacklogFiles:     prometheus.NewGauge(prometheus.GaugeOpts{Name: "rogi_chat_archive_backlog_files", Help: "Durable chat records pending PostgreSQL acceptance."}),
+		ChatArchiveBacklogBytes:     prometheus.NewGauge(prometheus.GaugeOpts{Name: "rogi_chat_archive_backlog_bytes", Help: "Bytes of durable chat records pending PostgreSQL acceptance."}),
 	}
 
 	registry.MustRegister(
@@ -308,6 +318,11 @@ func NewMetricsRegistry() (*prometheus.Registry, *WorkerMetrics) {
 		m.ChatCHBufferRetryTotal,
 		m.ChatCHBufferPending,
 		m.ChatCHBufferEnqueueTotal,
+		m.ChatArchiveAcceptedTotal,
+		m.ChatArchiveSaveErrorsTotal,
+		m.ChatArchiveDrainErrorsTotal,
+		m.ChatArchiveBacklogFiles,
+		m.ChatArchiveBacklogBytes,
 	)
 
 	return registry, m

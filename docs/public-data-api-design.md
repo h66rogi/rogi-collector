@@ -29,7 +29,7 @@ Redis 채팅은 최대 24시간·채널당 10,000건이며 영구 기록이 아�
 
 ```text
 SOOP → discover / worker ┬→ Redis 최근 채팅 → query의 내부 WatchChat
-                         └→ 내구성 있는 채팅 보관 → PostgreSQL 색인 + S3 채팅 archive
+                         └→ 내구성 있는 채팅 보관 → PostgreSQL 색인 + Cloudflare R2 채팅 archive
 
 Cloudflare 방문자 → data-api.rogi.chat → Tunnel → data-api (Go, Compose)
                                               ├→ 내부 query 읽기 계약
@@ -81,7 +81,7 @@ WebSocket은 표준 RFC 6455와 JSON 메시지로 시작한다. 첫 메시지에
 ## 시간 만료 없는 채팅 보관
 
 40 GiB 로컬 데이터 볼륨에 채팅을 무기한 쌓는 것은 불가능하다. 보관 정책은
-**시간 만료 없음**으로 정의하고, 오래된 본문은 별도 S3 archive bucket에 계속 보존한다.
+**시간 만료 없음**으로 정의하고, 오래된 본문은 별도 비공개 Cloudflare R2 archive bucket에 계속 보존한다.
 현재의 PostgreSQL dump 백업 bucket과 archive bucket은 역할을 분리한다.
 
 1. worker의 일반 채팅 경로에서 안정적인 event ID와 수집 시각을 확정한다.
@@ -92,13 +92,13 @@ WebSocket은 표준 RFC 6455와 JSON 메시지로 시작한다. 첫 메시지에
    현재 history emitter는 선택 기능이므로 운영 profile의 실제 활성 여부와
    방송 전환 의미를 구현 시 확인한다.
 3. 최근 기록과 방송·archive segment 색인은 PostgreSQL에서 조회한다.
-   확정된 segment는 압축된 불변 객체로 S3에 업로드하고 checksum·건수·첫/마지막
-   event ID를 검증한 뒤 색인을 커밋한다. 온라인 DB 본문을 정리하더라도 S3와
-   색인에서 과거 페이지 조회가 계속 가능해야 한다. S3에 만료 lifecycle은 두지 않는다.
+   확정된 segment는 압축된 불변 객체로 R2의 S3 호환 API에 업로드하고 checksum·건수·첫/마지막
+   position을 검증한 뒤 색인을 커밋한다. 온라인 DB 본문을 정리하더라도 R2와
+   색인에서 과거 페이지 조회가 계속 가능해야 한다. R2에 만료 lifecycle은 두지 않는다.
 4. 저장 장애·spool 포화·방송 연결 단절에는 기록 완전성을 보장한 척하지 않고
    session별 `complete`/`gaps`를 기록한다. Redis 실시간 전달과 영구 archive의
    수락 지점을 구분한다. 기존 Redis cursor보다 오래된 기록은 archive 조회로 복구한다.
-5. archive 업로드·색인·복원 시험, 로컬 spool 사용량, S3 비용·증가율을 감시한다.
+5. archive 업로드·색인·복원 시험, 로컬 spool 사용량, R2 비용·증가율을 감시한다.
    "무제한"은 데이터를 자동 삭제하지 않는 정책이지 유한한 디스크의 무한 용량이 아니다.
 
 과거에 Redis에서 이미 사라진 채팅은 소급 복원할 수 없다. archive 시작 시각과
@@ -134,8 +134,11 @@ OpenAPI/JSON Schema 유효성을 검증한 후 승인된 배포 흐름에서 pub
 
 ## 구현 순서와 인수 기준
 
-1. 방송 session 식별·영구 archive 형식과 실패 의미를 확정하고 합성 입력으로
-   방송 전환·중복·복원·S3 장애를 검증한다.
+[운영 전환 계획](public-data-api-rollout.md)은 SecretString 키 확장과 8개 역할 감독,
+Tunnel, R2 활성화의 실제 순서를 정리한다.
+
+1. [방송 session 식별·영구 archive 저장 계약](public-chat-archive-contract.md)을 확정하고 합성 입력으로
+   방송 전환·중복·복원·R2 장애를 검증한다.
 2. collector 내부 archive writer와 read-only 조회 계약을 추가한다. 기존
    주루마블 gRPC, 후원 journal, Redis 실시간 경로의 회귀를 확인한다.
 3. Go `data-api`와 내부 Tunnel connector를 추가한다. 로컬 로그·제한·readiness,
