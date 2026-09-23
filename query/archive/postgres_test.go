@@ -46,6 +46,10 @@ func TestArchiveExportPreservesDedupIndex(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	sessions, err := exporter.ListSessions(ctx, nil, "", 10)
+	if err != nil || len(sessions) != 1 || sessions[0].Complete {
+		t.Fatalf("archive sessions: %#v %v", sessions, err)
+	}
 	rows, err := exporter.NextBatch(ctx, time.Now().Add(time.Minute), 1000)
 	if err != nil || len(rows) != 1 {
 		t.Fatalf("batch: %d rows, %v", len(rows), err)
