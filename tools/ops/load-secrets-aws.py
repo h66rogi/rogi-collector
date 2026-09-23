@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse,json,os,re,shutil,stat
 from pathlib import Path
-KEYS={'postgres-admin-password','postgres-migrate-password','migrate.pgpass','redis-password','discover.env','coordinator.env','worker.env','query.env','cookie-auth.env','app-migrate.env','tls-ca.pem','tls-ca.key'}
+KEYS={'postgres-admin-password','postgres-migrate-password','migrate.pgpass','redis-password','discover.env','coordinator.env','worker.env','query.env','data-api.env','cookie-auth.env','app-migrate.env','tls-ca.pem','tls-ca.key'}
 ARN=re.compile(r'^arn:aws:secretsmanager:[a-z0-9-]+:[0-9]{12}:secret:[A-Za-z0-9/_+=.@-]{1,512}$')
 def load(metadata:Path,target:Path,*,require_root=True,client=None):
  st=metadata.stat()

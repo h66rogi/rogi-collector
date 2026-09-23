@@ -15,6 +15,7 @@ RUN test "$ROLE" = discover -o "$ROLE" = coordinator -o "$ROLE" = worker -o "$RO
 RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build target="./${ROLE}/cmd"; \
     if [ "$ROLE" = data-api ]; then target=./query/cmd/data-api; fi; \
     CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/service "$target" && \
+    if [ "$ROLE" = query ]; then CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/data-api ./query/cmd/data-api; fi && \
     CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/healthcheck ./shared/cmd/healthcheck && \
     CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/migrate ./shared/cmd/migrate && \
     CGO_ENABLED=0 go build -trimpath -ldflags='-s -w' -o /out/collector-check ./shared/cmd/collector-check

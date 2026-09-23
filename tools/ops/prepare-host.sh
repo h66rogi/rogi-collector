@@ -25,5 +25,5 @@ fi
 "$library_root/validate-runtime-secrets.sh" "$runtime_root"
 chown 70:70 "$runtime_root/postgres-admin-password" "$runtime_root/postgres-migrate-password" "$runtime_root/migrate.pgpass"
 chown 999:1000 "$runtime_root/redis-password"
-chown 65532:65532 "$runtime_root/discover.env" "$runtime_root/coordinator.env" "$runtime_root/worker.env" "$runtime_root/query.env" "$runtime_root/cookie-auth.env" "$runtime_root/app-migrate.env"
+chown 65532:65532 "$runtime_root/discover.env" "$runtime_root/coordinator.env" "$runtime_root/worker.env" "$runtime_root/query.env" "$runtime_root/data-api.env" "$runtime_root/cookie-auth.env" "$runtime_root/app-migrate.env"
 "$library_root/rotate-server-tls.py"

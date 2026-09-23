@@ -134,6 +134,9 @@ OpenAPI/JSON Schema 유효성을 검증한 후 승인된 배포 흐름에서 pub
 
 ## 구현 순서와 인수 기준
 
+[운영 전환 계획](public-data-api-rollout.md)은 SecretString 키 확장과 8개 역할 감독,
+Tunnel, R2 활성화의 실제 순서를 정리한다.
+
 1. [방송 session 식별·영구 archive 저장 계약](public-chat-archive-contract.md)을 확정하고 합성 입력으로
    방송 전환·중복·복원·R2 장애를 검증한다.
 2. collector 내부 archive writer와 read-only 조회 계약을 추가한다. 기존

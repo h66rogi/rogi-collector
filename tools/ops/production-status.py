@@ -2,7 +2,7 @@
 from __future__ import annotations
 import json,shutil,subprocess,time
 from pathlib import Path
-REQUIRED=('postgres','redis','discover','coordinator','worker','query','cookie-auth')
+REQUIRED=('postgres','redis','discover','coordinator','worker','query','data-api','cookie-auth')
 def command(argv):
  r=subprocess.run(argv,text=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE);return {'ok':r.returncode==0,'output':(r.stdout or r.stderr).strip()}
 def parse_containers(raw):

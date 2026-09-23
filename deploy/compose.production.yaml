@@ -135,6 +135,14 @@ services:
     networks: [data, egress]
     ports: ["${QUERY_BIND_IP:?private IP required}:7443:7443"]
 
+  data-api:
+    <<: *role
+    image: ${QUERY_IMAGE:?set immutable QUERY_IMAGE digest}
+    entrypoint: [/data-api]
+    volumes: [{type: bind, source: "${SECRETS_ROOT:?set SECRETS_ROOT}/data-api.env", target: /run/secrets/role.env, read_only: true, bind: {create_host_path: false}}]
+    networks: [data, egress]
+    depends_on: {postgres: {condition: service_healthy}, redis: {condition: service_healthy}}
+
   cookie-auth:
     image: ${COOKIE_AUTH_IMAGE:?required}
     init: true
