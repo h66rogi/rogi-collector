@@ -64,10 +64,10 @@ func (s *PgStore) AppendArchiveChat(ctx context.Context, record ArchiveChatRecor
 	}
 	rows, err := tx.Query(ctx, `
 		SELECT started_at, session_seq FROM broadcast_sessions
-			WHERE platform=$1 AND channel_id=$2 AND started_observed_at <= $3 + INTERVAL '30 seconds'
-			  AND started_at <= $3 + INTERVAL '30 seconds'
-		  AND last_seen_at >= $3 - INTERVAL '10 minutes'
-		  AND (ended_observed_at IS NULL OR ended_observed_at >= $3)
+			WHERE platform=$1 AND channel_id=$2 AND started_observed_at <= $3::timestamptz + INTERVAL '30 seconds'
+			  AND started_at <= $3::timestamptz + INTERVAL '30 seconds'
+		  AND last_seen_at >= $3::timestamptz - INTERVAL '10 minutes'
+		  AND (ended_observed_at IS NULL OR ended_observed_at >= $3::timestamptz)
 		ORDER BY started_at DESC LIMIT 2`, string(record.Platform), record.ChannelID, record.ReceivedAt)
 	if err != nil {
 		return false, err
