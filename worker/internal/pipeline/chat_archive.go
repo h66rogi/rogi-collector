@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"sort"
@@ -69,6 +70,10 @@ func NewChatArchiveSpool(dir string, key []byte, journal ChatArchiveJournal, max
 		return nil, errors.New("chat archive spool already owned")
 	}
 	s := &ChatArchiveSpool{dir: dir, key: append([]byte(nil), key...), maxBytes: maxBytes, journal: journal, lock: lock}
+	if err := s.recoverPending(); err != nil {
+		lock.Close()
+		return nil, err
+	}
 	_, size, count, err := s.list()
 	if err != nil {
 		lock.Close()
@@ -104,6 +109,82 @@ func (s *ChatArchiveSpool) syncDir() error {
 	return f.Sync()
 }
 
+func validChatArchiveEnvelope(body []byte) (store.ArchiveChatRecord, error) {
+	if len(body) == 0 || len(body) > 1<<20 {
+		return store.ArchiveChatRecord{}, errors.New("invalid chat archive spool record size")
+	}
+	var envelope chatArchiveEnvelope
+	if err := json.Unmarshal(body, &envelope); err != nil || envelope.Version != 1 {
+		return store.ArchiveChatRecord{}, errors.New("corrupt chat archive spool record")
+	}
+	raw, err := json.Marshal(envelope.Record)
+	if err != nil {
+		return store.ArchiveChatRecord{}, err
+	}
+	sum := sha256.Sum256(raw)
+	if envelope.SHA256 != hex.EncodeToString(sum[:]) {
+		return store.ArchiveChatRecord{}, errors.New("chat archive spool checksum mismatch")
+	}
+	if err := envelope.Record.Validate(); err != nil {
+		return store.ArchiveChatRecord{}, err
+	}
+	return envelope.Record, nil
+}
+
+// A crash can leave the pre-rename file behind. Complete records are replayed;
+// incomplete records are retained in a private quarantine for investigation.
+func (s *ChatArchiveSpool) recoverPending() error {
+	entries, err := os.ReadDir(s.dir)
+	if err != nil {
+		return err
+	}
+	for _, entry := range entries {
+		if !strings.HasSuffix(entry.Name(), ".pending") {
+			continue
+		}
+		if !entry.Type().IsRegular() {
+			return errors.New("unexpected chat archive pending entry")
+		}
+		path := filepath.Join(s.dir, entry.Name())
+		body, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		if _, err := validChatArchiveEnvelope(body); err == nil {
+			if err := os.Rename(path, strings.TrimSuffix(path, ".pending")+".json"); err != nil {
+				return err
+			}
+			slog.Warn("recovered pending chat archive record", "name", entry.Name())
+		} else {
+			quarantine := filepath.Join(s.dir, "quarantine")
+			if err := os.Mkdir(quarantine, 0700); err != nil && !os.IsExist(err) {
+				return err
+			}
+			info, statErr := os.Lstat(quarantine)
+			if statErr != nil || !info.IsDir() || info.Mode().Perm()&0077 != 0 {
+				return errors.New("unsafe chat archive quarantine directory")
+			}
+			if err := os.Rename(path, filepath.Join(quarantine, entry.Name())); err != nil {
+				return err
+			}
+			f, err := os.Open(quarantine)
+			if err != nil {
+				return err
+			}
+			err = f.Sync()
+			_ = f.Close()
+			if err != nil {
+				return err
+			}
+			slog.Error("quarantined incomplete chat archive record", "name", entry.Name())
+		}
+		if err := s.syncDir(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (s *ChatArchiveSpool) list() ([]string, int64, int, error) {
 	entries, err := os.ReadDir(s.dir)
 	if err != nil {
@@ -112,7 +193,7 @@ func (s *ChatArchiveSpool) list() ([]string, int64, int, error) {
 	var names []string
 	var size int64
 	for _, entry := range entries {
-		if entry.Name() == ".writer.lock" {
+		if entry.Name() == ".writer.lock" || entry.Name() == "quarantine" {
 			continue
 		}
 		if !entry.Type().IsRegular() || !strings.HasSuffix(entry.Name(), ".json") {
@@ -223,25 +304,11 @@ func (s *ChatArchiveSpool) Drain(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		if len(body) > 1<<20 {
-			return errors.New("oversized chat archive spool record")
-		}
-		var envelope chatArchiveEnvelope
-		if err := json.Unmarshal(body, &envelope); err != nil || envelope.Version != 1 {
-			return errors.New("corrupt chat archive spool record")
-		}
-		raw, err := json.Marshal(envelope.Record)
+		record, err := validChatArchiveEnvelope(body)
 		if err != nil {
 			return err
 		}
-		sum := sha256.Sum256(raw)
-		if envelope.SHA256 != hex.EncodeToString(sum[:]) {
-			return errors.New("chat archive spool checksum mismatch")
-		}
-		if err := envelope.Record.Validate(); err != nil {
-			return err
-		}
-		if _, err := s.journal.AppendArchiveChat(ctx, envelope.Record); err != nil {
+		if _, err := s.journal.AppendArchiveChat(ctx, record); err != nil {
 			return err
 		}
 		s.mu.Lock()

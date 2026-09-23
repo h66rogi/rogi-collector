@@ -34,7 +34,8 @@ REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM collector_public_ap
 GRANT CONNECT ON DATABASE :"db_name" TO collector_public_api;
 GRANT USAGE ON SCHEMA public TO collector_public_api;
 GRANT SELECT ON collector_channels, collector_owner_grants, collection_opt_outs,
-  broadcast_sessions, archive_sessions, archive_segments, archive_chat_hot
+  broadcast_sessions, archive_sessions, archive_segments, archive_chat_hot,
+  archive_quality_gaps
   TO collector_public_api;
 SQL
 echo 'public API read-only database role provisioned'

@@ -110,6 +110,14 @@ func (s *Server) broadcastChats(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 400, map[string]string{"code": "invalid_cursor"})
 		return
 	}
+	select {
+	case s.historyReads <- struct{}{}:
+		defer func() { <-s.historyReads }()
+	default:
+		w.Header().Set("Retry-After", "1")
+		writeJSON(w, http.StatusTooManyRequests, map[string]string{"code": "rate_limited"})
+		return
+	}
 	ctx, cancel := context.WithTimeout(r.Context(), 15*time.Second)
 	defer cancel()
 	page, err := history.database.ReadChatsPage(ctx, sessionID, cursor.Position, limit, history.objects)

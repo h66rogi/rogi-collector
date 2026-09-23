@@ -74,4 +74,21 @@ func TestArchiveChatSessionAndReplay(t *testing.T) {
 	if unassignedCount != 1 {
 		t.Fatalf("unassigned replay duplicated row: %d", unassignedCount)
 	}
+	secondStarted := record.ReceivedAt.Add(5 * time.Second)
+	_, err = pool.Exec(ctx, `INSERT INTO broadcast_sessions
+		(started_at,platform,channel_id,session_seq,streamer_name,started_observed_at,first_seen_at,last_seen_at,instance_id)
+		VALUES($1,'soop',$2,2,'synthetic',$1,$1,$1,'test')`, secondStarted, channel)
+	if err != nil {
+		t.Fatal(err)
+	}
+	attempted, assignedCount, err := store.ReconcileUnassignedArchiveChats(ctx, 10)
+	if err != nil || attempted != 1 || assignedCount != 1 {
+		t.Fatalf("reconcile: attempted=%d assigned=%d err=%v", attempted, assignedCount, err)
+	}
+	if err := pool.QueryRow(ctx, `SELECT count(*) FROM archive_unassigned_chat WHERE spool_id=$1`, record.SpoolID).Scan(&unassignedCount); err != nil {
+		t.Fatal(err)
+	}
+	if unassignedCount != 0 {
+		t.Fatalf("reconciled record remained unassigned: %d", unassignedCount)
+	}
 }

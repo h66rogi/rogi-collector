@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sort"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -80,14 +79,14 @@ func (p *PgArchive) ReadChatsPage(ctx context.Context, sessionID string, after i
 	if err != nil {
 		return ChatPage{}, err
 	}
-	rows := make([]ChatRow, 0, limit+1)
+	hot := make([]ChatRow, 0, limit+1)
 	for hotRows.Next() {
 		var row ChatRow
 		if err := hotRows.Scan(&row.SessionID, &row.Position, &row.EventID, &row.ReceivedAt, &row.UserIDVersion, &row.PublicUserID, &row.DisplayName, &row.Message); err != nil {
 			hotRows.Close()
 			return ChatPage{}, err
 		}
-		rows = append(rows, row)
+		hot = append(hot, row)
 	}
 	err = hotRows.Err()
 	hotRows.Close()
@@ -97,7 +96,19 @@ func (p *PgArchive) ReadChatsPage(ctx context.Context, sessionID string, after i
 	if err := tx.Commit(ctx); err != nil {
 		return ChatPage{}, err
 	}
+	rows := make([]ChatRow, 0, limit+1)
+	hotIndex := 0
+	appendHotBefore := func(position int64) {
+		for hotIndex < len(hot) && hot[hotIndex].Position < position && len(rows) <= limit {
+			rows = append(rows, hot[hotIndex])
+			hotIndex++
+		}
+	}
 	for _, item := range segments {
+		appendHotBefore(item.first)
+		if len(rows) > limit {
+			break
+		}
 		segment := Segment{SessionID: sessionID, FirstPosition: item.first, LastPosition: item.last, Count: item.count, SHA256: item.checksum}
 		if item.bucket != objects.Bucket() {
 			return ChatPage{}, errors.New("archive bucket mismatch")
@@ -116,11 +127,25 @@ func (p *PgArchive) ReadChatsPage(ctx context.Context, sessionID string, after i
 		}
 		for _, row := range decoded {
 			if row.Position > after {
+				if hotIndex < len(hot) && hot[hotIndex].Position <= row.Position {
+					return ChatPage{}, errors.New("archive hot row overlaps segment")
+				}
 				rows = append(rows, row)
+				if len(rows) > limit {
+					break
+				}
 			}
 		}
+		if len(rows) > limit {
+			break
+		}
 	}
-	sort.Slice(rows, func(i, j int) bool { return rows[i].Position < rows[j].Position })
+	if len(rows) <= limit {
+		for hotIndex < len(hot) && len(rows) <= limit {
+			rows = append(rows, hot[hotIndex])
+			hotIndex++
+		}
+	}
 	for i := 1; i < len(rows); i++ {
 		if rows[i-1].Position == rows[i].Position {
 			return ChatPage{}, errors.New("archive position appears twice")

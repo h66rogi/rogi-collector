@@ -82,3 +82,64 @@ func TestChatArchiveSpoolKeepsSanitizedMessageAcrossRestart(t *testing.T) {
 		t.Fatalf("unexpected replay record: %#v", journal.records)
 	}
 }
+
+func TestChatArchiveSpoolRecoversPendingAfterCrash(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "archive")
+	journal := &fakeArchiveJournal{}
+	key := []byte(strings.Repeat("k", 32))
+	spool, err := NewChatArchiveSpool(dir, key, journal, 1<<20)
+	if err != nil {
+		t.Fatal(err)
+	}
+	message := model.ChatMessage{ID: "pending-event", Type: model.MessageTypeChat, Platform: model.PlatformSoop,
+		ChannelID: "h66rogi", UserID: "private-user", Nickname: "viewer", Message: "hello"}
+	if err := spool.Save(message, time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	if err := spool.Close(); err != nil {
+		t.Fatal(err)
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, entry := range entries {
+		if strings.HasSuffix(entry.Name(), ".json") {
+			if err := os.Rename(filepath.Join(dir, entry.Name()), filepath.Join(dir, strings.TrimSuffix(entry.Name(), ".json")+".pending")); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	spool, err = NewChatArchiveSpool(dir, key, journal, 1<<20)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer spool.Close()
+	if err := spool.Drain(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if len(journal.records) != 1 || journal.records[0].EventID != message.ID {
+		t.Fatalf("pending record was not replayed: %#v", journal.records)
+	}
+}
+
+func TestChatArchiveSpoolQuarantinesIncompletePending(t *testing.T) {
+	dir := filepath.Join(t.TempDir(), "archive")
+	if err := os.MkdirAll(dir, 0700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "incomplete.pending"), []byte("{"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	spool, err := NewChatArchiveSpool(dir, []byte(strings.Repeat("k", 32)), &fakeArchiveJournal{}, 1<<20)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer spool.Close()
+	if _, err := os.Stat(filepath.Join(dir, "quarantine", "incomplete.pending")); err != nil {
+		t.Fatal(err)
+	}
+	if files, _ := spool.Backlog(); files != 0 {
+		t.Fatalf("incomplete record entered replay backlog: %d", files)
+	}
+}

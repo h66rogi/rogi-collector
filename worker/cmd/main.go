@@ -203,6 +203,25 @@ func main() {
 				}
 			}
 		}()
+		go func() {
+			ticker := time.NewTicker(30 * time.Second)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-rootCtx.Done():
+					return
+				case <-ticker.C:
+					ctx, done := context.WithTimeout(rootCtx, 15*time.Second)
+					attempted, assigned, err := pgStore.ReconcileUnassignedArchiveChats(ctx, 100)
+					done()
+					if err != nil {
+						slog.Warn("chat archive reconciliation failed", "error", err)
+					} else if attempted > 0 {
+						slog.Info("chat archive reconciliation", "attempted", attempted, "assigned", assigned)
+					}
+				}
+			}
+		}()
 	}
 
 	var chatWriters []*store.BatchWriter[store.ChatMessageRow]

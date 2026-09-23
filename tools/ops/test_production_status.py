@@ -1,4 +1,5 @@
 import importlib.util,json,unittest
+from collections import namedtuple
 from pathlib import Path
 spec=importlib.util.spec_from_file_location('status',Path(__file__).with_name('production-status.py'));m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m)
 class Test(unittest.TestCase):
@@ -14,4 +15,8 @@ class Test(unittest.TestCase):
   manifest,units,compose=self.fixture();rows=json.loads(compose['output']);rows[0]['Padding']='x'*9000;compose['output']=json.dumps(rows);self.assertTrue(m.evaluate(manifest,dict(manifest),units,compose)['ok'])
  def test_empty_dead_missing_unhealthy_or_stale_receipt_is_never_green(self):
   manifest,units,compose=self.fixture();self.assertFalse(m.evaluate(manifest,dict(manifest),units,{'ok':True,'output':'[]'})['ok']);rows=json.loads(compose['output']);rows[0]['State']='exited';self.assertFalse(m.evaluate(manifest,dict(manifest),units,{'ok':True,'output':json.dumps(rows)})['ok']);rows[0]['State']='running';rows[0]['Health']='unhealthy';self.assertFalse(m.evaluate(manifest,dict(manifest),units,{'ok':True,'output':json.dumps(rows)})['ok']);stale={**manifest,'sourceSha':'b'*40};self.assertFalse(m.evaluate(manifest,stale,units,compose)['ok']);units['query']={'ok':False};self.assertFalse(m.evaluate(manifest,dict(manifest),units,compose)['ok'])
+ def test_data_disk_reserve(self):
+  Usage=namedtuple('Usage','total used free')
+  self.assertTrue(m.data_disk_healthy(Usage(40*1024**3,35*1024**3,5*1024**3)))
+  self.assertFalse(m.data_disk_healthy(Usage(40*1024**3,37*1024**3,3*1024**3)))
 if __name__=='__main__':unittest.main()
