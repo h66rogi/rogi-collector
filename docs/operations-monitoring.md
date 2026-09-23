@@ -14,6 +14,7 @@ A future backup metric emitter should publish `LastSuccessfulBackupAgeSeconds` u
 
 - Run `tools/ops/status.sh` from an installed release for the Compose service overview. Its capability text describes the configured product; it does not perform an authenticated RPC.
 - Run `/usr/local/lib/rogi-collector/production-status.py` on the host to compare the current manifest and receipt, systemd units, and all seven containers. It exits nonzero when the deployment assessment fails. Its local backup age is informational and does not verify S3 or restore success.
+- The same status command exits nonzero when the data volume has less than 4 GiB or 10% free, whichever reserve is larger. Track `archive_event_ids` growth and expand the volume before this threshold is reached; this check is not a remote notification.
 - Use `GetCollectionStatus` from the consumer host with its mTLS identity to inspect the configured channel, connection/storage state, observation times, and journal cursors. `waiting` is expected when the broadcast is offline.
 - Cookie `/healthz` checks process liveness; authenticated `/v1/status` checks login/refresh readiness. Neither proves entry into the broadcast. Keep the API internal and never print cookies or credentials.
 - Check update, backup, and TLS timer/service results separately. Server certificate rotation is automatic; consumer certificate issuance and renewal remain operator procedures.

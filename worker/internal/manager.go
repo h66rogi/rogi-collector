@@ -108,6 +108,7 @@ type Manager struct {
 	collectionStore   *store.PgStore
 	donationSpool     *pipeline.DonationSpool
 	chatArchive       *pipeline.ChatArchiveSpool
+	archiveGapQueue   chan archiveGap
 	collectionChannel *string
 	connecting        map[string]bool
 	workerID          string
@@ -144,6 +145,12 @@ type Manager struct {
 	connectBackoff  map[string]backoffEntry
 	backoffMu       sync.Mutex
 	backoffDuration time.Duration
+}
+
+type archiveGap struct {
+	platform model.Platform
+	channel  string
+	at       time.Time
 }
 
 // NewManager creates a new connection Manager. The provided ctx should be a
@@ -201,8 +208,38 @@ func NewManager(ctx context.Context, workerID string, maxConn int, maxMsgPerSec 
 	}
 }
 
-func (m *Manager) SetCollectionChannel(channel string)             { m.collectionChannel = &channel }
-func (m *Manager) SetChatArchive(spool *pipeline.ChatArchiveSpool) { m.chatArchive = spool }
+func (m *Manager) SetCollectionChannel(channel string) { m.collectionChannel = &channel }
+func (m *Manager) SetChatArchive(spool *pipeline.ChatArchiveSpool) {
+	m.chatArchive = spool
+	if spool != nil && m.collectionStore != nil && m.archiveGapQueue == nil {
+		m.archiveGapQueue = make(chan archiveGap, 1)
+		go m.persistArchiveGaps()
+	}
+}
+
+func (m *Manager) persistArchiveGaps() {
+	for {
+		select {
+		case <-m.connCtx.Done():
+			return
+		case gap := <-m.archiveGapQueue:
+			for {
+				ctx, done := context.WithTimeout(m.connCtx, 3*time.Second)
+				err := m.collectionStore.RecordArchiveSpoolFailure(ctx, gap.platform, gap.channel, gap.at)
+				done()
+				if err == nil {
+					break
+				}
+				slog.Error("chat archive quality gap could not be recorded", "channel", gap.channel, "error", err)
+				select {
+				case <-m.connCtx.Done():
+					return
+				case <-time.After(5 * time.Second):
+				}
+			}
+		}
+	}
+}
 func (m *Manager) permits(channel model.LiveChannel) bool {
 	return m.collectionChannel == nil || (*m.collectionChannel != "" && channel.Platform == model.PlatformSoop && channel.ChannelID == *m.collectionChannel)
 }
@@ -786,10 +823,21 @@ func (m *Manager) forwardMessages(ctx context.Context, key string, ac *activeCon
 				}
 			}
 			if m.chatArchive != nil && msg.Type == model.MessageTypeChat {
-				if err := m.chatArchive.Save(msg, time.Now()); err != nil {
+				receivedAt := time.Now()
+				saveErr := m.chatArchive.Save(msg, receivedAt)
+				if m.metrics != nil {
+					m.metrics.ChatArchiveSaveDurationSeconds.Observe(time.Since(receivedAt).Seconds())
+				}
+				if err := saveErr; err != nil {
 					slog.Error("chat archive acceptance failed", "key", key, "error", err)
 					if m.metrics != nil {
 						m.metrics.ChatArchiveSaveErrorsTotal.Inc()
+					}
+					if m.archiveGapQueue != nil {
+						select {
+						case m.archiveGapQueue <- archiveGap{platform: msg.Platform, channel: msg.ChannelID, at: receivedAt}:
+						default:
+						}
 					}
 				} else if m.metrics != nil {
 					m.metrics.ChatArchiveAcceptedTotal.Inc()

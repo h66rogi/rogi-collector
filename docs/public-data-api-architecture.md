@@ -16,7 +16,7 @@ archive-exporter는 오래된 PostgreSQL 채팅을 gzip NDJSON segment로 만들
 
 Redis 최근 채팅은 최대 24시간·10,000개 stream 항목이다. WebSocket cursor는 이 범위에만 유효하며, generation 변경 또는 범위 만료 시 `chat.gap`을 보낸다. 과거 채팅의 cursor와 호환되지 않는다.
 
-보관 목록에는 채팅이 한 건 이상 수락된 방송만 포함된다. 보관 기능 활성화 이전의 채팅은 소급 생성할 수 없다. `sourceGapDetected`는 원천 연결 공백의 감지 여부이고, `complete=false`는 방송 전체 채팅의 무누락 수집을 증명하지 않는다는 뜻이다.
+보관 목록에는 채팅이 한 건 이상 수락된 방송만 포함된다. 보관 기능 활성화 이전의 채팅은 소급 생성할 수 없다. 세션 생성 전에 들어온 채팅은 비공개 대기열에 보존하고 재배정을 시도한다. 보관 스풀 저장 실패는 품질 공백으로 기록하며 `knownArchiveGap`에 반영한다. `sourceGapDetected`는 방송 탐색 관측 공백을 뜻하고, `complete=false`는 방송 전체 채팅의 무누락 수집을 증명하지 않는다는 뜻이다.
 
 ## 운영 경계
 
@@ -24,6 +24,6 @@ Redis 최근 채팅은 최대 24시간·10,000개 stream 항목이다. WebSocket
 - 후원 spool과 채팅 spool은 encrypted data volume의 서로 겹치지 않는 형제 디렉터리다. worker는 경로 중첩을 시작 시 거부한다.
 - `data-api`는 별도 읽기 전용 PostgreSQL 역할과 R2 객체 읽기 자격 증명을 사용한다. `archive-exporter`만 R2 쓰기 자격 증명을 사용한다.
 - 런타임 비밀은 AWS Secrets Manager에서 host tmpfs로 적재된다. 비밀 값이나 R2 객체 본문은 Git, 릴리스 번들, 공개 로그에 포함하지 않는다.
-- 공개 요청 제한은 origin 전체 초당 20회·순간 60회, WebSocket 동시 연결은 기본 32개다. 접근 로그는 host의 로컬 로그 순환 정책을 따른다.
+- 공개 요청 제한은 origin 전체 초당 20회·순간 60회, WebSocket 동시 연결은 기본 32개·IP당 2개다. readiness 조회는 짧게 캐시한다. 접근 로그는 host의 로컬 로그 순환 정책을 따른다.
 
 배포 경로와 시스템 서비스는 [운영 배포](deployment-production.md), 변경 검증은 [CI/CD](deployment-ci.md)를 참고한다.

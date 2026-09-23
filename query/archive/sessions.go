@@ -15,6 +15,7 @@ type Session struct {
 	Title              *string    `json:"title"`
 	RecordingStartedAt *time.Time `json:"recordingStartedAt"`
 	SourceGapDetected  bool       `json:"sourceGapDetected"`
+	KnownArchiveGap    bool       `json:"knownArchiveGap"`
 	Complete           bool       `json:"complete"`
 }
 
@@ -37,7 +38,10 @@ func (p *PgArchive) ListSessions(ctx context.Context, beforeAt *time.Time, befor
 	if beforeAt != nil {
 		cursorID = beforeID
 	}
-	rows, err := p.pool.Query(ctx, `SELECT a.session_id::text,a.source_started_at,b.ended_at,b.title,a.recording_started_at,b.gap_detected
+	rows, err := p.pool.Query(ctx, `SELECT a.session_id::text,a.source_started_at,b.ended_at,b.title,a.recording_started_at,b.gap_detected,
+		EXISTS(SELECT 1 FROM archive_quality_gaps g WHERE g.platform=a.platform AND g.channel_id=a.channel_id
+			AND COALESCE(g.ended_at,g.started_at)>=b.started_at
+			AND (b.ended_observed_at IS NULL OR g.started_at<=b.ended_observed_at))
 		FROM archive_sessions a JOIN broadcast_sessions b
 		ON b.started_at=a.source_started_at AND b.platform=a.platform AND b.channel_id=a.channel_id AND b.session_seq=a.source_session_seq
 		WHERE a.platform='soop' AND a.channel_id=$1
@@ -50,7 +54,7 @@ func (p *PgArchive) ListSessions(ctx context.Context, beforeAt *time.Time, befor
 	var sessions []Session
 	for rows.Next() {
 		var session Session
-		if err := rows.Scan(&session.SessionID, &session.StartedAt, &session.EndedAt, &session.Title, &session.RecordingStartedAt, &session.SourceGapDetected); err != nil {
+		if err := rows.Scan(&session.SessionID, &session.StartedAt, &session.EndedAt, &session.Title, &session.RecordingStartedAt, &session.SourceGapDetected, &session.KnownArchiveGap); err != nil {
 			return nil, err
 		}
 		// End-to-end completeness remains false until spool failure gaps and

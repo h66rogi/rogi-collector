@@ -13,6 +13,17 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+type countingGetter struct {
+	inner VerifiedGetter
+	reads int
+}
+
+func (g *countingGetter) Bucket() string { return g.inner.Bucket() }
+func (g *countingGetter) GetVerified(ctx context.Context, key, checksum string) ([]byte, error) {
+	g.reads++
+	return g.inner.GetVerified(ctx, key, checksum)
+}
+
 func TestArchiveExportPreservesDedupIndex(t *testing.T) {
 	dsn := os.Getenv("COLLECTOR_TEST_DATABASE_URL")
 	if dsn == "" {
@@ -49,6 +60,13 @@ func TestArchiveExportPreservesDedupIndex(t *testing.T) {
 	sessions, err := exporter.ListSessions(ctx, nil, "", 10)
 	if err != nil || len(sessions) != 1 || sessions[0].Complete {
 		t.Fatalf("archive sessions: %#v %v", sessions, err)
+	}
+	if err := writer.RecordArchiveSpoolFailure(ctx, model.PlatformSoop, channel, time.Now().UTC()); err != nil {
+		t.Fatal(err)
+	}
+	sessions, err = exporter.ListSessions(ctx, nil, "", 10)
+	if err != nil || len(sessions) != 1 || !sessions[0].KnownArchiveGap {
+		t.Fatalf("archive quality gap was not visible: %#v %v", sessions, err)
 	}
 	rows, err := exporter.NextBatch(ctx, time.Now().Add(time.Minute), 1000)
 	if err != nil || len(rows) != 1 {
@@ -119,5 +137,73 @@ func TestArchiveExportPreservesDedupIndex(t *testing.T) {
 	}
 	if moved, err := service.RunOnce(ctx); err != nil || moved {
 		t.Fatalf("idle export run: moved=%v err=%v", moved, err)
+	}
+}
+
+func TestArchiveSmallPageReadsOnlyNeededSegment(t *testing.T) {
+	dsn := os.Getenv("COLLECTOR_TEST_DATABASE_URL")
+	if dsn == "" {
+		t.Skip("disposable PostgreSQL test database required")
+	}
+	ctx := context.Background()
+	pool, err := pgxpool.New(ctx, dsn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer pool.Close()
+	channel := "archive-page-" + uuid.NewString()
+	started := time.Now().UTC().Add(-time.Hour)
+	if _, err := pool.Exec(ctx, `INSERT INTO broadcast_sessions
+		(started_at,platform,channel_id,session_seq,streamer_name,started_observed_at,first_seen_at,last_seen_at,instance_id)
+		VALUES($1,'soop',$2,1,'synthetic',$1,$1,clock_timestamp(),'test')`, started, channel); err != nil {
+		t.Fatal(err)
+	}
+	writer := store.NewPgStore(pool)
+	writer.SetCollectionChannel(channel)
+	for i := range 3 {
+		record := store.ArchiveChatRecord{SpoolID: uuid.NewString(), EventID: uuid.NewString(), Platform: model.PlatformSoop,
+			ChannelID: channel, ReceivedAt: time.Now().UTC(), UserIDVersion: 1,
+			PublicUserID: strings.Repeat("a", 64), DisplayName: "viewer", Message: "chat"}
+		if assigned, err := writer.AppendArchiveChat(ctx, record); err != nil || !assigned {
+			t.Fatalf("append %d: assigned=%v err=%v", i, assigned, err)
+		}
+	}
+	exporter, err := NewPgArchive(pool, channel)
+	if err != nil {
+		t.Fatal(err)
+	}
+	objects, err := NewS3ObjectStore(&memoryS3{}, "disposable-bucket")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i := range 2 {
+		batchLimit := 1
+		if i == 0 {
+			batchLimit = 2
+		}
+		rows, err := exporter.NextBatch(ctx, time.Now().Add(time.Minute), batchLimit)
+		if err != nil || len(rows) != batchLimit {
+			t.Fatalf("batch %d: rows=%d err=%v", i, len(rows), err)
+		}
+		segment, err := Build(rows)
+		if err != nil {
+			t.Fatal(err)
+		}
+		verified, err := objects.PutVerified(ctx, segment)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := exporter.CommitSegment(ctx, verified); err != nil {
+			t.Fatal(err)
+		}
+	}
+	sessions, err := exporter.ListSessions(ctx, nil, "", 2)
+	if err != nil || len(sessions) != 1 {
+		t.Fatalf("session: %v %v", sessions, err)
+	}
+	getter := &countingGetter{inner: objects}
+	page, err := exporter.ReadChatsPage(ctx, sessions[0].SessionID, 0, 1, getter)
+	if err != nil || len(page.Rows) != 1 || !page.HasMore || getter.reads != 1 {
+		t.Fatalf("page=%#v reads=%d err=%v", page, getter.reads, err)
 	}
 }

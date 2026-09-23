@@ -92,7 +92,7 @@ func run() error {
 		err = objects.Probe(probeCtx)
 		probeCancel()
 		if err != nil {
-			return err
+			logger.Warn("archive object store unavailable at startup", "error", err)
 		}
 		if err := api.EnableHistory(archiveDatabase, objects, []byte(os.Getenv("HISTORY_CURSOR_HMAC_KEY"))); err != nil {
 			return err

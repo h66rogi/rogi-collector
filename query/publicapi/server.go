@@ -34,27 +34,55 @@ type ChatReader interface {
 type BroadcastChecker func(context.Context, string) (*pb.BroadcastStatus, error)
 
 type Server struct {
-	channel     string
-	collection  CollectionReader
-	chat        ChatReader
-	check       BroadcastChecker
-	logger      *slog.Logger
-	mu          sync.Mutex
-	status      *pb.BroadcastStatus
-	statusUntil time.Time
-	statusWait  chan struct{}
-	connections chan struct{}
-	history     *historyAccess
-	rateMu      sync.Mutex
-	rateTokens  float64
-	rateAt      time.Time
+	channel         string
+	collection      CollectionReader
+	chat            ChatReader
+	check           BroadcastChecker
+	logger          *slog.Logger
+	mu              sync.Mutex
+	status          *pb.BroadcastStatus
+	statusUntil     time.Time
+	statusWait      chan struct{}
+	connections     chan struct{}
+	connectionMu    sync.Mutex
+	connectionsByIP map[string]int
+	history         *historyAccess
+	historyReads    chan struct{}
+	rateMu          sync.Mutex
+	rateTokens      float64
+	rateAt          time.Time
+	readyMu         sync.Mutex
+	readyUntil      time.Time
+	readyStatus     int
+	readyWait       chan struct{}
 }
 
 func New(channel string, collection CollectionReader, chat ChatReader, check BroadcastChecker, logger *slog.Logger, maxConnections int) (*Server, error) {
 	if channel == "" || collection == nil || chat == nil || check == nil || logger == nil || maxConnections < 1 {
 		return nil, errors.New("public API dependencies and positive connection limit required")
 	}
-	return &Server{channel: channel, collection: collection, chat: chat, check: check, logger: logger, connections: make(chan struct{}, maxConnections), rateTokens: 60, rateAt: time.Now()}, nil
+	return &Server{channel: channel, collection: collection, chat: chat, check: check, logger: logger,
+		connections: make(chan struct{}, maxConnections), connectionsByIP: make(map[string]int),
+		historyReads: make(chan struct{}, 1),
+		rateTokens:   60, rateAt: time.Now()}, nil
+}
+
+func clientIP(r *http.Request) string {
+	if ip := net.ParseIP(r.Header.Get("CF-Connecting-IP")); ip != nil {
+		return ip.String()
+	}
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err == nil {
+		if ip := net.ParseIP(host); ip != nil {
+			return ip.String()
+		}
+	}
+	return "unknown"
+}
+
+func internalReadiness(r *http.Request) bool {
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	return err == nil && net.ParseIP(host) != nil && net.ParseIP(host).IsLoopback()
 }
 
 // A single bounded token bucket protects the small public origin from
@@ -90,7 +118,8 @@ func (s *Server) Handler() http.Handler {
 		started := time.Now()
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		observed := &observedWriter{ResponseWriter: w, status: http.StatusOK}
-		if r.URL.Path != "/healthz" && r.URL.Path != "/readyz" && r.URL.Path != "/ready" && !s.allowRequest() {
+		healthPath := r.URL.Path == "/healthz" || r.URL.Path == "/readyz" || r.URL.Path == "/ready"
+		if !(healthPath && internalReadiness(r)) && !s.allowRequest() {
 			observed.Header().Set("Retry-After", "1")
 			writeJSON(observed, http.StatusTooManyRequests, map[string]string{"code": "rate_limited"})
 		} else {
@@ -158,17 +187,51 @@ func archiveUnavailable(w http.ResponseWriter, _ *http.Request) {
 }
 
 func (s *Server) ready(w http.ResponseWriter, r *http.Request) {
-	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
-	defer cancel()
-	if _, err := s.collection.CollectionState(ctx, s.channel); err != nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"status": "not_ready"})
+	for {
+		s.readyMu.Lock()
+		if time.Now().Before(s.readyUntil) {
+			status := s.readyStatus
+			s.readyMu.Unlock()
+			s.writeReady(w, status)
+			return
+		}
+		if wait := s.readyWait; wait != nil {
+			s.readyMu.Unlock()
+			select {
+			case <-wait:
+				continue
+			case <-r.Context().Done():
+				return
+			}
+		}
+		wait := make(chan struct{})
+		s.readyWait = wait
+		s.readyMu.Unlock()
+		ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+		status := http.StatusOK
+		if _, err := s.collection.CollectionState(ctx, s.channel); err != nil {
+			status = http.StatusServiceUnavailable
+		} else if _, err := s.chat.ReadProductChat(ctx, s.channel, "0-0"); err != nil {
+			status = http.StatusServiceUnavailable
+		}
+		cancel()
+		s.readyMu.Lock()
+		s.readyStatus = status
+		s.readyUntil = time.Now().Add(2 * time.Second)
+		s.readyWait = nil
+		close(wait)
+		s.readyMu.Unlock()
+		s.writeReady(w, status)
 		return
 	}
-	if _, err := s.chat.ReadProductChat(ctx, s.channel, "0-0"); err != nil {
-		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"status": "not_ready"})
-		return
+}
+
+func (s *Server) writeReady(w http.ResponseWriter, status int) {
+	if status == http.StatusOK {
+		writeJSON(w, status, map[string]string{"status": "ready"})
+	} else {
+		writeJSON(w, status, map[string]string{"status": "not_ready"})
 	}
-	writeJSON(w, http.StatusOK, map[string]string{"status": "ready"})
 }
 
 // checkBroadcast shares a single 10-second cache and in-flight call. The
@@ -369,6 +432,23 @@ func (s *Server) stream(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 503, map[string]string{"code": "connection_limit"})
 		return
 	}
+	ip := clientIP(r)
+	s.connectionMu.Lock()
+	if s.connectionsByIP[ip] >= 2 {
+		s.connectionMu.Unlock()
+		writeJSON(w, 503, map[string]string{"code": "connection_limit"})
+		return
+	}
+	s.connectionsByIP[ip]++
+	s.connectionMu.Unlock()
+	defer func() {
+		s.connectionMu.Lock()
+		s.connectionsByIP[ip]--
+		if s.connectionsByIP[ip] == 0 {
+			delete(s.connectionsByIP, ip)
+		}
+		s.connectionMu.Unlock()
+	}()
 	// This endpoint is anonymous and read-only. Browser clients on other origins
 	// need to connect; authentication will require a separate origin policy.
 	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{InsecureSkipVerify: true})
@@ -492,7 +572,7 @@ func (s *Server) stream(w http.ResponseWriter, r *http.Request) {
 		select {
 		case <-ctx.Done():
 			return
-		case <-time.After(250 * time.Millisecond):
+		case <-time.After(time.Second):
 		}
 	}
 }

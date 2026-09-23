@@ -24,13 +24,14 @@ jobs:
       - run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f deploy/migrations/001_foundation.sql
       - run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c 'CREATE ROLE collector_query; CREATE ROLE collector_worker;'
       - run: go run ./shared/cmd/migrate && go run ./shared/cmd/migrate
-      - run: test "$(psql "$DATABASE_URL" -At -v ON_ERROR_STOP=1 -c "SELECT name FROM collector_app_migrations WHERE name='007_public_chat_archive.sql' AND EXISTS (SELECT 1 FROM pg_class WHERE relname='archive_segments')")" = 007_public_chat_archive.sql
+      - run: test "$(psql "$DATABASE_URL" -At -v ON_ERROR_STOP=1 -c "SELECT name FROM collector_app_migrations WHERE name='009_archive_reconciliation.sql' AND EXISTS (SELECT 1 FROM pg_class WHERE relname='archive_unassigned_retry_idx')")" = 009_archive_reconciliation.sql
       - run: >-
           test "$(psql "$DATABASE_URL" -At -v ON_ERROR_STOP=1 -c
           "SELECT has_table_privilege('collector_query','archive_segments','SELECT')
           AND NOT has_table_privilege('collector_query','archive_segments','INSERT')
           AND has_table_privilege('collector_worker','archive_segments','INSERT')
-          AND has_sequence_privilege('collector_worker','archive_segments_segment_id_seq','USAGE')")" = t
+          AND has_sequence_privilege('collector_worker','archive_segments_segment_id_seq','USAGE')
+          AND has_table_privilege('collector_worker','archive_unassigned_chat','DELETE')")" = t
       - name: Verify dedicated public database role
         run: |
           admin_file=$(mktemp)
@@ -43,11 +44,11 @@ jobs:
             POSTGRES_ADMIN_PASSWORD_FILE="$admin_file" PUBLIC_API_PASSWORD_FILE="$public_file" \
             ./deploy/provision-public-api-role.sh
           test "$(PGPASSWORD=local-public-password-32-bytes-minimum psql -h localhost -U collector_public_api -d collector_test -At -v ON_ERROR_STOP=1 -c \
-            "SELECT has_table_privilege(current_user,'archive_chat_hot','SELECT') AND NOT has_table_privilege(current_user,'archive_chat_hot','INSERT') AND NOT has_table_privilege(current_user,'collector_channels','INSERT')")" = t
+            "SELECT has_table_privilege(current_user,'archive_chat_hot','SELECT') AND has_table_privilege(current_user,'archive_quality_gaps','SELECT') AND NOT has_table_privilege(current_user,'archive_chat_hot','INSERT') AND NOT has_table_privilege(current_user,'collector_channels','INSERT')")" = t
           PUBLIC_API_TEST_DATABASE_URL='postgres://collector_public_api:local-public-password-32-bytes-minimum@localhost:5432/collector_test?sslmode=disable' \
             COLLECTOR_TEST_DATABASE_URL="$DATABASE_URL" go test ./query/cmd/data-api -run '^TestPublicDatabaseRoleRejectsWritableLogin$' -count=1
       - run: COLLECTOR_TEST_DATABASE_URL="$DATABASE_URL" go test ./shared/store -run '^TestArchiveChatSessionAndReplay$' -count=1
-      - run: COLLECTOR_TEST_DATABASE_URL="$DATABASE_URL" go test ./query/archive -run '^TestArchiveExportPreservesDedupIndex$' -count=1
+      - run: COLLECTOR_TEST_DATABASE_URL="$DATABASE_URL" go test ./query/archive -run '^TestArchive(ExportPreservesDedupIndex|SmallPageReadsOnlyNeededSegment)$' -count=1
   verify:
     runs-on: ubuntu-24.04
     steps:

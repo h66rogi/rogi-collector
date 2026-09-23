@@ -26,6 +26,16 @@ func (f fakeCollection) CollectionState(context.Context, string) (store.Collecti
 }
 func (f fakeCollection) CollectionEnabled(context.Context, string) (bool, error) { return true, nil }
 
+type countingCollection struct{ calls atomic.Int32 }
+
+func (f *countingCollection) CollectionState(context.Context, string) (store.CollectionState, error) {
+	f.calls.Add(1)
+	return store.CollectionState{}, nil
+}
+func (f *countingCollection) CollectionEnabled(context.Context, string) (bool, error) {
+	return true, nil
+}
+
 type fakeChat struct{ batch store.ChatBatch }
 
 func (f fakeChat) ReadProductChat(context.Context, string, string) (store.ChatBatch, error) {
@@ -124,9 +134,77 @@ func TestPublicRequestBudgetLimitsPollingButKeepsHealthAvailable(t *testing.T) {
 		t.Fatalf("expected bounded polling, got %d", limited.Code)
 	}
 	health := httptest.NewRecorder()
-	s.Handler().ServeHTTP(health, httptest.NewRequest(http.MethodGet, "/healthz", nil))
+	healthRequest := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	healthRequest.RemoteAddr = "127.0.0.1:12345"
+	s.Handler().ServeHTTP(health, healthRequest)
 	if health.Code != http.StatusOK {
 		t.Fatalf("health check was rate limited: %d", health.Code)
+	}
+	externalHealth := httptest.NewRecorder()
+	s.Handler().ServeHTTP(externalHealth, httptest.NewRequest(http.MethodGet, "/ready", nil))
+	if externalHealth.Code != http.StatusTooManyRequests {
+		t.Fatalf("public readiness bypassed request budget: %d", externalHealth.Code)
+	}
+}
+
+func TestReadinessUsesShortSharedCache(t *testing.T) {
+	collection := &countingCollection{}
+	s, err := New("h66rogi", collection, fakeChat{}, func(context.Context, string) (*pb.BroadcastStatus, error) { return nil, nil },
+		slog.New(slog.NewTextHandler(io.Discard, nil)), 2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for range 2 {
+		response := httptest.NewRecorder()
+		s.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/ready", nil))
+		if response.Code != http.StatusOK {
+			t.Fatalf("readiness: %d", response.Code)
+		}
+	}
+	if collection.calls.Load() != 1 {
+		t.Fatalf("readiness queried database %d times", collection.calls.Load())
+	}
+}
+
+func TestArchiveReadsHaveIndependentConcurrencyLimit(t *testing.T) {
+	s := testServer(t, store.ChatBatch{}, func(context.Context, string) (*pb.BroadcastStatus, error) { return nil, nil })
+	s.history = &historyAccess{}
+	s.historyReads <- struct{}{}
+	response := httptest.NewRecorder()
+	s.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet,
+		"/v1/broadcasts/606c9e5a-05ab-4b25-a5c2-ef03870a73a4/chats", nil))
+	if response.Code != http.StatusTooManyRequests || response.Header().Get("Retry-After") != "1" {
+		t.Fatalf("archive request was not bounded: %d %s", response.Code, response.Body.String())
+	}
+}
+
+func TestWebSocketLimitsConnectionsPerClientIP(t *testing.T) {
+	s, err := New("h66rogi", fakeCollection{}, fakeChat{},
+		func(context.Context, string) (*pb.BroadcastStatus, error) {
+			return &pb.BroadcastStatus{State: "offline", CheckedAt: timestamppb.Now()}, nil
+		}, slog.New(slog.NewTextHandler(io.Discard, nil)), 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	httpServer := httptest.NewServer(s.Handler())
+	defer httpServer.Close()
+	url := "ws" + strings.TrimPrefix(httpServer.URL, "http") + "/v1/chat/stream"
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	for range 2 {
+		conn, _, err := websocket.Dial(ctx, url, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer conn.CloseNow()
+		var hello map[string]any
+		if err := wsjson.Read(ctx, conn, &hello); err != nil || hello["type"] != "hello" {
+			t.Fatalf("websocket hello: %#v %v", hello, err)
+		}
+	}
+	_, response, err := websocket.Dial(ctx, url, nil)
+	if err == nil || response == nil || response.StatusCode != http.StatusServiceUnavailable {
+		t.Fatalf("third connection was not limited: response=%v err=%v", response, err)
 	}
 }
 

@@ -1117,10 +1117,11 @@
         "Correct command dispatch blocking/order and readiness/stop-deadline comments; behavior unchanged",
         "Add bounded operator chat tests using the existing SOOP connector; close disconnected sockets reliably without production ingestion.",
         "Wire an opt-in fsynced public chat archive spool and backlog replay using the existing worker lifecycle.",
-        "Reject overlapping donation and chat archive spool directories before opening either spool."
+        "Reject overlapping donation and chat archive spool directories before opening either spool.",
+        "Retry unassigned public chat records after a broadcast session becomes available."
       ],
       "importSha256": "52b2b984c02465d8914fc0d7ec4cb31f6f9b6adf68067b81f803fc9f4f8cee1e",
-      "currentSha256": "9a4d21dfc453d42909a4bbac43b2b37618ae4880f55d6ef1b489bcddea0a4571"
+      "currentSha256": "a75a38c18bab1af1cdd74783735d75bc1e2e8147978036c26e13fa6333b59a86"
     },
     {
       "sourcePath": "worker/cmd/main_test.go",
@@ -1304,10 +1305,11 @@
       "changes": [
         "Go module/import address changed to target repository",
         "대상 밖 접속 차단, 동시 중복 dial 예약 방지, 기존 lifecycle에 소유권 수락/해제 연결",
-        "Accept ordinary chat into the durable archive spool before existing Redis publication; retain the original manager and connector flow."
+        "Accept ordinary chat into the durable archive spool before existing Redis publication; retain the original manager and connector flow.",
+        "Queue detected archive acceptance failures for database quality-gap recording without blocking live publication."
       ],
       "importSha256": "d7221c680d5f9b7df62bdc5b47a83150b5d0fa034235283306ce95a49248a070",
-      "currentSha256": "c40b0ddf71770097816fc2862ae957e81d60e211ec3bc88a4aaed2cf3aef4f0b"
+      "currentSha256": "e7352afec882329dc5adb35b0c8ca75707ccad56f446cf41029db89579a13690"
     },
     {
       "sourcePath": "worker/internal/manager_test.go",
@@ -1324,10 +1326,11 @@
       "targetPath": "worker/internal/metrics.go",
       "sourceSha256": "1b57d9b345bbc937b31aa6d8dbee06bc6b34054b38540049d49448f2111f05ff",
       "changes": [
-        "Expose archive acceptance, replay failure and backlog metrics for the existing worker registry."
+        "Expose archive acceptance, replay failure and backlog metrics for the existing worker registry.",
+        "Measure archive spool acceptance duration before live chat publication."
       ],
       "importSha256": "1b57d9b345bbc937b31aa6d8dbee06bc6b34054b38540049d49448f2111f05ff",
-      "currentSha256": "fff73e34eedf599967870329181f62126fd278a322e3f76d875e3b058ad98b8f"
+      "currentSha256": "4bc8064d7e96824c291067d3f78f007d3f8414b4b16aae9b00fc77e367f74161"
     },
     {
       "sourcePath": "worker/internal/metrics_test.go",

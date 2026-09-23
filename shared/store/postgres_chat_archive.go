@@ -64,9 +64,10 @@ func (s *PgStore) AppendArchiveChat(ctx context.Context, record ArchiveChatRecor
 	}
 	rows, err := tx.Query(ctx, `
 		SELECT started_at, session_seq FROM broadcast_sessions
-		WHERE platform=$1 AND channel_id=$2 AND started_observed_at <= $3
-		  AND last_seen_at >= $3 - INTERVAL '10 minutes'
-		  AND (ended_observed_at IS NULL OR ended_observed_at >= $3)
+			WHERE platform=$1 AND channel_id=$2 AND started_observed_at <= $3::timestamptz + INTERVAL '30 seconds'
+			  AND started_at <= $3::timestamptz + INTERVAL '30 seconds'
+		  AND last_seen_at >= $3::timestamptz - INTERVAL '10 minutes'
+		  AND (ended_observed_at IS NULL OR ended_observed_at >= $3::timestamptz)
 		ORDER BY started_at DESC LIMIT 2`, string(record.Platform), record.ChannelID, record.ReceivedAt)
 	if err != nil {
 		return false, err
@@ -121,8 +122,11 @@ func (s *PgStore) AppendArchiveChat(ctx context.Context, record ArchiveChatRecor
 	}
 	var position int64
 	err = tx.QueryRow(ctx, `INSERT INTO archive_event_ids(session_id,event_id)
-		VALUES($1,$2) ON CONFLICT (session_id,event_id) DO NOTHING RETURNING position`, sessionID, record.EventID).Scan(&position)
+			VALUES($1,$2) ON CONFLICT (session_id,event_id) DO NOTHING RETURNING position`, sessionID, record.EventID).Scan(&position)
 	if errors.Is(err, pgx.ErrNoRows) {
+		if _, err := tx.Exec(ctx, `DELETE FROM archive_unassigned_chat WHERE spool_id=$1`, record.SpoolID); err != nil {
+			return false, err
+		}
 		return true, tx.Commit(ctx)
 	}
 	if err != nil {
@@ -140,5 +144,70 @@ func (s *PgStore) AppendArchiveChat(ctx context.Context, record ArchiveChatRecor
 	if err != nil {
 		return false, err
 	}
+	if _, err := tx.Exec(ctx, `DELETE FROM archive_unassigned_chat WHERE spool_id=$1`, record.SpoolID); err != nil {
+		return false, err
+	}
 	return true, tx.Commit(ctx)
+}
+
+// ReconcileUnassignedArchiveChats retries records that arrived before their
+// broadcast session was committed. Unresolved records remain private and are
+// retried later; no ambiguous record is assigned to a guessed broadcast.
+func (s *PgStore) ReconcileUnassignedArchiveChats(ctx context.Context, limit int) (int, int, error) {
+	if limit < 1 || limit > 1000 || s.collectionChannel == nil || *s.collectionChannel == "" {
+		return 0, 0, errors.New("invalid archive reconciliation limit")
+	}
+	rows, err := s.pool.Query(ctx, `SELECT spool_id::text,event_id,platform,channel_id,received_at,
+		user_id_version,public_user_id,display_name,message
+		FROM archive_unassigned_chat WHERE platform='soop' AND channel_id=$1 AND next_retry_at<=clock_timestamp()
+		ORDER BY next_retry_at,id LIMIT $2`, *s.collectionChannel, limit)
+	if err != nil {
+		return 0, 0, err
+	}
+	var records []ArchiveChatRecord
+	for rows.Next() {
+		var record ArchiveChatRecord
+		if err := rows.Scan(&record.SpoolID, &record.EventID, &record.Platform, &record.ChannelID,
+			&record.ReceivedAt, &record.UserIDVersion, &record.PublicUserID, &record.DisplayName, &record.Message); err != nil {
+			rows.Close()
+			return 0, 0, err
+		}
+		records = append(records, record)
+	}
+	err = rows.Err()
+	rows.Close()
+	if err != nil {
+		return 0, 0, err
+	}
+	assigned := 0
+	for _, record := range records {
+		matched, err := s.AppendArchiveChat(ctx, record)
+		if err != nil {
+			return len(records), assigned, err
+		}
+		if matched {
+			assigned++
+			continue
+		}
+		if _, err := s.pool.Exec(ctx, `UPDATE archive_unassigned_chat
+			SET next_retry_at=clock_timestamp()+INTERVAL '1 minute' WHERE spool_id=$1`, record.SpoolID); err != nil {
+			return len(records), assigned, err
+		}
+	}
+	return len(records), assigned, nil
+}
+
+// RecordArchiveSpoolFailure stores a bounded, minute-bucketed signal that a
+// received chat could not enter the durable archive spool.
+func (s *PgStore) RecordArchiveSpoolFailure(ctx context.Context, platform model.Platform, channelID string, at time.Time) error {
+	if at.IsZero() || !s.allowsCollection(platform, channelID) {
+		return ErrCollectionDisabled
+	}
+	_, err := s.pool.Exec(ctx, `INSERT INTO archive_quality_gaps
+		(platform,channel_id,started_at,ended_at,reason)
+		VALUES($1,$2,date_trunc('minute',$3::timestamptz AT TIME ZONE 'UTC') AT TIME ZONE 'UTC',$3,'spool_save_failed')
+		ON CONFLICT (platform,channel_id,started_at,reason)
+		DO UPDATE SET ended_at=GREATEST(archive_quality_gaps.ended_at,EXCLUDED.ended_at)`,
+		string(platform), channelID, at.UTC())
+	return err
 }
