@@ -1,7 +1,7 @@
 .PHONY: build contracts test race source-check cookie-test
 modules = ./discover/... ./coordinator/... ./worker/... ./query/... ./shared/... ./cleanup/... ./chat-exporter/... ./proto/...
 build:
-	go build ./discover/cmd ./coordinator/cmd ./worker/cmd ./query/cmd ./cleanup/cmd ./chat-exporter/cmd ./shared/cmd/migrate ./shared/cmd/rotate-generation ./shared/cmd/healthcheck ./shared/cmd/collector-check
+	go build ./discover/cmd ./coordinator/cmd ./worker/cmd ./query/cmd ./query/cmd/data-api ./cleanup/cmd ./chat-exporter/cmd ./shared/cmd/migrate ./shared/cmd/rotate-generation ./shared/cmd/healthcheck ./shared/cmd/collector-check
 contracts:
 	npm run contracts:test
 test: contracts
