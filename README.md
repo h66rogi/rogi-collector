@@ -39,6 +39,7 @@
 | 구현 단계와 남은 제품 작업 | [구현 계획](docs/implementation-plan.md) · [검증 상태](docs/implementation-status.md) |
 | 역할별 설정·스키마·소비자 계약 | [코드 인계](docs/collector-code-handoff.md) · [쿠키 컴포넌트](cookie-auth/README.md) |
 | 정식 배포·인증서·재부팅 | [운영 배포](docs/deployment-production.md) · [CI/CD](docs/deployment-ci.md) |
+| 공개 방송·채팅 API 구상 | [data-api.rogi.chat 설계 초안](docs/public-data-api-design.md) |
 | 인프라·상태 확인 | [인프라 준비](docs/infrastructure-preparation.md) · [모니터링](docs/operations-monitoring.md) |
 | 출처와 초기 조사 | [이식 정책](docs/source-import-policy.md) · [원본 조사](docs/repository-review.md) · [쿠키 조사](docs/cookie-acquisition-review.md) |
 
