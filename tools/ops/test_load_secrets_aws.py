@@ -12,4 +12,10 @@ class TestLoader(unittest.TestCase):
   with tempfile.TemporaryDirectory() as td:
    root=Path(td);meta=root/'meta';meta.write_text(json.dumps({'runtimeSecretArn':'arn:aws:secretsmanager:us-east-1:123456789012:secret:x-AbC','region':'us-east-1'}));values={k:'x' for k in m.KEYS};values['extra']='bad'
    with self.assertRaises(RuntimeError):m.load(meta,root/'run',require_root=False,client=type('Client',(),{'get_secret_value':lambda self,**kwargs:{'SecretString':json.dumps(values)}})())
+ def test_legacy_generation_is_admitted_during_secret_rollout(self):
+  with tempfile.TemporaryDirectory() as td:
+   root=Path(td);meta=root/'meta';meta.write_text(json.dumps({'runtimeSecretArn':'arn:aws:secretsmanager:us-east-1:123456789012:secret:x-AbC','region':'us-east-1'}));values={k:'x' for k in m.LEGACY_KEYS}
+   client=type('Client',(),{'get_secret_value':lambda self,**kwargs:{'SecretString':json.dumps(values)}})()
+   m.load(meta,root/'run',require_root=False,client=client)
+   self.assertFalse((root/'run'/'data-api.env').exists())
 if __name__=='__main__':unittest.main()

@@ -16,11 +16,12 @@ discover의 내부 진단 토큰과 일치해야 한다. API 서비스에는 SOO
 private gRPC TLS 키, DB DDL 권한을 주지 않는다. 로그는 현재 Compose의 10 MiB × 3
 로컬 회전 설정을 따른다.
 
-현재 host의 secret loader는 정확한 키 집합을 검사한다. 기존 loader가 동작하는 동안
-새 `data-api.env` 키를 먼저 추가하면 검증이 실패한다. 반대로 새 역할을 먼저 시작하면
+현재 host의 secret loader는 정확한 기존 키 집합을 검사한다. 기존 loader가 동작하는 동안
+새 `data-api.env` 키를 먼저 추가하면 검증이 실패한다. 새 loader는 전환 기간에 기존
+키 집합과 `data-api.env`를 포함한 확장 집합만 허용한다. 새 역할을 먼저 시작하면
 파일이 없어 실패한다. 따라서 다음 순서를 하나의 점검된 전환 작업으로 수행한다.
 
-1. 새 키를 받아들이는 loader·validator와 host 준비 코드를 먼저 설치한다. 기존
+1. 두 키 집합을 받아들이는 loader·validator와 host 준비 코드를 먼저 설치한다. 기존
    서비스가 살아 있는지 확인한다.
 2. Secrets Manager SecretString의 정확한 키 집합에 `data-api.env`를 추가하고,
    실행 계정·모드·내용을 host에서 검증한다. 기존 키 값은 보존한다.

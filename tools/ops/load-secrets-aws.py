@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 import argparse,json,os,re,shutil,stat
 from pathlib import Path
-KEYS={'postgres-admin-password','postgres-migrate-password','migrate.pgpass','redis-password','discover.env','coordinator.env','worker.env','query.env','data-api.env','cookie-auth.env','app-migrate.env','tls-ca.pem','tls-ca.key'}
+LEGACY_KEYS={'postgres-admin-password','postgres-migrate-password','migrate.pgpass','redis-password','discover.env','coordinator.env','worker.env','query.env','cookie-auth.env','app-migrate.env','tls-ca.pem','tls-ca.key'}
+KEYS=LEGACY_KEYS|{'data-api.env'}
 ARN=re.compile(r'^arn:aws:secretsmanager:[a-z0-9-]+:[0-9]{12}:secret:[A-Za-z0-9/_+=.@-]{1,512}$')
 def load(metadata:Path,target:Path,*,require_root=True,client=None):
  st=metadata.stat()
@@ -15,14 +16,17 @@ def load(metadata:Path,target:Path,*,require_root=True,client=None):
  raw=response.get('SecretString')
  if not isinstance(raw,str) or len(raw.encode('utf-8'))>65536 or '\0' in raw:raise RuntimeError('secret value must be a bounded JSON SecretString')
  values=json.loads(raw)
- if set(values)!=KEYS or any(not isinstance(v,str) or not v or len(v.encode('utf-8'))>8192 or '\0' in v for v in values.values()):raise RuntimeError('secret JSON must contain the exact bounded non-empty key set')
+ if set(values) not in (LEGACY_KEYS,KEYS) or any(not isinstance(v,str) or not v or len(v.encode('utf-8'))>8192 or '\0' in v for v in values.values()):raise RuntimeError('secret JSON must contain an admitted bounded non-empty key set')
  target.mkdir(parents=True,exist_ok=True);os.chmod(target,0o700);generation=target/f'source-secrets.{os.getpid()}'
  if generation.exists():shutil.rmtree(generation)
  generation.mkdir(mode=0o700)
  for name,value in values.items():
   path=generation/name;path.write_text(value+'\n');path.chmod(0o400)
  temporary=target/f'.source-secrets.{os.getpid()}';temporary.symlink_to(generation.name);os.replace(temporary,target/'source-secrets')
- for name in KEYS:
+ for name in KEYS-set(values):
+  link=target/name
+  if link.exists() or link.is_symlink():link.unlink()
+ for name in values:
   link=target/name
   if link.exists() or link.is_symlink():link.unlink()
   link.symlink_to(f'source-secrets/{name}')
