@@ -2,6 +2,7 @@ package connector
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"github.com/h66rogi/rogi-collector/shared/model"
@@ -46,6 +47,20 @@ func TestSoopHandleChatPacket(t *testing.T) {
 	}
 	if msg.Nickname != "닉네임" || msg.UserID != "user1" || msg.Message != "안녕하세요" {
 		t.Fatalf("unexpected message: %+v", msg)
+	}
+}
+
+func TestSoopHandleOGQPacket(t *testing.T) {
+	c := newTestSoopConnector()
+	fields := []string{"123", "함께 응원해요", "17d73948ad610a6", "1", "1", "viewer(2)", "시청자", "", "", "", "0", "png", "", "", "", "", "", "0"}
+	packet := soopPacket{Cmd: soopCmdOGQEmoticon, Fields: fields, Raw: buildSoopPacket(soopCmdOGQEmoticon, "\f"+strings.Join(fields, "\f")+"\f")}
+	c.handlePacket(context.Background(), packet)
+	msg := <-c.msgCh
+	if msg.Type != model.MessageTypeChat || msg.UserID != "viewer" || msg.Nickname != "시청자" || msg.Message != "함께 응원해요" {
+		t.Fatalf("unexpected OGQ chat metadata: %+v", msg)
+	}
+	if len(msg.Emotes) != 1 || msg.Emotes[0].Source != "soop_ogq" || msg.Emotes[0].Animated || msg.Emotes[0].ImageURL != "https://ogq-sticker-global-cdn-z01.sooplive.com/sticker/17d73948ad610a6/1_160.png" {
+		t.Fatalf("unexpected OGQ emote: %+v", msg.Emotes)
 	}
 }
 

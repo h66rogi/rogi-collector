@@ -20,7 +20,7 @@ message DonationEvent {
   google.protobuf.Timestamp observed_at = 19; optional google.protobuf.Timestamp occurred_at = 20;
   NativeCurrency native_currency = 21; string donor_display_name = 22; string message = 23;
 }
-message ChatEvent { string event_id = 1; string channel_id = 2; string user_id = 3; string message = 4; ChatCursor cursor = 5; optional google.protobuf.Timestamp occurred_at = 6; google.protobuf.Timestamp observed_at = 7; string schema_version = 8; Platform platform = 9; string platform_channel_id = 10; string user_display_name = 11; }
+message ChatEvent { string event_id = 1; string channel_id = 2; string user_id = 3; string message = 4; ChatCursor cursor = 5; optional google.protobuf.Timestamp occurred_at = 6; google.protobuf.Timestamp observed_at = 7; string schema_version = 8; Platform platform = 9; string platform_channel_id = 10; string user_display_name = 11; string emotes_json = 12; }
 message CollectionStatus { string channel_id = 1; bool configured = 2; bool collection_active = 3; string process_health = 4; repeated string quality_reasons = 5; optional Cursor earliest_cursor = 6; optional Cursor current_cursor = 7; uint64 recovery_revision = 8; optional google.protobuf.Timestamp last_received_at = 9; }
 message GetCollectionStatusRequest { string consumer_id = 1; string channel_id = 2; }
 message SetChannelSubscriptionRequest { string consumer_id = 1; string channel_id = 2; bool subscribed = 3; string idempotency_key = 4; }

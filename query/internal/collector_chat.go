@@ -55,7 +55,7 @@ func (s *collectorService) WatchChat(r *pb.WatchChatRequest, stream grpc.ServerS
 				gap = true
 				continue
 			}
-			event := &pb.ChatEvent{EventId: value("id"), ChannelId: r.ChannelId, UserId: value("userId"), Message: value("message"), Cursor: &pb.ChatCursor{StreamGeneration: generation, StreamId: msg.StreamID, GapBefore: gap}, ObservedAt: timestamppb.New(at), SchemaVersion: "v1", Platform: pb.Platform_PLATFORM_SOOP, PlatformChannelId: r.ChannelId, UserDisplayName: value("nickname")}
+			event := &pb.ChatEvent{EventId: value("id"), ChannelId: r.ChannelId, UserId: value("userId"), Message: value("message"), EmotesJson: value("emotes"), Cursor: &pb.ChatCursor{StreamGeneration: generation, StreamId: msg.StreamID, GapBefore: gap}, ObservedAt: timestamppb.New(at), SchemaVersion: "v1", Platform: pb.Platform_PLATFORM_SOOP, PlatformChannelId: r.ChannelId, UserDisplayName: value("nickname")}
 			if err := stream.Send(event); err != nil {
 				return err
 			}

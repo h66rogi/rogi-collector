@@ -28,6 +28,8 @@ import (
 // soopUserIDSuffix strips the "(N)" tier suffix SOOP appends to user IDs
 // for subscribers (e.g. "example-user(2)" → "example-user").
 var soopUserIDSuffix = regexp.MustCompile(`\(\d+\)$`)
+var soopOGQID = regexp.MustCompile(`^[A-Za-z0-9_-]{1,80}$`)
+var soopOGQNumber = regexp.MustCompile(`^[1-9][0-9]{0,5}$`)
 
 const (
 	soopOrigin       = "https://play.sooplive.com"
@@ -59,6 +61,7 @@ const (
 	soopCmdFollowItemChain = 93
 	soopCmdBJNotice        = 104
 	soopCmdSendSubscribe   = 108
+	soopCmdOGQEmoticon     = 109
 	soopCmdMissionGift     = 121
 )
 
@@ -432,7 +435,7 @@ func (c *SoopConnector) handlePacket(ctx context.Context, packet soopPacket) {
 	if waiting && packet.Cmd != soopCmdLogin && packet.Cmd != soopCmdJoin {
 		return
 	}
-	if packet.Cmd == soopCmdChatMessage || packet.Cmd == soopCmdSendBalloon {
+	if packet.Cmd == soopCmdChatMessage || packet.Cmd == soopCmdOGQEmoticon || packet.Cmd == soopCmdSendBalloon {
 		c.lastReceived.Store(time.Now().UnixNano())
 	}
 
@@ -483,6 +486,8 @@ func (c *SoopConnector) handlePacket(ctx context.Context, packet soopPacket) {
 
 	case soopCmdChatMessage:
 		c.emitMessage(c.convertChatPacket(packet))
+	case soopCmdOGQEmoticon:
+		c.emitMessage(c.convertOGQPacket(packet))
 	case soopCmdSendBalloon, soopCmdChocolate, soopCmdSuperChat, soopCmdMissionGift:
 		if c.donationSink == nil {
 			c.emitMessage(c.convertDonationPacket(packet))
@@ -556,6 +561,41 @@ func (c *SoopConnector) convertChatPacket(packet soopPacket) model.ChatMessage {
 		Message:      rawText,
 		Timestamp:    time.Now(),
 		Raw:          string(packet.Raw),
+	}
+}
+
+// OGQ uses its own SOOP command. The player packet layout is chatNo, text,
+// groupId, subId, version, userId, nickname, ... animation flag at field 17.
+func (c *SoopConnector) convertOGQPacket(packet soopPacket) model.ChatMessage {
+	fields := packet.Fields
+	groupID := fieldAt(fields, 2)
+	subID := fieldAt(fields, 3)
+	if !soopOGQID.MatchString(groupID) || !soopOGQNumber.MatchString(subID) {
+		return model.ChatMessage{}
+	}
+	ext := "png"
+	animated := fieldAt(fields, 17) == "1"
+	if animated {
+		ext = "webp"
+	}
+	userID := soopUserIDSuffix.ReplaceAllString(fieldAt(fields, 5), "")
+	nickname := fieldAt(fields, 6)
+	if nickname == "" {
+		nickname = userID
+	}
+	if nickname == "" {
+		nickname = "?"
+	}
+	return model.ChatMessage{
+		ID:   fmt.Sprintf("soop-%s-%s-%d", c.channel.ChannelID, c.epoch, c.seq.Add(1)),
+		Type: model.MessageTypeChat, Platform: model.PlatformSoop,
+		ChannelID: c.channel.ChannelID, StreamerName: c.channel.StreamerName,
+		UserID: userID, Nickname: nickname,
+		Message:   strings.ReplaceAll(fieldAt(fields, 1), "\r", ""),
+		Timestamp: time.Now(), Raw: string(packet.Raw),
+		Emotes: []model.EmoteToken{{Code: groupID + ":" + subID, Start: -1, End: -1,
+			ImageURL: "https://ogq-sticker-global-cdn-z01.sooplive.com/sticker/" + groupID + "/" + subID + "_160." + ext,
+			Animated: animated, Source: "soop_ogq"}},
 	}
 }
 
