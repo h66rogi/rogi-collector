@@ -20,6 +20,8 @@ const (
 	MaxSegmentGzipBytes  = 16 << 20
 )
 
+var ErrSegmentTooLarge = errors.New("archive segment size limit")
+
 // ChatRow is the public, sanitized data stored in one immutable S3 segment.
 // The platform raw user ID and raw packet are deliberately absent.
 type ChatRow struct {
@@ -67,7 +69,7 @@ func Build(rows []ChatRow) (Segment, error) {
 			return Segment{}, err
 		}
 		if plain.Len()+len(line)+1 > MaxSegmentPlainBytes {
-			return Segment{}, errors.New("segment uncompressed size limit")
+			return Segment{}, ErrSegmentTooLarge
 		}
 		_, _ = plain.Write(line)
 		_ = plain.WriteByte('\n')
@@ -84,7 +86,7 @@ func Build(rows []ChatRow) (Segment, error) {
 		return Segment{}, err
 	}
 	if compressed.Len() > MaxSegmentGzipBytes {
-		return Segment{}, errors.New("segment compressed size limit")
+		return Segment{}, ErrSegmentTooLarge
 	}
 	sum := sha256.Sum256(compressed.Bytes())
 	return Segment{Body: compressed.Bytes(), SHA256: hex.EncodeToString(sum[:]), SessionID: sessionID, FirstPosition: rows[0].Position, LastPosition: previous, Count: len(rows)}, nil

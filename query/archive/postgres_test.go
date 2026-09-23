@@ -94,6 +94,7 @@ func TestArchiveExportPreservesDedupIndex(t *testing.T) {
 	}
 	record.SpoolID, record.EventID = uuid.NewString(), "synthetic-"+uuid.NewString()
 	record.Message = "newer"
+	record.ReceivedAt = time.Now().UTC().Add(-2 * time.Minute)
 	if assigned, err := writer.AppendArchiveChat(ctx, record); err != nil || !assigned {
 		t.Fatalf("append newer: assigned=%v err=%v", assigned, err)
 	}
@@ -104,5 +105,15 @@ func TestArchiveExportPreservesDedupIndex(t *testing.T) {
 	secondPage, err := exporter.ReadChatsPage(ctx, segment.SessionID, *firstPage.NextPosition, 1, objects)
 	if err != nil || len(secondPage.Rows) != 1 || secondPage.Rows[0].Message != "newer" || secondPage.HasMore {
 		t.Fatalf("second page: %#v %v", secondPage, err)
+	}
+	service, err := NewExporter(exporter, objects, time.Minute)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if moved, err := service.RunOnce(ctx); err != nil || !moved {
+		t.Fatalf("export run: moved=%v err=%v", moved, err)
+	}
+	if moved, err := service.RunOnce(ctx); err != nil || moved {
+		t.Fatalf("idle export run: moved=%v err=%v", moved, err)
 	}
 }
