@@ -14,3 +14,12 @@ for name in postgres-admin-password postgres-migrate-password migrate.pgpass red
   [ "$(stat -L -c '%a' -- "$link")" = 400 ] || { echo "unsafe secret target mode: $name" >&2; exit 78; }
   [ "$(stat -L -c '%u' -- "$link")" = "$expected_uid" ] || { echo "secret target is not root-owned: $name" >&2; exit 78; }
 done
+for name in public-api-db-password data-api.env archive-exporter.env tunnel-token; do
+  if [ ! -e "$runtime_root/$name" ] && [ ! -L "$runtime_root/$name" ]; then continue; fi
+  link=$runtime_root/$name
+  target=$(realpath -e -- "$link") || { echo "dangling secret link: $name" >&2; exit 78; }
+  case "$target" in "$allowed"/*) :;; *) echo "secret target escapes published generation: $name" >&2; exit 78;; esac
+  [ "$(stat -L -c '%F' -- "$link")" = 'regular file' ] || { echo "secret target is not regular: $name" >&2; exit 78; }
+  [ "$(stat -L -c '%a' -- "$link")" = 400 ] || { echo "unsafe secret target mode: $name" >&2; exit 78; }
+  [ "$(stat -L -c '%u' -- "$link")" = "$expected_uid" ] || { echo "secret target is not root-owned: $name" >&2; exit 78; }
+done

@@ -35,7 +35,7 @@ import json,sys
 p=sys.argv[1]; v=json.load(open(p)); v['runtimeNonSecret']['unexpected']='bad'; open(p+'.bad','w').write(json.dumps(v))
 PYFIX
 if node "$root/tools/ops/validate-manifest.mjs" "$tmp/manifest.json.bad" >/dev/null 2>&1; then echo 'unexpected runtime field was accepted' >&2; exit 1; fi
-node "$root/tools/ops/render-runtime-env.mjs" "$tmp/manifest.json" | grep -q "QUERY_IMAGE='registry.example/test/query@sha256:"
+node "$root/tools/ops/render-runtime-env.mjs" "$tmp/manifest.json" | grep "QUERY_IMAGE='registry.example/test/query@sha256:" >/dev/null
 sh -n "$root/tools/ops/deploy.sh" "$root/tools/ops/status.sh" "$root/tools/ops/test.sh" "$root/tools/ops/prepare-host.sh" "$root/deploy/install-runtime.sh" "$root/deploy/initdb/010_migrate_role.sh" "$root/deploy/run-migrations.sh"
 grep -q 'restart: "no"' "$root/deploy/compose.production.yaml"
 ! grep -Eq 'build:' "$root/deploy/compose.production.yaml"
