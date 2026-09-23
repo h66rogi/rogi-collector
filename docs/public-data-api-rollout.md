@@ -1,7 +1,17 @@
 # data-api.rogi.chat production rollout
 
-Status: prepared, not yet applied. This is a direct production rollout; there
-is no staging hostname or environment.
+Status: deployed to production on 2026-09-23. This was a direct production
+rollout; there is no staging hostname or environment. The API, Tunnel, private
+R2 bucket, archive exporter, and read-only database role are active. External
+checks confirmed readiness, live status, recent chat, WebSocket chat, and an
+archived-chat page. End-to-end archive completeness remains unproven, so
+responses report `complete=false`.
+
+The donation spool and chat archive spool must be separate sibling directories
+on the data volume. Nesting the chat directory inside the donation spool makes
+the donation spool reject the extra directory and reports `storage_delayed`.
+Production uses separate `spool/donations` and `spool/chat` paths. The worker
+now rejects overlapping paths at startup.
 
 ## Public surface
 
@@ -57,7 +67,8 @@ is no staging hostname or environment.
    bundle. The new archive grant migration and public DB role provisioning run
    before service startup. The API rejects a DB login with write privileges.
 2. Set `HISTORY_ENABLED=true` and `VIEWER_HISTORY_ENABLED=false` in discover;
-   set `CHAT_ARCHIVE_ENABLED=true`, an absolute spool path on the data volume,
+   set `CHAT_ARCHIVE_ENABLED=true`, an absolute spool path on the data volume
+   that does not contain or sit inside the donation spool,
    and a 32-byte-or-longer HMAC key in worker; set
    `PUBLIC_ARCHIVE_HISTORY_ENABLED=true` in data-api. Keep the existing Redis
    retention independent from the R2 archive.
