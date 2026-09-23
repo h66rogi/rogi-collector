@@ -17,6 +17,7 @@ import (
 	"github.com/h66rogi/rogi-collector/shared/collection"
 	"github.com/h66rogi/rogi-collector/shared/runtimeenv"
 	"github.com/h66rogi/rogi-collector/shared/store"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func main() {
@@ -55,6 +56,9 @@ func run() error {
 		return err
 	}
 	defer pool.Close()
+	if err := verifyPublicDatabaseRole(ctx, pool); err != nil {
+		return err
+	}
 	pg := store.NewPgStore(pool)
 	pg.SetCollectionChannel(channel)
 	redisClient := store.NewRedisClient(redisAddr)
@@ -111,6 +115,31 @@ func run() error {
 	logger.Info("data API listening", "channel", channel)
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return err
+	}
+	return nil
+}
+
+// A public origin must never inherit the private query service's write grants.
+// The deployment provisions a distinct role with only the seven table reads
+// needed by status and history handlers.
+func verifyPublicDatabaseRole(ctx context.Context, pool *pgxpool.Pool) error {
+	var isolated, writable bool
+	err := pool.QueryRow(ctx, `SELECT current_user='collector_public_api'
+		AND NOT (r.rolsuper OR r.rolcreatedb OR r.rolcreaterole OR r.rolreplication OR r.rolbypassrls)
+		AND NOT has_schema_privilege(current_user,'public','CREATE')
+		AND NOT has_database_privilege(current_user,current_database(),'CREATE'),
+		EXISTS(SELECT 1 FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+			WHERE n.nspname='public' AND c.relkind IN ('r','p','v','f')
+			AND (has_table_privilege(current_user,c.oid,'INSERT')
+				OR has_table_privilege(current_user,c.oid,'UPDATE')
+				OR has_table_privilege(current_user,c.oid,'DELETE')
+				OR has_table_privilege(current_user,c.oid,'TRUNCATE')))
+		FROM pg_roles r WHERE r.rolname=current_user`).Scan(&isolated, &writable)
+	if err != nil {
+		return err
+	}
+	if !isolated || writable {
+		return errors.New("public API database role has unsafe permissions")
 	}
 	return nil
 }

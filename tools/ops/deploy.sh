@@ -53,6 +53,7 @@ rm -rf "$registry_auth";trap - EXIT HUP INT TERM
 $docker_bin compose --env-file "$runtime_root/candidate.env" -f deploy/compose.production.yaml up --no-deps --wait postgres redis
 $docker_bin compose --env-file "$runtime_root/candidate.env" -f deploy/compose.production.yaml run --rm migrate
 $docker_bin compose --env-file "$runtime_root/candidate.env" -f deploy/compose.production.yaml run --rm app-migrate
+$docker_bin compose --env-file "$runtime_root/candidate.env" -f deploy/compose.production.yaml run --rm provision-public-api-role
 
 "$target_real/deploy/install-runtime.sh" --update-only
 

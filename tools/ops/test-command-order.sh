@@ -9,8 +9,9 @@ mkdir -p "$release/deploy/migrations" "$release/deploy/initdb" "$release/deploy/
 cp "$root/deploy/compose.production.yaml" "$release/deploy/compose.production.yaml"
 cp "$root/deploy/migrations/001_foundation.sql" "$release/deploy/migrations/001_foundation.sql"
 cp "$root/deploy/run-migrations.sh" "$release/deploy/run-migrations.sh"
+cp "$root/deploy/provision-public-api-role.sh" "$release/deploy/provision-public-api-role.sh"
 cp "$root/deploy/initdb/010_migrate_role.sh" "$release/deploy/initdb/010_migrate_role.sh"
-runtime_paths='deploy/cookie-auth.apparmor deploy/systemd/rogi-collector-tls.service deploy/systemd/rogi-collector-tls.timer tools/ops/rotate-server-tls.py deploy/install-runtime.sh deploy/systemd/rogi-collector-host-ready.service deploy/systemd/rogi-collector-migrate.service deploy/systemd/rogi-collector-role@.service deploy/systemd/rogi-collector-update.service deploy/systemd/rogi-collector-update.timer deploy/systemd/rogi-collector-backup.service deploy/systemd/rogi-collector-backup.timer deploy/systemd/rogi-collector.target tools/ops/deploy.sh tools/ops/status.sh tools/ops/prepare-host.sh tools/ops/validate-manifest.mjs tools/ops/render-runtime-env.mjs tools/ops/fetch-release.py tools/ops/production-status.py tools/ops/backup-postgres.sh tools/ops/load-secrets-aws.py tools/ops/upload-backup-s3.py tools/ops/validate-runtime-secrets.sh tools/ops/load-registry-auth.py'
+runtime_paths='deploy/provision-public-api-role.sh deploy/cookie-auth.apparmor deploy/systemd/rogi-collector-tls.service deploy/systemd/rogi-collector-tls.timer tools/ops/rotate-server-tls.py deploy/install-runtime.sh deploy/systemd/rogi-collector-host-ready.service deploy/systemd/rogi-collector-migrate.service deploy/systemd/rogi-collector-role@.service deploy/systemd/rogi-collector-update.service deploy/systemd/rogi-collector-update.timer deploy/systemd/rogi-collector-backup.service deploy/systemd/rogi-collector-backup.timer deploy/systemd/rogi-collector.target tools/ops/deploy.sh tools/ops/status.sh tools/ops/prepare-host.sh tools/ops/validate-manifest.mjs tools/ops/render-runtime-env.mjs tools/ops/fetch-release.py tools/ops/production-status.py tools/ops/backup-postgres.sh tools/ops/load-secrets-aws.py tools/ops/upload-backup-s3.py tools/ops/validate-runtime-secrets.sh tools/ops/load-registry-auth.py'
 for path in $runtime_paths;do mkdir -p "$release/$(dirname "$path")";cp "$root/$path" "$release/$path";done
 cp "$root/tools/ops/validate-manifest.mjs" "$root/tools/ops/render-runtime-env.mjs" "$prefix/usr/local/lib/rogi-collector/"
 printf 'test-volume\n' > "$prefix/etc/rogi-collector/data-volume.uuid"
@@ -77,8 +78,9 @@ test "$(readlink "$prefix/opt/rogi-collector/app/current")" = "$release"
 host_line=$(grep -n 'systemctl restart rogi-collector-host-ready' "$COMMAND_LOG" | cut -d: -f1)
 pull_line=$(grep -n 'docker .* compose .* pull' "$COMMAND_LOG" | cut -d: -f1)
 migrate_line=$(grep -n 'docker compose .* run --rm migrate' "$COMMAND_LOG" | cut -d: -f1)
+provision_line=$(grep -n 'docker compose .* run --rm provision-public-api-role' "$COMMAND_LOG" | cut -d: -f1)
 target_line=$(grep -n 'systemctl restart rogi-collector.target' "$COMMAND_LOG" | cut -d: -f1)
-[ "$host_line" -lt "$pull_line" ] && [ "$pull_line" -lt "$migrate_line" ] && [ "$migrate_line" -lt "$target_line" ]
+[ "$host_line" -lt "$pull_line" ] && [ "$pull_line" -lt "$migrate_line" ] && [ "$migrate_line" -lt "$provision_line" ] && [ "$provision_line" -lt "$target_line" ]
 [ "$(grep -c 'systemctl start rogi-collector.target' "$COMMAND_LOG")" -ge 3 ] || { echo 'transient unit readiness was not retried' >&2;exit 1; }
 [ "$(cat "$COMMAND_LOG.health-count")" -ge 3 ] || { echo 'transient Docker health was not retried' >&2;exit 1; }
 echo 'collector deploy fake-command order passed'

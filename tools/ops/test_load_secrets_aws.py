@@ -17,6 +17,7 @@ class TestLoader(unittest.TestCase):
    root=Path(td);meta=root/'meta';meta.write_text(json.dumps({'runtimeSecretArn':'arn:aws:secretsmanager:us-east-1:123456789012:secret:x-AbC','region':'us-east-1'}));values={k:'x' for k in m.LEGACY_KEYS}
    client=type('Client',(),{'get_secret_value':lambda self,**kwargs:{'SecretString':json.dumps(values)}})()
    m.load(meta,root/'run',require_root=False,client=client)
+   self.assertFalse((root/'run'/'public-api-db-password').exists())
    self.assertFalse((root/'run'/'data-api.env').exists())
    self.assertFalse((root/'run'/'archive-exporter.env').exists())
    self.assertFalse((root/'run'/'tunnel-token').exists())

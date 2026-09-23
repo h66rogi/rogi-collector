@@ -2,7 +2,8 @@
 import argparse,json,os,re,shutil,stat
 from pathlib import Path
 LEGACY_KEYS={'postgres-admin-password','postgres-migrate-password','migrate.pgpass','redis-password','discover.env','coordinator.env','worker.env','query.env','cookie-auth.env','app-migrate.env','tls-ca.pem','tls-ca.key'}
-API_KEYS=LEGACY_KEYS|{'data-api.env'}
+ROLE_KEYS=LEGACY_KEYS|{'public-api-db-password'}
+API_KEYS=ROLE_KEYS|{'data-api.env'}
 ARCHIVE_KEYS=API_KEYS|{'archive-exporter.env'}
 KEYS=ARCHIVE_KEYS|{'tunnel-token'}
 ARN=re.compile(r'^arn:aws:secretsmanager:[a-z0-9-]+:[0-9]{12}:secret:[A-Za-z0-9/_+=.@-]{1,512}$')
@@ -18,7 +19,7 @@ def load(metadata:Path,target:Path,*,require_root=True,client=None):
  raw=response.get('SecretString')
  if not isinstance(raw,str) or len(raw.encode('utf-8'))>65536 or '\0' in raw:raise RuntimeError('secret value must be a bounded JSON SecretString')
  values=json.loads(raw)
- if set(values) not in (LEGACY_KEYS,API_KEYS,ARCHIVE_KEYS,KEYS) or any(not isinstance(v,str) or not v or len(v.encode('utf-8'))>8192 or '\0' in v for v in values.values()):raise RuntimeError('secret JSON must contain an admitted bounded non-empty key set')
+ if set(values) not in (LEGACY_KEYS,ROLE_KEYS,API_KEYS,ARCHIVE_KEYS,KEYS) or any(not isinstance(v,str) or not v or len(v.encode('utf-8'))>8192 or '\0' in v for v in values.values()):raise RuntimeError('secret JSON must contain an admitted bounded non-empty key set')
  target.mkdir(parents=True,exist_ok=True);os.chmod(target,0o700);generation=target/f'source-secrets.{os.getpid()}'
  if generation.exists():shutil.rmtree(generation)
  generation.mkdir(mode=0o700)

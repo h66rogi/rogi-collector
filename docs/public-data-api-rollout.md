@@ -35,12 +35,15 @@ is no staging hostname or environment.
    token. Keep values out of Git, CI logs, release bundles, Terraform output,
    and public documentation.
 3. The production runtime secret must preserve its existing keys and add
-   `data-api.env`, `archive-exporter.env`, and `tunnel-token`. The new loader
+   `public-api-db-password`, `data-api.env`, `archive-exporter.env`, and
+   `tunnel-token`. The new loader
    admits the legacy set and each consecutive expanded set. Install the new
    loader, secret validator, and host preparation code before adding keys; then
    reload and validate the secret files. The Tunnel token file is mode 0400.
-4. `data-api.env` uses the existing read-only query DB role, Redis address and
-   password, the discover diagnostic token, a new cursor HMAC key, and the
+4. The deployment creates a dedicated `collector_public_api` DB role with
+   SELECT on only the seven tables used by the public surface. Its password
+   is supplied in `public-api-db-password`. `data-api.env` uses this role,
+   Redis address and password, the discover diagnostic token, a new cursor HMAC key, and the
    object-read R2 credentials. `archive-exporter.env` uses the existing worker
    DB role and the object-read/write R2 credentials. Both set the single
    allowed channel. Never give the public API the migrate role, worker role,
@@ -51,7 +54,8 @@ is no staging hostname or environment.
 1. Validate the public source audit, all CI jobs, and the exact staged diff.
    Merge the reviewed collector PR to `main`. The release workflow publishes
    immutable image digests and the private deployment workflow applies the
-   bundle. The new archive grant migration runs before service startup.
+   bundle. The new archive grant migration and public DB role provisioning run
+   before service startup. The API rejects a DB login with write privileges.
 2. Set `HISTORY_ENABLED=true` and `VIEWER_HISTORY_ENABLED=false` in discover;
    set `CHAT_ARCHIVE_ENABLED=true`, an absolute spool path on the data volume,
    and a 32-byte-or-longer HMAC key in worker; set

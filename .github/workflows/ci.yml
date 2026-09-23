@@ -31,6 +31,19 @@ jobs:
           AND NOT has_table_privilege('collector_query','archive_segments','INSERT')
           AND has_table_privilege('collector_worker','archive_segments','INSERT')
           AND has_sequence_privilege('collector_worker','archive_segments_segment_id_seq','USAGE')")" = t
+      - name: Verify dedicated public database role
+        run: |
+          admin_file=$(mktemp)
+          public_file=$(mktemp)
+          trap 'rm -f "$admin_file" "$public_file"' EXIT
+          printf 'local-test-only' > "$admin_file"
+          printf 'local-public-password-32-bytes-minimum' > "$public_file"
+          chmod 0400 "$admin_file" "$public_file"
+          PGHOST=localhost POSTGRES_ADMIN_USER=collector_test POSTGRES_DB=collector_test \
+            POSTGRES_ADMIN_PASSWORD_FILE="$admin_file" PUBLIC_API_PASSWORD_FILE="$public_file" \
+            ./deploy/provision-public-api-role.sh
+          test "$(PGPASSWORD=local-public-password-32-bytes-minimum psql -h localhost -U collector_public_api -d collector_test -At -v ON_ERROR_STOP=1 -c \
+            "SELECT has_table_privilege(current_user,'archive_chat_hot','SELECT') AND NOT has_table_privilege(current_user,'archive_chat_hot','INSERT') AND NOT has_table_privilege(current_user,'collector_channels','INSERT')")" = t
       - run: COLLECTOR_TEST_DATABASE_URL="$DATABASE_URL" go test ./shared/store -run '^TestArchiveChatSessionAndReplay$' -count=1
       - run: COLLECTOR_TEST_DATABASE_URL="$DATABASE_URL" go test ./query/archive -run '^TestArchiveExportPreservesDedupIndex$' -count=1
   verify:
