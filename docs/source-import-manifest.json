@@ -687,7 +687,8 @@
         "기존 Server lifecycle에서 제품 mTLS 7443·범위 인증·collector v1·보존 정리 실행",
         "Load the mounted role environment as data and wire explicit single-channel live-test authentication",
         "Connect read-only broadcast diagnostics through discover cookie boundary; preserve production subscription scope.",
-        "Add bounded operator chat tests using the existing SOOP connector; close disconnected sockets reliably without production ingestion."
+        "Add bounded operator chat tests using the existing SOOP connector; close disconnected sockets reliably without production ingestion.",
+        "Decode SOOP command 109 as OGQ chat with validated sticker identifiers and image metadata."
       ],
       "importSha256": "d2a5b154ad86dfb34a655b8289473d70a6d047409dc3dd1434785f832832179c",
       "currentSha256": "56cbad6c156ac91b8a31c6eafba84622aef28f7fd0e3659d80c63a3ad14cdec5"
@@ -1282,17 +1283,18 @@
         "Add bounded operator chat tests using the existing SOOP connector; close disconnected sockets reliably without production ingestion."
       ],
       "importSha256": "8a900c65f43bfd1c7f71e5433d2c3d924cffc2bcb6f4b2dbcf437a195c55e93b",
-      "currentSha256": "282eb68e74f137a515437ba267c12cad320c2a98f9a1d0707073956d1e8ed54b"
+      "currentSha256": "299f2129516604825a6fd0a75d4dca43c1202f80b2f08c6a8282ea959d7f6a80"
     },
     {
       "sourcePath": "worker/internal/connector/soop_test.go",
       "targetPath": "worker/internal/connector/soop_test.go",
       "sourceSha256": "669d4e6c88fe29b32cb5cb42a0e1e58f52a5ffa65670beb8a7f0c6a5dd38daa1",
       "changes": [
-        "Go module/import address changed to target repository"
+        "Go module/import address changed to target repository",
+        "Verify command 109 OGQ chat decoding with a synthetic SOOP packet."
       ],
       "importSha256": "d7347091594d2e5d4f0f799d157ad7218cd7cc732ceecc2d475157f89f0a2aa6",
-      "currentSha256": "d7347091594d2e5d4f0f799d157ad7218cd7cc732ceecc2d475157f89f0a2aa6"
+      "currentSha256": "0a756673a2d701843830a67ea2091a4f90f286e5604f04af475a6aea302c4448"
     },
     {
       "sourcePath": "worker/internal/manager.go",
