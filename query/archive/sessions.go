@@ -22,7 +22,8 @@ type Session struct {
 // current archive session is created on its first accepted chat, so a broadcast
 // with no chat has no archive record and is not included here.
 func (p *PgArchive) ListSessions(ctx context.Context, beforeAt *time.Time, beforeID string, limit int) ([]Session, error) {
-	if limit < 1 || limit > 100 {
+	// The HTTP layer fetches one extra row to determine whether a next page exists.
+	if limit < 1 || limit > 101 {
 		return nil, errors.New("invalid session page limit")
 	}
 	if beforeAt != nil {

@@ -1,7 +1,7 @@
 # 공개 채팅 archive 저장 계약
 
 상태: 구현 중 계약. SQL과 선택적 worker spool/DB writer는 draft PR에 있으며 운영에서 꺼져 있다.
-S3 exporter, 영구 gap 기록, 과거 조회가 완료되기 전에는 보관 기능을 운영에서 켜지 않는다.
+R2 exporter, 영구 gap 기록, 과거 조회가 완료되기 전에는 보관 기능을 운영에서 켜지 않는다.
 이 문서의 전체 절차는 현재 운영 기능을 뜻하지 않는다.
 대상: SOOP `h66rogi` 한 채널. [상위 설계](public-data-api-design.md)의 첫 구현 단계다.
 
@@ -42,14 +42,14 @@ worker는 `type=chat` 메시지만 archive writer에 전달한다. 후원·시�
 공개 archive에 넣지 않는다. 원본 `userId`는 archive spool에 쓰기 전에 버전이 있는
 비밀키로 `HMAC-SHA256(platform || 0x00 || channelId || 0x00 || userId)`를 계산해
 가명 식별자로 바꾼다. display name과 메시지는 그대로 보존한다. 키 회전 후 가명은
-달라질 수 있으므로 응답에 `userIdVersion`을 포함한다. 키와 원본 ID는 API 응답·로그·S3에
+달라질 수 있으므로 응답에 `userIdVersion`을 포함한다. 키와 원본 ID는 API 응답·로그·R2에
 넣지 않는다.
 
 worker의 내구성 수락 시점은 로컬 spool 파일과 디렉터리의 `fsync`가 끝난 순간이다.
 메시지를 Redis에 발행하기 **전**에 수락을 시도한다. DB 장애 시 파일을 유지하고 다시
 전송한다. spool은 단일 writer lock, 파일별 checksum, 크기·건수 상한을 갖는다. 재시도
 중복은 DB의 영구 `archive_event_ids(session_id, event_id, position)` unique 제약으로 제거한다.
-본문을 S3로 옮긴 뒤에도 이 작은 중복 방지 색인은 유지한다. 색인·백업 용량 증가율을
+본문을 R2로 옮긴 뒤에도 이 작은 중복 방지 색인은 유지한다. 색인·백업 용량 증가율을
 감시하고, 용량이 부족해지면 EBS를 증설한다. 기록 수락 실패나 spool
 포화는 Redis 발행까지 중단시키지 않고 별도 gap/지표를 남긴다. 따라서 API는 그 구간을
 완전한 archive라고 주장하지 않는다. 비밀키 부재나 spool 손상은 archive 기능 준비 실패다.
@@ -57,14 +57,14 @@ worker의 내구성 수락 시점은 로컬 spool 파일과 디렉터리의 `fsy
 PostgreSQL hot 테이블은 `session_id`, `position`, `event_id`, `received_at`, 가명 ID와
 버전, `display_name`, `message`만 담는다. spool과 DB가 위치한 EBS는 암호화돼 있지만
 로컬 파일 모드와 Docker mount도 최소 권한으로 둔다. 운영 서비스가 보관 수락을 시작하기
-전에 마이그레이션, bucket, 업로드 권한, 재시도 경로를 모두 준비한다.
+전에 마이그레이션, 비공개 R2 bucket, bucket 범위의 S3 API 토큰, 재시도 경로를 모두 준비한다.
 
 초안 worker는 `CHAT_ARCHIVE_ENABLED=true`일 때만 spool을 생성하고, 설정이 없으면 기존
 Redis 경로만 실행한다. 이 스위치는 아직 운영 활성화 권한을 뜻하지 않는다. 현재 save 실패는
 로그와 지표에 남지만 세션별 영구 gap 원장까지 보장하지 않으므로, 읽기 API는 완전성을
 주장할 수 없다.
 
-## S3 segment와 읽기
+## R2 segment와 읽기
 
 하나의 session에서 연속한 `position` 구간을 최대 1,000건의 gzip NDJSON 객체로 만든다.
 객체 키는 `v1/soop/h66rogi/{sessionId}/{firstPosition}-{lastPosition}-{sha256}.jsonl.gz`
@@ -78,7 +78,7 @@ Redis 경로만 실행한다. 이 스위치는 아직 운영 활성화 권한을
 페이지 cursor는 버전, session ID, 마지막 `position`을 서버가 서명한 불투명 값이다.
 조회는 segment 색인과 hot 테이블을 같은 position 오름차순으로 병합한다. segment
 이동 중에도 마지막 position 이후를 읽으므로 중복·누락이 생기지 않아야 한다. 첫 조회
-결과의 `archiveStartedAt`, `complete`, `gaps`는 요청 범위의 사실을 나타낸다. S3/색인
+결과의 `archiveStartedAt`, `complete`, `gaps`는 요청 범위의 사실을 나타낸다. R2/색인
 조회가 실패하면 일부 페이지를 정상 성공처럼 반환하지 않고 503과 재시도 가능한 오류를
 반환한다. `limit` 기본값 50, 최대 200, segment 객체 크기 상한과 압축 해제 상한을 둔다.
 
@@ -86,12 +86,12 @@ Redis 경로만 실행한다. 이 스위치는 아직 운영 활성화 권한을
 
 1. PostgreSQL 세션 emitter를 독립적으로 켜고 ClickHouse가 없어도 세션 시작·종료가
    올바른지 합성 입력과 운영 관측으로 확인한다. 기존 세션의 소급 복원을 약속하지 않는다.
-2. 마이그레이션, archive bucket/IAM, spool mount와 모니터링을 준비한다. Terraform
+2. 마이그레이션, 비공개 R2 bucket과 bucket 범위의 S3 API 토큰, spool mount와 모니터링을 준비한다. Terraform
    production 변경은 최신 exact plan 검토와 명시 승인을 거친다.
 3. worker archive writer를 shadow 모드로 켠다. Redis 실시간 경로, 후원 journal,
    spool 압력과 DB 중복 제거를 확인하고 archive 시작 시각을 기록한다.
-4. S3 exporter를 켜서 업로드 실패·재시도·복원을 합성 데이터로 검증한 뒤 hot 정리를
-   허용한다. 백업 복원에는 segment 색인과 S3 객체의 대조가 포함된다.
+4. R2 exporter를 켜서 업로드 실패·재시도·복원을 합성 데이터로 검증한 뒤 hot 정리를
+   허용한다. 백업 복원에는 segment 색인과 R2 객체의 대조가 포함된다.
 5. 그 후에만 과거 채팅 HTTP 경로를 공개한다. 표준 WebSocket은 Redis cursor의 gap을
    명시하며, 영구 archive 수락 여부를 Redis cursor와 혼동하지 않는다.
 
@@ -103,7 +103,7 @@ Redis 경로만 실행한다. 이 스위치는 아직 운영 활성화 권한을
 | 같은 event 재전송 | archive 1건, `position`은 안정적 |
 | DB 중단 후 worker 재시작 | spool replay, 유실 없는 재시도 |
 | spool 포화·손상 | gap과 readiness에 노출, Redis 경로는 독립적으로 동작 |
-| S3 업로드 성공 뒤 색인 실패 | deterministic key 재시도, hot 행 유지 |
+| R2 업로드 성공 뒤 색인 실패 | deterministic key 재시도, hot 행 유지 |
 | 색인 성공 뒤 hot 삭제 전 중단 | 읽기 중복 제거, 재시도 시 정확히 한 페이지 |
-| S3 객체 손상·누락 | 503, 해당 세션의 품질 장애 경보 |
+| R2 객체 손상·누락 | 503, 해당 세션의 품질 장애 경보 |
 | 세션 없이 받은 채팅 | 미할당 구간으로 격리, 다른 방송에 임의 포함하지 않음 |

@@ -43,6 +43,7 @@ type Server struct {
 	statusUntil time.Time
 	statusWait  chan struct{}
 	connections chan struct{}
+	history     *historyAccess
 }
 
 func New(channel string, collection CollectionReader, chat ChatReader, check BroadcastChecker, logger *slog.Logger, maxConnections int) (*Server, error) {
@@ -60,10 +61,11 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /v1/broadcasts/current", s.current)
 	mux.HandleFunc("GET /v1/chats/recent", s.recent)
 	mux.HandleFunc("GET /v1/chat/stream", s.stream)
-	mux.HandleFunc("GET /v1/broadcasts", archiveUnavailable)
-	mux.HandleFunc("GET /v1/broadcasts/{sessionId}/chats", archiveUnavailable)
+	mux.HandleFunc("GET /v1/broadcasts", s.broadcasts)
+	mux.HandleFunc("GET /v1/broadcasts/{sessionId}/chats", s.broadcastChats)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		started := time.Now()
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 		observed := &observedWriter{ResponseWriter: w, status: http.StatusOK}
 		mux.ServeHTTP(observed, r)
 		pattern := r.Pattern

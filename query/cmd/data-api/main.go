@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/h66rogi/rogi-collector/query/archive"
 	"github.com/h66rogi/rogi-collector/query/internal"
 	"github.com/h66rogi/rogi-collector/query/publicapi"
 	"github.com/h66rogi/rogi-collector/shared/collection"
@@ -70,6 +71,22 @@ func run() error {
 	api, err := publicapi.New(channel, pg, redis, check, logger, maxConnections)
 	if err != nil {
 		return err
+	}
+	if os.Getenv("PUBLIC_ARCHIVE_HISTORY_ENABLED") == "true" {
+		archiveDatabase, err := archive.NewPgArchive(pool, channel)
+		if err != nil {
+			return err
+		}
+		objects, err := archive.NewR2ObjectStore(
+			os.Getenv("R2_ACCOUNT_ID"), os.Getenv("R2_ARCHIVE_BUCKET"),
+			os.Getenv("R2_ACCESS_KEY_ID"), os.Getenv("R2_SECRET_ACCESS_KEY"),
+		)
+		if err != nil {
+			return err
+		}
+		if err := api.EnableHistory(archiveDatabase, objects, []byte(os.Getenv("HISTORY_CURSOR_HMAC_KEY"))); err != nil {
+			return err
+		}
 	}
 	server := &http.Server{
 		Addr: ":8080", Handler: api.Handler(), ReadHeaderTimeout: 5 * time.Second,
