@@ -1,8 +1,8 @@
 # 공개 채팅 archive 저장 계약
 
-상태: 구현 중 계약. SQL과 선택적 worker spool/DB writer는 draft PR에 있으며 운영에서 꺼져 있다.
-R2 exporter, 영구 gap 기록, 과거 조회가 완료되기 전에는 보관 기능을 운영에서 켜지 않는다.
-이 문서의 전체 절차는 현재 운영 기능을 뜻하지 않는다.
+상태: 2026-09-23 운영에 부분 적용. worker spool·PostgreSQL 색인·R2 exporter·과거 조회가
+실행 중이다. 영구 gap 원장과 전체 복구 검증은 아직 완료되지 않아 공개 응답의 `complete`는 항상
+`false`다. 아래 단계별 게이트 중 미검증 항목은 운영 완전성을 보증하지 않는다.
 대상: SOOP `h66rogi` 한 채널. [상위 설계](public-data-api-design.md)의 첫 구현 단계다.
 
 ## 확인한 기존 동작
@@ -59,8 +59,8 @@ PostgreSQL hot 테이블은 `session_id`, `position`, `event_id`, `received_at`,
 로컬 파일 모드와 Docker mount도 최소 권한으로 둔다. 운영 서비스가 보관 수락을 시작하기
 전에 마이그레이션, 비공개 R2 bucket, bucket 범위의 S3 API 토큰, 재시도 경로를 모두 준비한다.
 
-초안 worker는 `CHAT_ARCHIVE_ENABLED=true`일 때만 spool을 생성하고, 설정이 없으면 기존
-Redis 경로만 실행한다. 이 스위치는 아직 운영 활성화 권한을 뜻하지 않는다. 현재 save 실패는
+worker는 `CHAT_ARCHIVE_ENABLED=true`일 때만 spool을 생성하며 현재 운영에서 활성화돼 있다.
+채팅 spool은 후원 spool과 별도의 형제 디렉터리를 사용해야 한다. 현재 save 실패는
 로그와 지표에 남지만 세션별 영구 gap 원장까지 보장하지 않으므로, 읽기 API는 완전성을
 주장할 수 없다.
 

@@ -78,6 +78,27 @@ func TestEnvHelpers(t *testing.T) {
 	}
 }
 
+func TestValidateSpoolPaths(t *testing.T) {
+	tests := []struct {
+		name, donation, chat string
+		valid                bool
+	}{
+		{"sibling directories", "/srv/spool/donations", "/srv/spool/chat", true},
+		{"same directory", "/srv/spool", "/srv/spool", false},
+		{"chat inside donation spool", "/srv/spool", "/srv/spool/chat", false},
+		{"donations inside chat spool", "/srv/spool/chat/donations", "/srv/spool/chat", false},
+		{"relative path", "spool/donations", "/srv/spool/chat", false},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			err := validateSpoolPaths(test.donation, test.chat)
+			if (err == nil) != test.valid {
+				t.Fatalf("validateSpoolPaths(%q, %q): %v", test.donation, test.chat, err)
+			}
+		})
+	}
+}
+
 func TestConnectAssignedChannelSkipsUnassignedChannel(t *testing.T) {
 	otherWorker := "worker-2"
 	store := &cmdChannelStore{

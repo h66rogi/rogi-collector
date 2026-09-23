@@ -1114,20 +1114,22 @@
         "Load the mounted role environment as data and wire explicit single-channel live-test authentication",
         "Correct command dispatch blocking/order and readiness/stop-deadline comments; behavior unchanged",
         "Add bounded operator chat tests using the existing SOOP connector; close disconnected sockets reliably without production ingestion.",
-        "Wire an opt-in fsynced public chat archive spool and backlog replay using the existing worker lifecycle."
+        "Wire an opt-in fsynced public chat archive spool and backlog replay using the existing worker lifecycle.",
+        "Reject overlapping donation and chat archive spool directories before opening either spool."
       ],
       "importSha256": "52b2b984c02465d8914fc0d7ec4cb31f6f9b6adf68067b81f803fc9f4f8cee1e",
-      "currentSha256": "f063011fe88c13d257a9ec427793ad6343d04b80d69e90b305999c9c3896be31"
+      "currentSha256": "9a4d21dfc453d42909a4bbac43b2b37618ae4880f55d6ef1b489bcddea0a4571"
     },
     {
       "sourcePath": "worker/cmd/main_test.go",
       "targetPath": "worker/cmd/main_test.go",
       "sourceSha256": "7cfcd5e6a5f58d67118d71d8fa2a0932153a16609dea99a858d9a1986e9d1a66",
       "changes": [
-        "Go module/import address changed to target repository"
+        "Go module/import address changed to target repository",
+        "Test that donation and chat archive spool paths are absolute and non-overlapping."
       ],
       "importSha256": "c6f5f65edd8e91b4edcc0b5d0ef003c58027f479f4a591d7da431d94d99dedef",
-      "currentSha256": "c6f5f65edd8e91b4edcc0b5d0ef003c58027f479f4a591d7da431d94d99dedef"
+      "currentSha256": "5417afef128e2a8fb5686462ee6391524baa8cfe523d99ecd12fc7a6c01a8724"
     },
     {
       "sourcePath": "worker/go.mod",

@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -139,6 +140,12 @@ func main() {
 	if err := pgStore.EnsureCollection(rootCtx, productChannel); err != nil {
 		slog.Error("collector schema not ready")
 		os.Exit(1)
+	}
+	if os.Getenv("CHAT_ARCHIVE_ENABLED") == "true" {
+		if err := validateSpoolPaths(os.Getenv("DONATION_SPOOL_DIR"), os.Getenv("CHAT_ARCHIVE_SPOOL_DIR")); err != nil {
+			slog.Error("spool configuration invalid", "error", err)
+			os.Exit(1)
+		}
 	}
 	spool, err := pipeline.NewDonationSpool(os.Getenv("DONATION_SPOOL_DIR"), pgStore, 1<<30)
 	if err != nil {
@@ -384,6 +391,23 @@ func main() {
 	rootCancel()
 
 	slog.Info("worker shutdown complete")
+}
+
+func validateSpoolPaths(donation, chat string) error {
+	if !filepath.IsAbs(donation) || !filepath.IsAbs(chat) {
+		return fmt.Errorf("donation and chat archive spool paths must be absolute")
+	}
+	donation, chat = filepath.Clean(donation), filepath.Clean(chat)
+	for _, pair := range [][2]string{{donation, chat}, {chat, donation}} {
+		relative, err := filepath.Rel(pair[0], pair[1])
+		if err != nil {
+			return fmt.Errorf("cannot compare spool paths: %w", err)
+		}
+		if relative == "." || (relative != ".." && !strings.HasPrefix(relative, ".."+string(filepath.Separator))) {
+			return fmt.Errorf("donation and chat archive spools must use separate directories")
+		}
+	}
+	return nil
 }
 
 // commandDispatcherMaxConcurrency limits how many connect commands run in
