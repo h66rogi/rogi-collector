@@ -698,20 +698,22 @@
       "sourceSha256": "dd9b10577b47fac760501e60be99fe710faf729dcfa30786f1ef79121ebb3081",
       "changes": [
         "Go module/import address changed to target repository",
-        "Add the isolated public API standard WebSocket dependency for the Go query module."
+        "Add the isolated public API standard WebSocket dependency for the Go query module.",
+        "Add AWS SDK v2 S3 client dependencies for the bounded, verified archive object adapter."
       ],
       "importSha256": "7a20e701a1c3b0aa91d220e0b1a0fe668f97f8184216e1c086ab866d4556d38e",
-      "currentSha256": "8d081c883a6047efb9207314973c6d61e99033539b1c0582d898babcfd2eb54a"
+      "currentSha256": "08f636d8d9178f27d48d21a9d698203d2d1b0b669913b4d19150aaa88a9f6337"
     },
     {
       "sourcePath": "query/go.sum",
       "targetPath": "query/go.sum",
       "sourceSha256": "ac4126b37c424fda53b107fbd6c226efeac5e6a3b89f71f06e052921e4f8e779",
       "changes": [
-        "Add the isolated public API standard WebSocket dependency for the Go query module."
+        "Add the isolated public API standard WebSocket dependency for the Go query module.",
+        "Add AWS SDK v2 S3 client dependencies for the bounded, verified archive object adapter."
       ],
       "importSha256": "ac4126b37c424fda53b107fbd6c226efeac5e6a3b89f71f06e052921e4f8e779",
-      "currentSha256": "5a24016a0316f3e492bca0dedfe2f9cc4d19c79f60d8ffa7ee8d9b0f01ffbfd6"
+      "currentSha256": "199b0748b0da5b2e1b2349e79249bdc3e033144aa0f5bb7f110fc3b15ca2be6c"
     },
     {
       "sourcePath": "query/internal/admin_http.go",
