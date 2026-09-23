@@ -1,6 +1,8 @@
 # 공개 채팅 archive 저장 계약
 
-상태: 구현 전 계약. 이 문서의 표와 절차는 현재 운영 기능을 뜻하지 않는다.
+상태: 구현 중 계약. SQL과 선택적 worker spool/DB writer는 draft PR에 있으며 운영에서 꺼져 있다.
+S3 exporter, 영구 gap 기록, 과거 조회가 완료되기 전에는 보관 기능을 운영에서 켜지 않는다.
+이 문서의 전체 절차는 현재 운영 기능을 뜻하지 않는다.
 대상: SOOP `h66rogi` 한 채널. [상위 설계](public-data-api-design.md)의 첫 구현 단계다.
 
 ## 확인한 기존 동작
@@ -56,6 +58,11 @@ PostgreSQL hot 테이블은 `session_id`, `position`, `event_id`, `received_at`,
 버전, `display_name`, `message`만 담는다. spool과 DB가 위치한 EBS는 암호화돼 있지만
 로컬 파일 모드와 Docker mount도 최소 권한으로 둔다. 운영 서비스가 보관 수락을 시작하기
 전에 마이그레이션, bucket, 업로드 권한, 재시도 경로를 모두 준비한다.
+
+초안 worker는 `CHAT_ARCHIVE_ENABLED=true`일 때만 spool을 생성하고, 설정이 없으면 기존
+Redis 경로만 실행한다. 이 스위치는 아직 운영 활성화 권한을 뜻하지 않는다. 현재 save 실패는
+로그와 지표에 남지만 세션별 영구 gap 원장까지 보장하지 않으므로, 읽기 API는 완전성을
+주장할 수 없다.
 
 ## S3 segment와 읽기
 

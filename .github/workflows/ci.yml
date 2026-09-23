@@ -24,6 +24,7 @@ jobs:
       - run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f deploy/migrations/001_foundation.sql
       - run: go run ./shared/cmd/migrate && go run ./shared/cmd/migrate
       - run: test "$(psql "$DATABASE_URL" -At -v ON_ERROR_STOP=1 -c "SELECT name FROM collector_app_migrations WHERE name='007_public_chat_archive.sql' AND EXISTS (SELECT 1 FROM pg_class WHERE relname='archive_segments')")" = 007_public_chat_archive.sql
+      - run: COLLECTOR_TEST_DATABASE_URL="$DATABASE_URL" go test ./shared/store -run '^TestArchiveChatSessionAndReplay$' -count=1
   verify:
     runs-on: ubuntu-24.04
     steps:

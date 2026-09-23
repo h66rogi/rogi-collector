@@ -45,6 +45,7 @@ CREATE INDEX archive_chat_hot_page_idx ON archive_chat_hot (session_id, position
 -- reconciliation. They are never returned as part of another broadcast.
 CREATE TABLE archive_unassigned_chat (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    spool_id UUID NOT NULL UNIQUE,
     platform VARCHAR(10) NOT NULL,
     channel_id VARCHAR(100) NOT NULL,
     event_id TEXT NOT NULL,

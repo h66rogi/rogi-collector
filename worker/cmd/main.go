@@ -165,6 +165,38 @@ func main() {
 			}
 		}
 	}()
+	if os.Getenv("CHAT_ARCHIVE_ENABLED") == "true" {
+		archiveSpool, err := pipeline.NewChatArchiveSpool(
+			os.Getenv("CHAT_ARCHIVE_SPOOL_DIR"), []byte(os.Getenv("CHAT_ARCHIVE_ID_KEY")), pgStore, 1<<30,
+		)
+		if err != nil {
+			slog.Error("chat archive spool unavailable", "error", err)
+			os.Exit(1)
+		}
+		defer archiveSpool.Close()
+		mgr.SetChatArchive(archiveSpool)
+		go func() {
+			ticker := time.NewTicker(2 * time.Second)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-rootCtx.Done():
+					return
+				case <-ticker.C:
+					ctx, done := context.WithTimeout(rootCtx, 3*time.Second)
+					err := archiveSpool.Drain(ctx)
+					done()
+					files, bytes := archiveSpool.Backlog()
+					workerMetrics.ChatArchiveBacklogFiles.Set(float64(files))
+					workerMetrics.ChatArchiveBacklogBytes.Set(float64(bytes))
+					if err != nil {
+						workerMetrics.ChatArchiveDrainErrorsTotal.Inc()
+						slog.Warn("chat archive replay delayed", "error", err, "backlogFiles", files)
+					}
+				}
+			}
+		}()
+	}
 
 	var chatWriters []*store.BatchWriter[store.ChatMessageRow]
 
