@@ -27,6 +27,8 @@ type S3ObjectStore struct {
 	bucket string
 }
 
+func (s *S3ObjectStore) Bucket() string { return s.bucket }
+
 // VerifiedSegment can only be issued after an object has been uploaded and
 // read back through S3ObjectStore. Its fields are private to this package.
 type VerifiedSegment struct {

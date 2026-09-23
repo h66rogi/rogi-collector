@@ -92,4 +92,17 @@ func TestArchiveExportPreservesDedupIndex(t *testing.T) {
 	if err != nil || len(decoded) != 1 || decoded[0].Message != "hello" {
 		t.Fatalf("readback: %#v %v", decoded, err)
 	}
+	record.SpoolID, record.EventID = uuid.NewString(), "synthetic-"+uuid.NewString()
+	record.Message = "newer"
+	if assigned, err := writer.AppendArchiveChat(ctx, record); err != nil || !assigned {
+		t.Fatalf("append newer: assigned=%v err=%v", assigned, err)
+	}
+	firstPage, err := exporter.ReadChatsPage(ctx, segment.SessionID, 0, 1, objects)
+	if err != nil || len(firstPage.Rows) != 1 || firstPage.Rows[0].Message != "hello" || !firstPage.HasMore || firstPage.NextPosition == nil {
+		t.Fatalf("first page: %#v %v", firstPage, err)
+	}
+	secondPage, err := exporter.ReadChatsPage(ctx, segment.SessionID, *firstPage.NextPosition, 1, objects)
+	if err != nil || len(secondPage.Rows) != 1 || secondPage.Rows[0].Message != "newer" || secondPage.HasMore {
+		t.Fatalf("second page: %#v %v", secondPage, err)
+	}
 }
