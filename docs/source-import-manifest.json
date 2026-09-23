@@ -263,10 +263,11 @@
         "단일 채널·구독 설정과 인증/방송 상태를 기존 discover loop에 연결",
         "Load the mounted role environment as data and wire explicit single-channel live-test authentication",
         "Clarify that single-SOOP validation precedes the retained generic allowlist parser; comments only",
-        "Connect read-only broadcast diagnostics through discover cookie boundary; preserve production subscription scope."
+        "Connect read-only broadcast diagnostics through discover cookie boundary; preserve production subscription scope.",
+        "Allow PostgreSQL-only broadcast session history with VIEWER_HISTORY_ENABLED=false while preserving existing ClickHouse default."
       ],
       "importSha256": "b0d2ef284b9aad71fe9708a3f45d85a948fbed03c389ed47c5385b219677b5c5",
-      "currentSha256": "64d02914078a0a13036cb6df3b09882e66136d4c7418f4be63b800e0b88141e7"
+      "currentSha256": "8fc12e58fb22a93b02e89ba6405e5f439f4ca9fb99d9cd0efbd498ad78fda01a"
     },
     {
       "sourcePath": "discover/cmd/main_test.go",
@@ -696,18 +697,21 @@
       "targetPath": "query/go.mod",
       "sourceSha256": "dd9b10577b47fac760501e60be99fe710faf729dcfa30786f1ef79121ebb3081",
       "changes": [
-        "Go module/import address changed to target repository"
+        "Go module/import address changed to target repository",
+        "Add the isolated public API standard WebSocket dependency for the Go query module."
       ],
       "importSha256": "7a20e701a1c3b0aa91d220e0b1a0fe668f97f8184216e1c086ab866d4556d38e",
-      "currentSha256": "7a20e701a1c3b0aa91d220e0b1a0fe668f97f8184216e1c086ab866d4556d38e"
+      "currentSha256": "8d081c883a6047efb9207314973c6d61e99033539b1c0582d898babcfd2eb54a"
     },
     {
       "sourcePath": "query/go.sum",
       "targetPath": "query/go.sum",
       "sourceSha256": "ac4126b37c424fda53b107fbd6c226efeac5e6a3b89f71f06e052921e4f8e779",
-      "changes": [],
+      "changes": [
+        "Add the isolated public API standard WebSocket dependency for the Go query module."
+      ],
       "importSha256": "ac4126b37c424fda53b107fbd6c226efeac5e6a3b89f71f06e052921e4f8e779",
-      "currentSha256": "ac4126b37c424fda53b107fbd6c226efeac5e6a3b89f71f06e052921e4f8e779"
+      "currentSha256": "5a24016a0316f3e492bca0dedfe2f9cc4d19c79f60d8ffa7ee8d9b0f01ffbfd6"
     },
     {
       "sourcePath": "query/internal/admin_http.go",
