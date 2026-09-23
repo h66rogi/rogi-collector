@@ -8,6 +8,8 @@
 - worker는 connector의 `ChatMessage`를 받아 선택적인 ClickHouse writer에 enqueue한 다음 Redis에 발행한다.
 - Redis product stream은 최대 10,000건, TTL 24시간이다. Redis에서 사라진 메시지는 복구할 수 없다.
 - `broadcast_sessions`는 PostgreSQL에 있지만 discover의 `HISTORY_ENABLED=true`에서만 작성된다.
+  `VIEWER_HISTORY_ENABLED=false`를 함께 주면 ClickHouse viewer writer 없이 PostgreSQL 세션
+  기록만 사용할 수 있다. 기본값은 기존의 ClickHouse 동작을 유지한다.
 - 현재 일반 `UpsertLiveChannels`는 `current_session_seq`를 증가시키지 않는다. archive를 켜려면
   PostgreSQL 세션 기록을 먼저 활성화하고, 실방송 시작·종료·재연결을 확인해야 한다.
 - 현재 `WatchChat`의 cursor는 Redis generation과 stream ID다. 영구 보관의 수락 여부나 순서를

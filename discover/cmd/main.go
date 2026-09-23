@@ -130,47 +130,45 @@ func main() {
 	var chAddr, chDB, chUser, chPassword string
 	var historyMetrics *history.Metrics
 	historyEnabled := os.Getenv("HISTORY_ENABLED") == "true"
-	if !historyEnabled {
+	viewerHistoryEnabled := historyEnabled && os.Getenv("VIEWER_HISTORY_ENABLED") != "false"
+	if !viewerHistoryEnabled {
 		// Not applicable — suppress DiscoverClickHouseUnavailable alert
 		metrics.ClickHouseAvailable.Set(1)
 	}
 	if historyEnabled {
-		chAddr = os.Getenv("CLICKHOUSE_ADDR")
-		if chAddr == "" {
-			chAddr = "localhost:9000"
-		}
-		chDB = os.Getenv("CLICKHOUSE_DATABASE")
-		if chDB == "" {
-			chDB = "default"
-		}
-		chUser = os.Getenv("CLICKHOUSE_USER")
-		if chUser == "" {
-			chUser = "collector"
-		}
-		chPassword = os.Getenv("CLICKHOUSE_PASSWORD")
-
 		historyMetrics = history.NewMetrics(metricsRegistry)
+		if viewerHistoryEnabled {
+			chAddr = os.Getenv("CLICKHOUSE_ADDR")
+			if chAddr == "" {
+				chAddr = "localhost:9000"
+			}
+			chDB = os.Getenv("CLICKHOUSE_DATABASE")
+			if chDB == "" {
+				chDB = "default"
+			}
+			chUser = os.Getenv("CLICKHOUSE_USER")
+			if chUser == "" {
+				chUser = "collector"
+			}
+			chPassword = os.Getenv("CLICKHOUSE_PASSWORD")
 
-		chStore, err := store.NewClickHouseStore(chAddr, chDB, chUser, chPassword)
-		if err != nil {
-			logger.Warn("ClickHouse unavailable, viewer count tracking disabled", "error", err)
-			metrics.ClickHouseAvailable.Set(0)
-			chNeedsReconnect = true
-		}
+			chStore, err := store.NewClickHouseStore(chAddr, chDB, chUser, chPassword)
+			if err != nil {
+				logger.Warn("ClickHouse unavailable, viewer count tracking disabled", "error", err)
+				metrics.ClickHouseAvailable.Set(0)
+				chNeedsReconnect = true
+			}
 
-		if chStore != nil {
-			defer chStore.Close()
-			chWriter = history.NewBatchWriter(chStore, 5000, 10*time.Second, logger, historyMetrics)
-			metrics.ClickHouseAvailable.Set(1)
+			if chStore != nil {
+				defer chStore.Close()
+				chWriter = history.NewBatchWriter(chStore, 5000, 10*time.Second, logger, historyMetrics)
+				metrics.ClickHouseAvailable.Set(1)
+			}
 		}
 
 		pgHistoryStore := store.NewPgHistoryStore(pgPool)
 		emitter = history.NewEmitter(pgHistoryStore, chWriter, instanceID, historyMetrics)
-		if chStore != nil {
-			logger.Info("history tracking enabled")
-		} else {
-			logger.Info("history tracking enabled (PG only, ClickHouse unavailable)")
-		}
+		logger.Info("history tracking enabled", "viewerHistoryEnabled", viewerHistoryEnabled, "viewerWriterReady", chWriter != nil)
 	}
 
 	// Preserve the existing discovery/leader loop, but only probe explicitly
