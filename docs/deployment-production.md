@@ -1,16 +1,15 @@
-# Collector 정식 배포
+# Collector 운영 배포
 
-정식 profile은 `soop-single-channel`이다. 초기 health-only profile을 실제 원본 기반
-수집기와 cookie-auth로 교체했다. GitHub main release → private GHCR digest → 승인된
+정식 profile은 `soop-single-channel`이다. GitHub main release → private GHCR digest → 승인된
 SSM 전달 → host 검증/마이그레이션 → systemd 감독 경로를 사용한다.
-현재 적용 증거는 [구현 상태](implementation-status.md), 배포 자동화는 [CI/CD](deployment-ci.md),
-프로세스·방송·쿠키 상태의 점검 방법은 [모니터링](operations-monitoring.md)에 기록한다.
-`deploy/compose.yaml`은 과거 health-only preview이며 정식 실행에 사용하지 않는다.
+배포 자동화는 [CI/CD](deployment-ci.md), 프로세스·방송·쿠키 상태 점검은
+[모니터링](operations-monitoring.md), 공개 API의 저장 경계는 [공개 API 구조](public-data-api-architecture.md)를 따른다.
+실행 Compose는 `deploy/compose.production.yaml`이다.
 
 ## 실행과 저장 경계
 
 - 정식 Compose 프로젝트: `rogi-collector`; 역할은 PostgreSQL, Redis, discover,
-  coordinator, worker, query, cookie-auth이다.
+  coordinator, worker, query, data-api, archive-exporter, cloudflared, cookie-auth이다.
 - release bundle과 current: `/opt/rogi-collector/app`; 설정: `/etc/rogi-collector`;
   tmpfs 비밀 파일: `/run/rogi-collector`; encrypted data EBS: `/srv/rogi-collector`.
 - host-ready는 EBS mount와 예상 UUID를 검사한다. 빠진 EBS를 root 디스크의 빈 폴더로 대체하지 않는다.
@@ -24,8 +23,9 @@ SSM 전달 → host 검증/마이그레이션 → systemd 감독 경로를 사�
 Secrets Manager의 runtime SecretString은 다음 정확한 키 집합이다. 실제 값은 Git이나 bundle에 넣지 않는다.
 
 `postgres-admin-password`, `postgres-migrate-password`, `migrate.pgpass`, `redis-password`,
-`discover.env`, `coordinator.env`, `worker.env`, `query.env`, `cookie-auth.env`,
-`app-migrate.env`, `tls-ca.pem`, `tls-ca.key`.
+`discover.env`, `coordinator.env`, `worker.env`, `query.env`, `data-api.env`,
+`archive-exporter.env`, `cookie-auth.env`, `app-migrate.env`, `public-api-db-password`,
+`tunnel-token`, `tls-ca.pem`, `tls-ca.key`.
 
 기존 root-only `secrets-manager.json`의 ARN/region을 통해 instance role이 읽는다.
 새 비밀 세대를 tmpfs에 쓰고 검증한 뒤 역할 UID로 소유권을 설정한다.
@@ -34,9 +34,8 @@ Docker env_file을 쓰지 않고 프로세스 안에서 `ROLE_ENV_FILE`의 KEY=v
 쿠키 자체는 encrypted EBS에 0600으로 원자 교체하고 discover/worker에 RO 공유한다.
 root 호스트 관리자는 런타임 비밀에 접근할 수 있다.
 
-`CHANNEL_ALLOWLIST=soop:h66rogi`, `SOOP_AUTH_MODE=cookie`를 모든 Go 역할에 설정한다.
-기타 필드는 [역할별 인계](collector-code-handoff.md)를 따른다. 원래 health-only 역할 설정을
-그대로 쓸 수 없다. 정식 활성화 전 새 키 집합과 역할별 DB 계정·권한을 준비해야 한다.
+`CHANNEL_ALLOWLIST=soop:h66rogi`, `SOOP_AUTH_MODE=cookie`를 해당 Go 역할에 설정한다.
+기타 필드는 [역할별 인계](collector-code-handoff.md)를 따른다.
 
 ## 데이터베이스와 배포
 
@@ -45,10 +44,9 @@ app-migrate 역할로 한 번 실행하고 `shared/migrations`의 앱 원장을 
 둘 다 성공해야 current를 승격한다. 런타임 계정은 DDL 권한 없이 schema/table/sequence 권한만 받는다.
 새 migration의 table/sequence에도 권한이 이어지도록 migration owner의 default privileges를 설정한다.
 
-manifest는 7개 image digest, 공개 runtime 파일 allowlist checksum, SQL checksum,
+manifest는 8개 image digest, 공개 runtime 파일 allowlist checksum, SQL checksum,
 private IP를 포함한 비밀 없는 host overlay를 검증한다. tag만 있는 이미지는 허용하지 않는다.
-첫 health-only → SOOP 전환은 새 admission helper/secret schema를 설치한 뒤 수행한다.
-이후에는 기존 release updater가 같은 profile을 처리한다.
+release updater는 검증된 digest와 runtime manifest만 적용한다.
 
 systemd는 역할별 foreground Compose를 감독하고 컨테이너 종료 후 재시작한다.
 `--force-recreate`로 새 secret inode와 이미지/설정을 다시 mount한다. Compose restart는 no다.
@@ -83,7 +81,7 @@ Chromium sandbox는 유지하며 현재 이미지의 seccomp는 unconfined다.
 `make race`, `make build`, `make source-check`, `tools/ops/test.sh`,
 `python3 tools/ops/test_rotate_server_tls.py`, Selenium 환경의 cookie-auth unittest를 사용한다.
 manifest 변조·secret 경계·migration 실패 시 승격 거부·인증서 동일 CA 회전을 검사한다.
-정식 EC2에서는 7개 역할 health, h66rogi 상태 RPC, 인증서 교체 후 peer 연결,
+정식 EC2에서는 10개 역할 health, h66rogi 상태 RPC, 인증서 교체 후 peer 연결,
 강제 종료/재부팅 복구, backup 완료를 별도로 확인한다.
 프로세스 healthy를 방송 연결 또는 게임 연동 성공으로 표현하지 않는다.
 

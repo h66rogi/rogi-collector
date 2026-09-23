@@ -19,6 +19,16 @@ local rows=redis.call('XRANGE',KEYS[1],'('..ARGV[1],'+','COUNT',100)
 return {generation,earliest,latest,rows}
 `)
 
+var chatReadLatest = redis.NewScript(`
+local generation=redis.call('GET',KEYS[2]) or ''
+local earliest=redis.call('XRANGE',KEYS[1],'-','+','COUNT',1)
+local latest=redis.call('XREVRANGE',KEYS[1],'+','-','COUNT',1)
+local rows=redis.call('XREVRANGE',KEYS[1],'+','-','COUNT',100)
+local ordered={}
+for i=#rows,1,-1 do ordered[#ordered+1]=rows[i] end
+return {generation,earliest,latest,ordered}
+`)
+
 type ChatBatch struct {
 	Generation, Earliest, Latest string
 	Messages                     []StreamMessage
@@ -34,6 +44,20 @@ func (s *RedisStore) ReadProductChat(ctx context.Context, channel, after string)
 	if err != nil {
 		return batch, err
 	}
+	return parseChatBatch(result), nil
+}
+
+func (s *RedisStore) ReadLatestProductChat(ctx context.Context, channel string) (ChatBatch, error) {
+	key := ChatStreamKey("soop", channel)
+	result, err := chatReadLatest.Run(ctx, s.client, []string{key, key + ":generation"}).Slice()
+	if err != nil {
+		return ChatBatch{}, err
+	}
+	return parseChatBatch(result), nil
+}
+
+func parseChatBatch(result []interface{}) ChatBatch {
+	var batch ChatBatch
 	batch.Generation, _ = result[0].(string)
 	for index, target := range map[int]*string{1: &batch.Earliest, 2: &batch.Latest} {
 		if rows, ok := result[index].([]interface{}); ok && len(rows) > 0 {
@@ -52,7 +76,7 @@ func (s *RedisStore) ReadProductChat(ctx context.Context, channel, after string)
 			batch.Messages = append(batch.Messages, msg)
 		}
 	}
-	return batch, nil
+	return batch
 }
 func ValidStreamID(id string) bool {
 	parts := strings.Split(id, "-")

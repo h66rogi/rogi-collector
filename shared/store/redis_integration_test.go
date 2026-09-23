@@ -2,12 +2,35 @@ package store
 
 import (
 	"context"
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/alicebob/miniredis/v2"
 	"github.com/h66rogi/rogi-collector/shared/model"
+	"github.com/redis/go-redis/v9"
 )
+
+func TestReadLatestProductChatReturnsNewestRowsInAscendingOrder(t *testing.T) {
+	_, store := newRedisStoreForTest(t)
+	ctx := context.Background()
+	key := ChatStreamKey("soop", "h66rogi")
+	if err := store.client.Set(ctx, key+":generation", "generation-1", 0).Err(); err != nil {
+		t.Fatal(err)
+	}
+	for i := 1; i <= 120; i++ {
+		if err := store.client.XAdd(ctx, &redis.XAddArgs{Stream: key, ID: strconv.Itoa(i) + "-0", Values: map[string]any{"type": "chat", "message": strconv.Itoa(i)}}).Err(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	batch, err := store.ReadLatestProductChat(ctx, "h66rogi")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if batch.Generation != "generation-1" || batch.Earliest != "1-0" || batch.Latest != "120-0" || len(batch.Messages) != 100 || batch.Messages[0].StreamID != "21-0" || batch.Messages[99].StreamID != "120-0" {
+		t.Fatalf("unexpected latest batch: generation=%q earliest=%q latest=%q count=%d", batch.Generation, batch.Earliest, batch.Latest, len(batch.Messages))
+	}
+}
 
 func newRedisStoreForTest(t *testing.T) (*miniredis.Miniredis, *RedisStore) {
 	t.Helper()
