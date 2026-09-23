@@ -1089,10 +1089,11 @@
       "targetPath": "shared/store/redis_integration_test.go",
       "sourceSha256": "23ca0516b05d8ba7c458684b630d490deb812aa4b7cbd40d01b913f72315179b",
       "changes": [
-        "Go module/import address changed to target repository"
+        "Go module/import address changed to target repository",
+        "Verify newest public chat Redis reads and ascending cursor order"
       ],
       "importSha256": "1e7fd5758868916b05972e7d5603e956de89315875d7b16f702a90a124768391",
-      "currentSha256": "1e7fd5758868916b05972e7d5603e956de89315875d7b16f702a90a124768391"
+      "currentSha256": "1721dd62a6e2055d7e3a8ec4a510558502f897a5a2f2a5391fd99dda4a9c068a"
     },
     {
       "sourcePath": "shared/store/redis_test.go",

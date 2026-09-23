@@ -31,6 +31,9 @@ type fakeChat struct{ batch store.ChatBatch }
 func (f fakeChat) ReadProductChat(context.Context, string, string) (store.ChatBatch, error) {
 	return f.batch, nil
 }
+func (f fakeChat) ReadLatestProductChat(context.Context, string) (store.ChatBatch, error) {
+	return f.batch, nil
+}
 
 func testServer(t *testing.T, chat store.ChatBatch, checker BroadcastChecker) *Server {
 	t.Helper()
@@ -81,6 +84,34 @@ func TestRecentRejectsExpiredGeneration(t *testing.T) {
 	}
 }
 
+func TestRecentWithoutCursorReturnsNewestMessages(t *testing.T) {
+	batch := store.ChatBatch{Generation: "generation-1", Earliest: "1-0", Latest: "3-0"}
+	for i, id := range []string{"1-0", "2-0", "3-0"} {
+		batch.Messages = append(batch.Messages, store.StreamMessage{StreamID: id, Values: map[string]interface{}{
+			"type": "chat", "id": id, "userId": "viewer", "nickname": "viewer",
+			"timestamp": "2026-09-23T08:00:00Z", "message": string(rune('a' + i)),
+		}})
+	}
+	s := testServer(t, batch, func(context.Context, string) (*pb.BroadcastStatus, error) { return nil, nil })
+	response := httptest.NewRecorder()
+	s.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/v1/chats/recent?limit=2", nil))
+	if response.Code != http.StatusOK {
+		t.Fatalf("unexpected status: %d %s", response.Code, response.Body.String())
+	}
+	var value struct {
+		Messages []struct {
+			EventID string `json:"eventId"`
+		} `json:"messages"`
+		NextCursor string `json:"nextCursor"`
+	}
+	if err := json.Unmarshal(response.Body.Bytes(), &value); err != nil {
+		t.Fatal(err)
+	}
+	if len(value.Messages) != 2 || value.Messages[0].EventID != "2-0" || value.Messages[1].EventID != "3-0" || value.NextCursor != encodeCursor(chatCursor{"generation-1", "3-0"}) {
+		t.Fatalf("unexpected recent messages: %#v", value)
+	}
+}
+
 func TestPublicRequestBudgetLimitsPollingButKeepsHealthAvailable(t *testing.T) {
 	s := testServer(t, store.ChatBatch{}, func(context.Context, string) (*pb.BroadcastStatus, error) { return nil, nil })
 	s.rateMu.Lock()
@@ -120,5 +151,39 @@ func TestWebSocketReportsGapAfterGenerationChange(t *testing.T) {
 	}
 	if hello["type"] != "hello" || gap["type"] != "chat.gap" || gap["reason"] != "cursor_expired" {
 		t.Fatalf("unexpected events: %#v %#v", hello, gap)
+	}
+}
+
+func TestWebSocketBroadcastStatusIncludesUpdatedTitle(t *testing.T) {
+	var calls atomic.Int32
+	checker := func(context.Context, string) (*pb.BroadcastStatus, error) {
+		if calls.Add(1) == 1 {
+			return &pb.BroadcastStatus{State: "live", BroadcastId: "broadcast-1", Title: "First title", CheckedAt: timestamppb.Now()}, nil
+		}
+		return &pb.BroadcastStatus{State: "live", BroadcastId: "broadcast-1", Title: "Updated title", CheckedAt: timestamppb.Now()}, nil
+	}
+	s := testServer(t, store.ChatBatch{}, checker)
+	httpServer := httptest.NewServer(s.Handler())
+	defer httpServer.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), 13*time.Second)
+	defer cancel()
+	url := "ws" + strings.TrimPrefix(httpServer.URL, "http") + "/v1/chat/stream"
+	conn, _, err := websocket.Dial(ctx, url, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.CloseNow()
+	var event map[string]any
+	if err := wsjson.Read(ctx, conn, &event); err != nil {
+		t.Fatal(err)
+	}
+	if event["type"] != "hello" || event["title"] != "First title" {
+		t.Fatalf("unexpected handshake: %#v", event)
+	}
+	if err := wsjson.Read(ctx, conn, &event); err != nil {
+		t.Fatal(err)
+	}
+	if event["type"] != "broadcast.status" || event["title"] != "Updated title" || event["broadcastId"] != "broadcast-1" {
+		t.Fatalf("unexpected status change: %#v", event)
 	}
 }

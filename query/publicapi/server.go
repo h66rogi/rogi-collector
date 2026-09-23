@@ -28,6 +28,7 @@ type CollectionReader interface {
 
 type ChatReader interface {
 	ReadProductChat(context.Context, string, string) (store.ChatBatch, error)
+	ReadLatestProductChat(context.Context, string) (store.ChatBatch, error)
 }
 
 type BroadcastChecker func(context.Context, string) (*pb.BroadcastStatus, error)
@@ -153,7 +154,7 @@ func writeJSON(w http.ResponseWriter, status int, value any) {
 }
 
 func archiveUnavailable(w http.ResponseWriter, _ *http.Request) {
-	writeJSON(w, http.StatusServiceUnavailable, map[string]string{"code": "archive_not_ready", "message": "chat history is not available yet"})
+	writeJSON(w, http.StatusServiceUnavailable, map[string]string{"code": "archive_unavailable"})
 }
 
 func (s *Server) ready(w http.ResponseWriter, r *http.Request) {
@@ -312,7 +313,12 @@ func (s *Server) recent(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
 	defer cancel()
-	batch, err := s.chat.ReadProductChat(ctx, s.channel, after)
+	var batch store.ChatBatch
+	if cursor.ID == "" {
+		batch, err = s.chat.ReadLatestProductChat(ctx, s.channel)
+	} else {
+		batch, err = s.chat.ReadProductChat(ctx, s.channel, after)
+	}
 	if err != nil {
 		writeJSON(w, 503, map[string]string{"code": "chat_unavailable"})
 		return
@@ -335,7 +341,11 @@ func (s *Server) recent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(events) > limit {
-		events = events[:limit]
+		if cursor.ID == "" {
+			events = events[len(events)-limit:]
+		} else {
+			events = events[:limit]
+		}
 	}
 	var next any
 	if len(events) > 0 {
@@ -469,8 +479,8 @@ func (s *Server) stream(w http.ResponseWriter, r *http.Request) {
 		}
 		if time.Since(lastStatus) >= 10*time.Second {
 			value, err := s.checkBroadcast(ctx)
-			if err == nil && value != nil && (value.State != broadcastState || value.BroadcastId != broadcastID || value.Title != broadcastTitle) {
-				if wsjson.Write(ctx, conn, map[string]any{"type": "broadcast.status", "state": value.State, "broadcastId": value.BroadcastId, "checkedAt": value.CheckedAt.AsTime()}) != nil {
+			if err == nil && value != nil && value.CheckedAt != nil && (value.State != broadcastState || value.BroadcastId != broadcastID || value.Title != broadcastTitle) {
+				if wsjson.Write(ctx, conn, map[string]any{"type": "broadcast.status", "state": value.State, "broadcastId": value.BroadcastId, "title": value.Title, "checkedAt": value.CheckedAt.AsTime()}) != nil {
 					return
 				}
 				broadcastState = value.State

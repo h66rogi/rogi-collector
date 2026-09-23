@@ -41,7 +41,7 @@ func TestHistoryUnavailableUntilEnabled(t *testing.T) {
 	for _, path := range []string{"/v1/broadcasts", "/v1/broadcasts/606c9e5a-05ab-4b25-a5c2-ef03870a73a4/chats"} {
 		response := httptest.NewRecorder()
 		s.Handler().ServeHTTP(response, httptest.NewRequest(http.MethodGet, path, nil))
-		if response.Code != http.StatusServiceUnavailable || !strings.Contains(response.Body.String(), "archive_not_ready") {
+		if response.Code != http.StatusServiceUnavailable || !strings.Contains(response.Body.String(), "archive_unavailable") {
 			t.Fatalf("%s: %d %s", path, response.Code, response.Body.String())
 		}
 	}

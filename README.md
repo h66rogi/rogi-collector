@@ -1,56 +1,37 @@
-# rogi-collector · rogimarble 방송 입력 수집기
+# rogi-collector
 
-후로기(`h66rogi`)의 SOOP 연령제한 방송을 감지하고, 로그인 쿠키로 그 방의 채팅·별풍선을 수집합니다.
-[주루마블](https://github.com/h66rogi/rogimarble)의 후원 기반 게임 진행과 후원자 채팅 선택에 필요한 입력을 제공합니다.
-주사위·보드·후원 개수별 규칙·게임 세션 판정은 주루마블이 담당합니다.
+SOOP `h66rogi` 방송을 감지하고 채팅과 별풍선 후원을 수집하는 Go 서비스입니다. 주루마블에는 private mTLS gRPC로 후원과 채팅을 전달하고, 공개 읽기 API는 [data-api.rogi.chat](https://data-api.rogi.chat/v1/broadcasts/current)에서 제공합니다. API 사용법과 응답 계약은 [docs.rogi.chat](https://docs.rogi.chat/)을 참고하세요.
 
-공개 chat-collector의 실제 코드와 8개 모듈을 가져온 뒤 기존 discover → coordinator → worker → query를 확장했습니다.
-`shared / proto / cleanup / chat-exporter`도 보존하며, cleanup·chat-exporter와 원본 광역 조회/관리 API는 첫 제품에서 실행하지 않습니다.
-151개 반입 파일의 출처·변경 사유·해시는 [반입 기록](docs/source-imports.md)에서 확인할 수 있습니다.
+## 데이터 흐름
 
-## 현재 상태
+```text
+SOOP → discover → coordinator → worker
+                               ├→ 후원 journal / outbox (PostgreSQL) → private query gRPC → 주루마블
+                               ├→ 최근 채팅 (Redis) → data-api HTTP / WebSocket
+                               └→ 채팅 spool → PostgreSQL → Cloudflare R2 → data-api 과거 조회
 
-2026-09-21 기준 `soop-single-channel` 정식 배포를 완료했습니다.
-독립 EC2의 PostgreSQL·Redis·Go 역할 4개·cookie-auth가 실행되며, 주루마블 EC2는 private 7443 mTLS로 연결합니다.
-재부팅 후 서비스·비밀 설정·쿠키 복원, 서버 인증서 교체 후 재접속, 실제 쿠키 갱신과 DB 백업/S3 업로드를 확인했습니다.
+인터넷 → Cloudflare Tunnel → data-api (Go)
+```
 
-다른 공개/연령제한 방송으로 채팅 수신과 실제 관측 후원의 파일 inbox 저장·ACK·재전송을 검증했습니다.
-정식 대상은 `h66rogi`만이며 검증 당시 방송 대기 상태였습니다. **후로기 본인 실방송 확인과 주루마블 실제 DB inbox·게임 연동은 남아 있습니다.**
-백업 생성과 복원 성공도 별개입니다. 배포 버전과 검증 범위는 [구현·검증 상태](docs/implementation-status.md)에 기록합니다.
+수집 대상은 `h66rogi` 한 채널로 제한합니다. 별풍선은 원천의 정수 개수와 종류를 보존하고, 소비자가 자신의 inbox와 cursor를 저장한 후 ACK하는 전달 계약을 사용합니다. 최근 채팅은 Redis에서 최대 24시간·10,000개 stream 항목 범위로 읽습니다. 채팅 archive에는 시간 기준 만료를 두지 않으며, 조회 응답의 `complete=false`는 전체 방송 채팅의 무누락 수집을 보증하지 않는다는 뜻입니다.
 
-## 입력과 전달
+공개 API는 방송 상태, 최근 채팅, WebSocket 실시간 이벤트, 방송별 보관 채팅을 읽기 전용으로 제공합니다. 공개 data-api의 PostgreSQL 계정과 R2 자격 증명은 읽기 권한으로 제한합니다. SOOP 로그인 정보, 내부 gRPC, PostgreSQL, Redis, R2 bucket은 공개 API로 노출하지 않습니다.
 
-- cookie-auth만 SOOP ID/PW를 받아 마지막 성공 후 24시간마다 또는 인증된 요청에 따라 쿠키를 갱신합니다.
-  discover/worker는 공유 snapshot을 읽습니다. 실제 비밀 값은 저장소에 넣지 않습니다.
-- 등록된 SOOP 채널 하나만 감지·할당·접속합니다. 대상이 미설정이면 플랫폼 요청을 하지 않습니다.
-  방송 종료·쿠키 문제·조회 실패·재연결·저장 장애를 구분합니다.
-- 별풍선은 native 정수 개수와 관측 ID를 보존해 disk spool·PostgreSQL journal/outbox에 저장합니다.
-  정상적인 동일 개수 후원 두 건을 raw hash로 합치지 않습니다.
-- collector v1의 11개 RPC로 상태·후원 재생/구독/ACK·최근 채팅·수집 설정·복구·조회 전용 방송 체크·임시 채팅 수신 테스트를 제공합니다.
-  다른 채널 테스트 조회는 운영 수집 대상을 바꾸지 않습니다. [방송 조회](docs/broadcast-diagnostics.md)를 참고하세요.
-  소비자는 자신의 inbox와 cursor를 함께 저장한 뒤 ACK해야 합니다.
-- 일반 채팅은 Redis에 최대 24시간·채널당 1만 건을 보관합니다. 후원과 같은 영속 재생 보장은 없습니다.
+## 저장소 구성
 
-## 문서 안내
-
-| 목적 | 문서 |
+| 경로 | 역할 |
 | --- | --- |
-| 제품 경계와 전달 계약 | [최종 배포·소비 설계](docs/deployment-design.md) |
-| 구현 단계와 남은 제품 작업 | [구현 계획](docs/implementation-plan.md) · [검증 상태](docs/implementation-status.md) |
-| 역할별 설정·스키마·소비자 계약 | [코드 인계](docs/collector-code-handoff.md) · [쿠키 컴포넌트](cookie-auth/README.md) |
-| 정식 배포·인증서·재부팅 | [운영 배포](docs/deployment-production.md) · [CI/CD](docs/deployment-ci.md) |
-| 공개 방송·채팅 API 구상 | [data-api.rogi.chat 설계 초안](docs/public-data-api-design.md) |
-| 인프라·상태 확인 | [인프라 준비](docs/infrastructure-preparation.md) · [모니터링](docs/operations-monitoring.md) |
-| 출처와 초기 조사 | [이식 정책](docs/source-import-policy.md) · [원본 조사](docs/repository-review.md) · [쿠키 조사](docs/cookie-acquisition-review.md) |
+| `discover/`, `coordinator/`, `worker/` | 방송 탐지·할당·수집 |
+| `query/` | private gRPC, 공개 Go HTTP/WebSocket, archive exporter |
+| `shared/`, `proto/` | 공통 저장소·계약·마이그레이션 |
+| `cookie-auth/` | 로그인 쿠키 갱신 |
+| `deploy/`, `infrastructure/` | Compose 배포와 인프라 정의 |
 
-`docs/upstream/`은 수정하지 않은 원본 참고 문서입니다. 현재 제품의 실행 안내는 위 문서를 따릅니다.
-`deploy/compose.yaml`은 초기 health-only 골격으로 현재 앱 실행용이 아닙니다.
-정식 실행은 `deploy/compose.production.yaml`, 격리 실방송 검증의 재현 절차는 [live-check 문서](deploy/live-check/README.md)를 사용합니다.
+이 저장소는 공개 chat-collector의 코드를 선별 반입해 확장했습니다. 파일별 출처와 변경 내용은 [반입 기록](docs/source-imports.md), 라이선스는 [NOTICE](NOTICE)에서 확인할 수 있습니다.
 
-## 코드 검증
+## 개발과 검증
 
-Go 1.27, Node 22.18 이상 23 미만, npm 10을 사용합니다. CI의 정확한 버전은
-[workflow](.github/workflows/ci.yml)에 고정합니다. 참고 저장소의 앱은 실행하지 않습니다.
+Go 1.27, Node.js 22.18 이상 23 미만, npm 10을 사용합니다. Node 버전은 [CI 설정](.github/workflows/ci.yml)에 고정돼 있습니다.
 
 ```sh
 npm ci
@@ -62,8 +43,16 @@ make race
 python3 tools/ops/test_rotate_server_tls.py
 ```
 
-`make test/race`는 합성 Go 테스트와 Go↔TypeScript 계약 검사를 실행하며 외부 저장소를 요구하지 않습니다.
-proto를 수정한 경우 `npm run generate`로 생성물을 갱신한 뒤 계약 검사를 실행합니다.
-쿠키 검사는 [Selenium Python 환경](cookie-auth/README.md)을 준비한 뒤 `make cookie-test PYTHON=/path/to/python`으로 실행합니다.
-실제 저장소 검사는 격리된 `COLLECTOR_TEST_DATABASE_URL`, `COLLECTOR_TEST_REDIS_ADDR`을 명시하고 `make integration-test`로 실행합니다.
-로컬 검사 통과를 실방송·게임 연동·운영 배포 성공으로 해석하지 않습니다.
+proto를 수정하면 `npm run generate`로 생성물을 갱신하세요. 쿠키 컴포넌트 테스트와 격리된 PostgreSQL·Redis 통합 테스트의 준비 방법은 [코드 인계](docs/collector-code-handoff.md)를 참고하세요. 운영 비밀과 실제 채팅은 저장소에 추가하지 않습니다.
+
+## 운영 문서
+
+| 목적 | 문서 |
+| --- | --- |
+| 공개 HTTP/WebSocket 계약 | [API 문서](https://docs.rogi.chat/) · [OpenAPI](https://docs.rogi.chat/openapi.yaml) |
+| 공개 API의 저장·권한 구조 | [공개 API 구조](docs/public-data-api-architecture.md) |
+| private 소비자 계약 | [코드 인계](docs/collector-code-handoff.md) |
+| 배포·복구 | [운영 배포](docs/deployment-production.md) · [CI/CD](docs/deployment-ci.md) |
+| 상태·진단 | [방송 진단](docs/broadcast-diagnostics.md) · [모니터링](docs/operations-monitoring.md) |
+
+`docs/upstream/`은 원본 프로젝트의 참고 문서입니다. 운영 Compose 설정은 `deploy/compose.production.yaml`에 있습니다.
