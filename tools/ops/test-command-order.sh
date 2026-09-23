@@ -44,7 +44,7 @@ echo "docker $*" >> "$COMMAND_LOG"
   count_file=${COMMAND_LOG}.health-count
   count=$(cat "$count_file" 2>/dev/null || echo 0);count=$((count+1));echo "$count" > "$count_file"
   health=healthy;[ "$count" -lt 3 ] && health=starting
-  printf '[{"Service":"postgres","State":"running","Health":"%s"},{"Service":"redis","State":"running","Health":"%s"},{"Service":"discover","State":"running","Health":"%s"},{"Service":"coordinator","State":"running","Health":"%s"},{"Service":"worker","State":"running","Health":"%s"},{"Service":"query","State":"running","Health":"%s"},{"Service":"cookie-auth","State":"running","Health":"%s"}]\n' "$health" "$health" "$health" "$health" "$health" "$health" "$health"
+  printf '[{"Service":"postgres","State":"running","Health":"%s"},{"Service":"redis","State":"running","Health":"%s"},{"Service":"discover","State":"running","Health":"%s"},{"Service":"coordinator","State":"running","Health":"%s"},{"Service":"worker","State":"running","Health":"%s"},{"Service":"query","State":"running","Health":"%s"},{"Service":"data-api","State":"running","Health":"%s"},{"Service":"cookie-auth","State":"running","Health":"%s"}]\n' "$health" "$health" "$health" "$health" "$health" "$health" "$health" "$health"
  ;;
 esac
 exit 0
