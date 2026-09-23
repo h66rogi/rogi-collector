@@ -5,6 +5,25 @@ on:
     branches-ignore: [main]
 permissions: {contents: read}
 jobs:
+  archive-schema:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env: {POSTGRES_DB: collector_test, POSTGRES_USER: collector_test, POSTGRES_PASSWORD: local-test-only}
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd="pg_isready -U collector_test -d collector_test"
+          --health-interval=5s --health-timeout=3s --health-retries=20
+    env:
+      DATABASE_URL: postgres://collector_test:local-test-only@localhost:5432/collector_test?sslmode=disable
+    steps:
+      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+      - uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00 # v6.0.0
+        with: {go-version: '1.27.1', cache: true, cache-dependency-path: '**/go.sum'}
+      - run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f deploy/migrations/001_foundation.sql
+      - run: go run ./shared/cmd/migrate && go run ./shared/cmd/migrate
+      - run: test "$(psql "$DATABASE_URL" -At -v ON_ERROR_STOP=1 -c "SELECT name FROM collector_app_migrations WHERE name='007_public_chat_archive.sql' AND EXISTS (SELECT 1 FROM pg_class WHERE relname='archive_segments')")" = 007_public_chat_archive.sql
   verify:
     runs-on: ubuntu-24.04
     steps:
