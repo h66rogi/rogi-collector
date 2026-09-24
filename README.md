@@ -1,6 +1,6 @@
 # rogi-collector
 
-SOOP `h66rogi` 방송을 감지하고 채팅과 별풍선 후원을 수집하는 Go 서비스입니다. 주루마블에는 private mTLS gRPC로 후원과 채팅을 전달하고, 공개 읽기 API는 [data-api.rogi.chat](https://data-api.rogi.chat/v1/broadcasts/current)에서 제공합니다. API 사용법과 응답 계약은 [docs.rogi.chat](https://docs.rogi.chat/)을 참고하세요.
+SOOP `h66rogi` 방송을 감지하고 채팅과 별풍선 후원을 수집하는 Go 서비스입니다. 주루마블에는 private mTLS gRPC로 후원과 채팅을 전달하고, 공개 읽기 API는 [data-api.rogi.chat](https://data-api.rogi.chat/v1/broadcasts/current)에서 제공합니다. API 사용법과 응답 계약은 [후로기 Developers](https://docs.rogi.chat/data-api/)를 참고하세요.
 
 ## 데이터 흐름
 
@@ -49,7 +49,7 @@ proto를 수정하면 `npm run generate`로 생성물을 갱신하세요. 쿠키
 
 | 목적 | 문서 |
 | --- | --- |
-| 공개 HTTP/WebSocket 계약 | [API 문서](https://docs.rogi.chat/) · [OpenAPI](https://docs.rogi.chat/openapi.yaml) |
+| 공개 HTTP/WebSocket 계약 | [API 문서](https://docs.rogi.chat/data-api/) · [OpenAPI](https://docs.rogi.chat/openapi.yaml) |
 | 공개 API의 저장·권한 구조 | [공개 API 구조](docs/public-data-api-architecture.md) |
 | private 소비자 계약 | [코드 인계](docs/collector-code-handoff.md) |
 | 배포·복구 | [운영 배포](docs/deployment-production.md) · [CI/CD](docs/deployment-ci.md) |

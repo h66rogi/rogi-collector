@@ -1,6 +1,6 @@
 # 공개 방송 데이터 API 구조
 
-사용자 요청·응답 계약은 [docs.rogi.chat](https://docs.rogi.chat/)에서 관리한다. 이 문서는 수집기 내부의 저장·배포 경계를 설명한다.
+사용자 요청·응답 계약은 [후로기 Developers의 Data API 문서](https://docs.rogi.chat/data-api/)에서 관리한다. 이 문서는 수집기 내부의 저장·배포 경계를 설명한다.
 
 ## 요청 경로
 
