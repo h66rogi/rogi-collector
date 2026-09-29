@@ -80,4 +80,8 @@ run "private_delivery_scope" {
     condition     = length(jsondecode(aws_iam_role_policy.github_delivery[0].policy).Statement[1].Resource) == 2 && contains(jsondecode(aws_iam_role_policy.github_delivery[0].policy).Statement[1].Resource, aws_ssm_document.delivery[0].arn)
     error_message = "SSM must bind the fixed document and exactly one host."
   }
+  assert {
+    condition     = jsondecode(aws_iam_role_policy.github_delivery[0].policy).Statement[3].Resource == [aws_sns_topic.alerts.arn]
+    error_message = "Delivery workflow failure alerts must publish only to the collector topic."
+  }
 }

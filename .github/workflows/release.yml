@@ -140,3 +140,19 @@ jobs:
         run: |
           tag="production-${GITHUB_SHA}"
           gh release create "$tag" dist/release/release-bundle.tar.gz dist/release/release-bundle.tar.gz.sha256 --target "$GITHUB_SHA" --title "$tag" --notes "Immutable production SOOP collector release for $GITHUB_SHA"
+  alert_failure:
+    needs: publish
+    if: ${{ always() && needs.publish.result == 'failure' && github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Assume production deploy role
+        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # v5.1.0
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ap-northeast-2
+          mask-aws-account-id: true
+      - name: Alert failed release build
+        env:
+          ALERT_TOPIC_ARN: ${{ secrets.AWS_ALERT_TOPIC_ARN }}
+        run: |
+          aws sns publish --topic-arn "$ALERT_TOPIC_ARN" --subject 'Rogi Collector release failed' --message "${GITHUB_REPOSITORY} release failed: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null

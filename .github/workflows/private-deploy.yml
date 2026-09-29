@@ -64,3 +64,9 @@ jobs:
           invocation=$(aws ssm get-command-invocation --command-id "$command_id" --instance-id "$INSTANCE_ID" --query '{Status:Status,Output:StandardOutputContent}' --output json)
           jq -e --arg sha "$SOURCE_SHA" '.Status == "Success" and (.Output | fromjson | .receipt.sourceSha == $sha)' <<<"$invocation" >/dev/null
           unset invocation
+      - name: Alert failed private delivery
+        if: ${{ failure() }}
+        env:
+          ALERT_TOPIC_ARN: ${{ secrets.AWS_ALERT_TOPIC_ARN }}
+        run: |
+          aws sns publish --topic-arn "$ALERT_TOPIC_ARN" --subject 'Rogi Collector private deployment failed' --message "${GITHUB_REPOSITORY} deployment failed: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" >/dev/null

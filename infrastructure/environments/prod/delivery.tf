@@ -65,7 +65,8 @@ resource "aws_iam_role_policy" "github_delivery" {
   policy = jsonencode({ Version = "2012-10-17", Statement = [
     { Effect = "Allow", Action = ["secretsmanager:PutSecretValue"], Resource = [aws_secretsmanager_secret.registry_pull[0].arn] },
     { Effect = "Allow", Action = ["ssm:SendCommand"], Resource = [aws_ssm_document.delivery[0].arn, "arn:aws:ec2:${var.region}:${var.aws_account_id}:instance/${aws_instance.host.id}"] },
-    { Effect = "Allow", Action = ["ssm:GetCommandInvocation"], Resource = ["*"] }
+    { Effect = "Allow", Action = ["ssm:GetCommandInvocation"], Resource = ["*"] },
+    { Effect = "Allow", Action = ["sns:Publish"], Resource = [aws_sns_topic.alerts.arn] }
   ] })
 }
 output "github_delivery_role_arn" { value = try(aws_iam_role.github_delivery[0].arn, null) }
