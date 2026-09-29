@@ -31,6 +31,7 @@ target=$release_root/releases/$release_id
 manifest_dir=$(CDPATH= cd -- "$(dirname -- "$manifest")" && pwd -P)
 target_real=$(CDPATH= cd -- "$target" && pwd -P)
 [ "$manifest_dir" = "$target_real" ] || { echo 'manifest must be inside the selected release bundle root' >&2; exit 66; }
+prior_release=$(readlink -f "$release_root/current" 2>/dev/null || true)
 $node_bin "$library_root/validate-manifest.mjs" "$manifest"
 data_root=$host_prefix/srv/$product
 [ "$(findmnt -n -o TARGET "$data_root" 2>/dev/null || true)" = "$data_root" ] || { echo "data EBS is not mounted at $data_root" >&2; exit 78; }
@@ -93,4 +94,9 @@ let raw="";process.stdin.on("data",chunk=>raw+=chunk).on("end",()=>{try{let rows
 done
 [ "$containers_healthy" = true ] || { echo 'collector containers did not become Docker-healthy' >&2; exit 70; }
 $install_bin -m 0600 "$manifest" "$config_root/deployed-release.json"
+if [ -n "$prior_release" ] && [ "$prior_release" != "$target_real" ]; then
+  ln -sfn "$prior_release" "$release_root/previous.next"
+  mv -Tf "$release_root/previous.next" "$release_root/previous"
+fi
+"$library_root/prune-collector-images.py" --app-root "$release_root"
 echo "collector release $release_id activated; single SOOP channel and mTLS 7443 enabled"

@@ -19,4 +19,5 @@ class Test(unittest.TestCase):
   Usage=namedtuple('Usage','total used free')
   self.assertTrue(m.data_disk_healthy(Usage(40*1024**3,35*1024**3,5*1024**3)))
   self.assertFalse(m.data_disk_healthy(Usage(40*1024**3,37*1024**3,3*1024**3)))
+  self.assertFalse(m.data_disk_healthy(Usage(20*1024**3,19*1024**3,1*1024**3)))
 if __name__=='__main__':unittest.main()

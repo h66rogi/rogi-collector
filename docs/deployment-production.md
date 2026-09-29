@@ -52,6 +52,8 @@ systemd는 역할별 foreground Compose를 감독하고 컨테이너 종료 후 
 `--force-recreate`로 새 secret inode와 이미지/설정을 다시 mount한다. Compose restart는 no다.
 재부팅 때 host-ready → DB/Redis → marker/app migration → 각 역할 순서로 시작한다.
 일일 DB backup/S3 upload와 10분 release timer는 기존 경로를 유지한다.
+정상 릴리스 활성화 뒤 현재·직전 릴리스의 이미지와 컨테이너가 참조하는 이미지를 보존하고,
+이전 수집기 앱 이미지만 정리한다. 이미지를 삭제해도 릴리스 manifest와 데이터 볼륨은 보존한다.
 백업은 UTC 18:40부터 최대 20분 지연 후 custom-format pg_dump를 gzip으로 저장하며, 로컬 7일 초과분을 정리한다.
 WAL 연속 보관·시점 복원은 구현하지 않았고 실제 백업 복원 시험도 남아 있다.
 스키마 down migration, data volume 삭제, 이미지 host build는 배포 중 실행하지 않는다.

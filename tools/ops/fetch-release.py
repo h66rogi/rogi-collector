@@ -74,7 +74,9 @@ def main():
   receipt=Path('/etc/rogi-collector/deployed-release.json')
   app,manifest=stage(a.source,a.overlay,a.releases_root,a.run_root,receipt)
   candidate=read_json(manifest)
-  if deployed_healthy(receipt,app,candidate,Path('/opt/rogi-collector/app/current')):return 0
+  if deployed_healthy(receipt,app,candidate,Path('/opt/rogi-collector/app/current')):
+   subprocess.run(['/usr/local/lib/rogi-collector/prune-collector-images.py'],check=True)
+   return 0
   os.execv('/usr/local/lib/rogi-collector/deploy.sh',['deploy.sh','--manifest',str(manifest)])
- except (FetchError,OSError,ValueError,json.JSONDecodeError) as e:print(f'release fetch failed: {e}',file=__import__('sys').stderr);return 1
+ except (FetchError,OSError,ValueError,json.JSONDecodeError,subprocess.CalledProcessError) as e:print(f'release fetch failed: {e}',file=__import__('sys').stderr);return 1
 if __name__=='__main__':raise SystemExit(main())
