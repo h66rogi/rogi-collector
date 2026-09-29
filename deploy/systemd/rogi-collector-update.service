@@ -6,7 +6,9 @@ Requires=docker.service
 
 [Service]
 Type=oneshot
+ExecStartPre=-/usr/local/lib/rogi-collector/production-status.py --maintenance
 ExecStart=/usr/local/lib/rogi-collector/fetch-release.py
+ExecStopPost=-/usr/local/lib/rogi-collector/production-status.py --deployment-result
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict

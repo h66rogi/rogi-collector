@@ -51,7 +51,8 @@ release updater는 검증된 digest와 runtime manifest만 적용한다.
 systemd는 역할별 foreground Compose를 감독하고 컨테이너 종료 후 재시작한다.
 `--force-recreate`로 새 secret inode와 이미지/설정을 다시 mount한다. Compose restart는 no다.
 재부팅 때 host-ready → DB/Redis → marker/app migration → 각 역할 순서로 시작한다.
-일일 DB backup/S3 upload와 10분 release timer는 기존 경로를 유지한다.
+일일 DB backup/S3 upload와 5~6분 release timer는 기존 경로를 유지한다.
+release timer는 GitHub 조회 전에 이미지 정리와 상태 지표 전송을 수행한다.
 정상 릴리스 활성화 뒤 현재·직전 릴리스의 이미지와 컨테이너가 참조하는 이미지를 보존하고,
 이전 수집기 앱 이미지만 정리한다. 이미지를 삭제해도 릴리스 manifest와 데이터 볼륨은 보존한다.
 백업은 UTC 18:40부터 최대 20분 지연 후 custom-format pg_dump를 gzip으로 저장하며, 로컬 7일 초과분을 정리한다.

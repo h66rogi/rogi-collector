@@ -22,7 +22,7 @@ variable "ami_id" {
 
 variable "instance_type" {
   type    = string
-  default = "t8i.medium"
+  default = "m8i-flex.large"
 }
 
 variable "vpc_id" {
@@ -43,7 +43,18 @@ variable "marble_security_group_id" {
 
 variable "root_volume_gib" {
   type    = number
-  default = 20
+  default = 40
+}
+
+variable "alert_email" {
+  type        = string
+  default     = ""
+  sensitive   = true
+  description = "Optional owned email endpoint for collector production alarms."
+  validation {
+    condition     = var.alert_email == "" || can(regex("^[^@[:space:]]+@[^@[:space:]]+\\.[^@[:space:]]+$", var.alert_email))
+    error_message = "Supply one email address or leave alert_email empty."
+  }
 }
 
 variable "data_volume_gib" {
@@ -98,13 +109,5 @@ variable "cpu_high_threshold_percent" {
   validation {
     condition     = var.cpu_high_threshold_percent > 0 && var.cpu_high_threshold_percent <= 100
     error_message = "CPU threshold must be in (0, 100]."
-  }
-}
-variable "cpu_credit_low_threshold" {
-  type    = number
-  default = 24
-  validation {
-    condition     = var.cpu_credit_low_threshold >= 0
-    error_message = "CPU credit threshold cannot be negative."
   }
 }

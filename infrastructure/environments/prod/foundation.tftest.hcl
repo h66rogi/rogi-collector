@@ -2,6 +2,9 @@ mock_provider "aws" {
   mock_data "aws_ami" {
     defaults = { id = "ami-0123456789abcdef0", architecture = "x86_64", root_device_type = "ebs", virtualization_type = "hvm", owner_id = "099720109477" }
   }
+  mock_resource "aws_sns_topic" {
+    defaults = { arn = "arn:aws:sns:ap-northeast-2:123456789012:rogi-collector-prod-alerts" }
+  }
 }
 run "collector_host_contract" {
   command = apply
@@ -27,8 +30,20 @@ run "collector_host_contract" {
     error_message = "Collector ingress must be private 7443 from marble SG only."
   }
   assert {
-    condition     = length(aws_cloudwatch_metric_alarm.status_system.alarm_actions) == 0 && length(aws_cloudwatch_metric_alarm.status_instance.alarm_actions) == 0 && length(aws_cloudwatch_metric_alarm.cpu_high.alarm_actions) == 0 && length(aws_cloudwatch_metric_alarm.cpu_credit_low.alarm_actions) == 0
-    error_message = "Baseline alarms must not invent notification destinations."
+    condition     = aws_cloudwatch_metric_alarm.status_system.alarm_actions == toset([aws_sns_topic.alerts.arn]) && aws_cloudwatch_metric_alarm.status_instance.alarm_actions == toset([aws_sns_topic.alerts.arn]) && aws_cloudwatch_metric_alarm.cpu_high.alarm_actions == toset([aws_sns_topic.alerts.arn])
+    error_message = "Host alarms must notify through the owned collector topic."
+  }
+  assert {
+    condition     = aws_cloudwatch_metric_alarm.custom["metrics_missing"].treat_missing_data == "breaching" && aws_cloudwatch_metric_alarm.custom["collection_failed"].dimensions.Environment == "prod"
+    error_message = "Custom metrics must detect a missing emitter and use the collector dimension."
+  }
+  assert {
+    condition     = aws_cloudwatch_metric_alarm.custom["deployment_failed"].period == 60 && aws_cloudwatch_metric_alarm.custom["deployment_failed"].datapoints_to_alarm == 1 && aws_cloudwatch_metric_alarm.custom["deployment_failed"].treat_missing_data == "ignore"
+    error_message = "A failed host deployment must alarm after one datapoint."
+  }
+  assert {
+    condition     = jsondecode(aws_iam_role_policy.monitoring.policy).Statement[0].Condition.StringEquals["cloudwatch:namespace"] == "Rogi/rogi-collector"
+    error_message = "The host may publish only collector metrics."
   }
   assert {
     condition     = aws_cloudwatch_metric_alarm.status_system.dimensions.InstanceId == aws_instance.host.id && aws_cloudwatch_metric_alarm.cpu_high.dimensions.InstanceId == aws_instance.host.id
