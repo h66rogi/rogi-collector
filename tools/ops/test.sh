@@ -9,7 +9,7 @@ cp "$root/deploy/migrations/001_foundation.sql" "$tmp/deploy/migrations/001_foun
 cp "$root/deploy/run-migrations.sh" "$tmp/deploy/run-migrations.sh"
 cp "$root/deploy/provision-public-api-role.sh" "$tmp/deploy/provision-public-api-role.sh"
 cp "$root/deploy/initdb/010_migrate_role.sh" "$tmp/deploy/initdb/010_migrate_role.sh"
-runtime_paths='deploy/provision-public-api-role.sh deploy/cookie-auth.apparmor deploy/systemd/rogi-collector-tls.service deploy/systemd/rogi-collector-tls.timer tools/ops/rotate-server-tls.py deploy/install-runtime.sh deploy/systemd/rogi-collector-host-ready.service deploy/systemd/rogi-collector-migrate.service deploy/systemd/rogi-collector-role@.service deploy/systemd/rogi-collector-update.service deploy/systemd/rogi-collector-update.timer deploy/systemd/rogi-collector-backup.service deploy/systemd/rogi-collector-backup.timer deploy/systemd/rogi-collector.target tools/ops/deploy.sh tools/ops/status.sh tools/ops/prepare-host.sh tools/ops/validate-manifest.mjs tools/ops/render-runtime-env.mjs tools/ops/fetch-release.py tools/ops/production-status.py tools/ops/prune-collector-images.py tools/ops/backup-postgres.sh tools/ops/load-secrets-aws.py tools/ops/upload-backup-s3.py tools/ops/validate-runtime-secrets.sh tools/ops/load-registry-auth.py'
+runtime_paths='deploy/provision-public-api-role.sh deploy/cookie-auth.apparmor deploy/systemd/rogi-collector-tls.service deploy/systemd/rogi-collector-tls.timer tools/ops/rotate-server-tls.py deploy/install-runtime.sh deploy/systemd/rogi-collector-host-ready.service deploy/systemd/rogi-collector-migrate.service deploy/systemd/rogi-collector-role@.service deploy/systemd/rogi-collector-update.service deploy/systemd/rogi-collector-update.timer deploy/systemd/rogi-collector-backup.service deploy/systemd/rogi-collector-backup.timer deploy/systemd/rogi-collector.target tools/ops/deploy.sh tools/ops/status.sh tools/ops/prepare-host.sh tools/ops/validate-manifest.mjs tools/ops/render-runtime-env.mjs tools/ops/fetch-release.py tools/ops/production-status.py tools/ops/backup-postgres.sh tools/ops/load-secrets-aws.py tools/ops/upload-backup-s3.py tools/ops/validate-runtime-secrets.sh tools/ops/load-registry-auth.py'
 for path in $runtime_paths;do mkdir -p "$tmp/$(dirname "$path")";cp "$root/$path" "$tmp/$path";done
 compose_sha=$(sha256sum "$tmp/deploy/compose.production.yaml" | awk '{print $1}')
 migration_sha=$(sha256sum "$tmp/deploy/migrations/001_foundation.sql" | awk '{print $1}')
@@ -60,7 +60,6 @@ python3 "$root/tools/ops/test_load_secrets_aws.py" >/dev/null
 python3 "$root/tools/ops/test_upload_backup_s3.py" >/dev/null
 python3 "$root/tools/ops/test_registry_auth.py" >/dev/null
 python3 "$root/tools/ops/test_production_status.py" >/dev/null
-python3 "$root/tools/ops/test_prune_collector_images.py" >/dev/null
 "$root/tools/ops/test_validate_runtime_secrets.sh" >/dev/null
 node "$root/tools/release/test-build-bundle.mjs"
 echo 'collector production runtime static tests passed (no Docker or EC2 execution)'

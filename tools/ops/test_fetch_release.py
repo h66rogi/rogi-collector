@@ -39,4 +39,15 @@ class FetchReleaseTest(unittest.TestCase):
    root=Path(td);archive=root/'bad.tar.gz'
    with tarfile.open(archive,'w:gz') as bundle:entry=tarfile.TarInfo('../escape');entry.size=1;bundle.addfile(entry,io.BytesIO(b'x'))
    with self.assertRaises(module.FetchError):module.safe_extract(archive,root/'out')
+ def test_prune_selects_only_old_owned_unused_images(self):
+  owned='ghcr.io/h66rogi/rogi-collector-worker';current=f'{owned}@sha256:{"a"*64}';previous=f'{owned}@sha256:{"b"*64}'
+  images=[{'Id':'current','RepoDigests':[current]},{'Id':'previous','RepoDigests':[previous]},{'Id':'old','RepoDigests':[f'{owned}@sha256:{"c"*64}']},{'Id':'stopped-container','RepoDigests':[f'{owned}@sha256:{"d"*64}']},{'Id':'other-product','RepoDigests':[f'ghcr.io/another/project@sha256:{"e"*64}']},{'Id':'unknown','RepoDigests':[]}]
+  self.assertEqual(module.stale_image_ids(images,{'current','stopped-container'},{current,previous},{owned}),['old'])
+ def test_prune_manifest_must_stay_inside_release_directory(self):
+  with tempfile.TemporaryDirectory() as temporary:
+   app=Path(temporary)/'app';releases=app/'releases';release=releases/'r1';release.mkdir(parents=True)
+   (release/'manifest.json').write_text(json.dumps({'product':'rogi-collector','images':{'worker':'digest'}}));(app/'current').symlink_to(release)
+   self.assertEqual(module.manifest_images(app/'current',releases),{'worker':'digest'})
+   outside=Path(temporary)/'outside';outside.mkdir();(outside/'manifest.json').write_text(json.dumps({'product':'rogi-collector','images':{}}));(app/'previous').symlink_to(outside)
+   with self.assertRaises(module.FetchError):module.manifest_images(app/'previous',releases)
 if __name__=='__main__':unittest.main()

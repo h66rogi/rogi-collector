@@ -10,7 +10,7 @@ library_root=$host_prefix/usr/local/lib/rogi-collector
 unit_root=$host_prefix/etc/systemd/system
 systemctl_bin=${SYSTEMCTL_BIN:-systemctl}
 install -d -m 0755 "$library_root" "$unit_root"
-for file in deploy.sh status.sh prepare-host.sh validate-manifest.mjs render-runtime-env.mjs fetch-release.py production-status.py prune-collector-images.py backup-postgres.sh load-secrets-aws.py upload-backup-s3.py validate-runtime-secrets.sh load-registry-auth.py rotate-server-tls.py; do
+for file in deploy.sh status.sh prepare-host.sh validate-manifest.mjs render-runtime-env.mjs fetch-release.py production-status.py backup-postgres.sh load-secrets-aws.py upload-backup-s3.py validate-runtime-secrets.sh load-registry-auth.py rotate-server-tls.py; do
   install -m 0755 "$source_root/tools/ops/$file" "$library_root/.$file.new"
   mv -f "$library_root/.$file.new" "$library_root/$file"
   cmp -s "$source_root/tools/ops/$file" "$library_root/$file" || { echo "installed helper verification failed: $file" >&2;exit 74; }

@@ -3,8 +3,37 @@ from __future__ import annotations
 import argparse,hashlib,json,os,re,subprocess,tarfile,tempfile,urllib.request
 from pathlib import Path,PurePosixPath
 API='https://api.github.com'; MAX_ARCHIVE=100*1024*1024
+APP_IMAGE_ROLES=('discover','coordinator','worker','query','cookie-auth')
 class FetchError(RuntimeError):pass
 def read_json(path):return json.loads(Path(path).read_text(encoding='utf-8'))
+def manifest_images(link:Path,releases:Path)->dict[str,str]|None:
+ if not link.exists() and not link.is_symlink():return None
+ release=link.resolve(strict=True)
+ if not release.is_relative_to(releases.resolve(strict=True)):raise FetchError(f'{link} points outside the release directory')
+ manifest=read_json(release/'manifest.json')
+ if manifest.get('product')!='rogi-collector' or not isinstance(manifest.get('images'),dict):raise FetchError(f'{link} has an invalid collector manifest')
+ return manifest['images']
+def stale_image_ids(images:list[dict],used_ids:set[str],protected:set[str],owned_repos:set[str])->list[str]:
+ stale=[]
+ for image in images:
+  refs=set(image.get('RepoDigests') or [])
+  if not refs or refs & protected or image['Id'] in used_ids:continue
+  if any(ref.partition('@')[0] in owned_repos for ref in refs):stale.append(image['Id'])
+ return stale
+def docker_json(command:list[str])->list[dict]:return json.loads(subprocess.check_output(['docker',*command],text=True))
+def prune_collector_images(app_root:Path)->dict[str,int]:
+ releases=app_root/'releases';current=manifest_images(app_root/'current',releases)
+ if current is None or any(not isinstance(current.get(role),str) or '@sha256:' not in current[role] for role in APP_IMAGE_ROLES):raise FetchError('active collector images are unavailable')
+ previous=manifest_images(app_root/'previous',releases)
+ if previous is not None and any(not isinstance(previous.get(role),str) or '@sha256:' not in previous[role] for role in APP_IMAGE_ROLES):raise FetchError('rollback collector images are unavailable')
+ protected=set(current.values())|set((previous or {}).values());owned_repos={current[role].partition('@')[0] for role in APP_IMAGE_ROLES}
+ image_ids=sorted(set(subprocess.check_output(['docker','image','ls','-q','--no-trunc'],text=True).split()))
+ if not image_ids:return {'candidates':0,'removed':0}
+ images=docker_json(['image','inspect',*image_ids]);container_ids=subprocess.check_output(['docker','ps','-aq'],text=True).split()
+ containers=docker_json(['container','inspect',*container_ids]) if container_ids else []
+ stale=stale_image_ids(images,{container['Image'] for container in containers},protected,owned_repos)
+ for image_id in stale:subprocess.run(['docker','image','rm',image_id],check=True,stdout=subprocess.DEVNULL)
+ return {'candidates':len(stale),'removed':len(stale)}
 def exact(value,keys,label):
  if not isinstance(value,dict) or set(value)!=set(keys):raise FetchError(f'invalid {label} fields')
  return value
@@ -69,13 +98,16 @@ def stage(source_path,overlay_path,releases_root,run_root,receipt_path=None):
  candidate=run_root/'candidate';candidate.mkdir(parents=True,exist_ok=True); pointer=candidate/'release.json';pointer.write_text(json.dumps(manifest,sort_keys=True,indent=2)+'\n');pointer.chmod(0o600)
  return destination,destination/'manifest.json'
 def main():
- p=argparse.ArgumentParser();p.add_argument('--source',type=Path,default=Path('/etc/rogi-collector/release-source.json'));p.add_argument('--overlay',type=Path,default=Path('/etc/rogi-collector/runtime-overlay.json'));p.add_argument('--releases-root',type=Path,default=Path('/opt/rogi-collector/app/releases'));p.add_argument('--run-root',type=Path,default=Path('/run/rogi-collector'));a=p.parse_args()
+ p=argparse.ArgumentParser();p.add_argument('--source',type=Path,default=Path('/etc/rogi-collector/release-source.json'));p.add_argument('--overlay',type=Path,default=Path('/etc/rogi-collector/runtime-overlay.json'));p.add_argument('--releases-root',type=Path,default=Path('/opt/rogi-collector/app/releases'));p.add_argument('--run-root',type=Path,default=Path('/run/rogi-collector'));p.add_argument('--prune-only',action='store_true');a=p.parse_args()
  try:
+  if a.prune_only:
+   print(json.dumps(prune_collector_images(a.releases_root.parent)))
+   return 0
   receipt=Path('/etc/rogi-collector/deployed-release.json')
   app,manifest=stage(a.source,a.overlay,a.releases_root,a.run_root,receipt)
   candidate=read_json(manifest)
   if deployed_healthy(receipt,app,candidate,Path('/opt/rogi-collector/app/current')):
-   subprocess.run(['/usr/local/lib/rogi-collector/prune-collector-images.py'],check=True)
+   print(json.dumps(prune_collector_images(a.releases_root.parent)))
    return 0
   os.execv('/usr/local/lib/rogi-collector/deploy.sh',['deploy.sh','--manifest',str(manifest)])
  except (FetchError,OSError,ValueError,json.JSONDecodeError,subprocess.CalledProcessError) as e:print(f'release fetch failed: {e}',file=__import__('sys').stderr);return 1

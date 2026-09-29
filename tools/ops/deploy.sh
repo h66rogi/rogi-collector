@@ -98,5 +98,5 @@ if [ -n "$prior_release" ] && [ "$prior_release" != "$target_real" ]; then
   ln -sfn "$prior_release" "$release_root/previous.next"
   mv -Tf "$release_root/previous.next" "$release_root/previous"
 fi
-"$library_root/prune-collector-images.py" --app-root "$release_root"
+"$library_root/fetch-release.py" --releases-root "$release_root/releases" --prune-only
 echo "collector release $release_id activated; single SOOP channel and mTLS 7443 enabled"
